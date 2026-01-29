@@ -111,34 +111,47 @@ export default function InvoicePreview({ invoice, onClose }) {
     }
   }, [virtualBarcode])
 
-  // Force all computed colors as inline styles so html2canvas doesn't
-  // need to parse oklch() from Tailwind v4 stylesheets
+  // Remove all stylesheets that contain oklch and force computed colors
+  // as inline styles so html2canvas never encounters oklch()
   const fixColorsForHtml2Canvas = (clonedDoc, clonedElement) => {
+    // Step 1: Remove/disable stylesheets containing oklch
+    const sheets = clonedDoc.querySelectorAll('style, link[rel="stylesheet"]')
+    sheets.forEach((sheet) => {
+      try {
+        const text = sheet.textContent || ''
+        if (text.includes('oklch') || text.includes('oklab')) {
+          sheet.remove()
+        }
+      } catch (e) {
+        // cross-origin stylesheet, ignore
+      }
+    })
+
+    // Step 2: Force all computed colors as inline rgb() on every element
     const colorProps = [
-      'color', 'backgroundColor', 'borderColor',
-      'borderTopColor', 'borderBottomColor', 'borderLeftColor', 'borderRightColor',
+      'color', 'background-color', 'border-color',
+      'border-top-color', 'border-bottom-color', 'border-left-color', 'border-right-color',
+      'box-shadow', 'outline-color', 'text-decoration-color',
     ]
-    const allElements = clonedElement.querySelectorAll('*')
-    const elements = [clonedElement, ...allElements]
+    const allElements = clonedDoc.querySelectorAll('*')
     const win = clonedDoc.defaultView
 
-    for (const el of elements) {
+    for (const el of allElements) {
       const computed = win.getComputedStyle(el)
       for (const prop of colorProps) {
-        // getComputedStyle always resolves to rgb()/rgba() in the browser
-        const resolved = computed.getPropertyValue(
-          prop.replace(/([A-Z])/g, '-$1').toLowerCase()
-        )
-        if (resolved) {
-          el.style[prop] = resolved
+        const resolved = computed.getPropertyValue(prop)
+        if (resolved && resolved !== 'none') {
+          el.style.setProperty(prop, resolved, 'important')
         }
       }
     }
 
-    // Ensure the main element is visible and properly positioned
+    // Step 3: Ensure the invoice element is visible and properly positioned
     clonedElement.style.visibility = 'visible'
     clonedElement.style.position = 'static'
     clonedElement.style.display = 'block'
+    clonedElement.style.backgroundColor = '#ffffff'
+    clonedElement.style.boxShadow = 'none'
   }
 
   const generatePdf = async () => {
@@ -261,7 +274,7 @@ export default function InvoicePreview({ invoice, onClose }) {
       </div>
 
       {/* A4 Invoice — all colors as inline HEX to avoid oklch() breaking html2canvas */}
-      <div ref={invoiceRef} className="invoice-sheet shadow-lg print:shadow-none mx-auto" style={{ width: '210mm', minHeight: '297mm', padding: '15mm', backgroundColor: '#ffffff', color: '#111827' }}>
+      <div ref={invoiceRef} className="invoice-sheet mx-auto" style={{ width: '210mm', minHeight: '297mm', padding: '15mm', backgroundColor: '#ffffff', color: '#111827', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1)' }}>
         {/* Header with logo */}
         <div className="flex justify-between items-start" style={{ marginBottom: '2rem' }}>
           {/* Company logo and info */}
@@ -530,7 +543,7 @@ export default function InvoicePreview({ invoice, onClose }) {
             min-height: 297mm;
             margin: 0;
             padding: 15mm;
-            box-shadow: none;
+            box-shadow: none !important;
           }
         }
       `}</style>
