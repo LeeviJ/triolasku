@@ -508,6 +508,12 @@ export default function InvoicePreview({ invoice, onClose }) {
 
         {/* Barcode area */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', marginTop: '1.5rem', minHeight: '30mm' }}>
+          {/* Always show IBAN above barcode as fallback */}
+          {company?.bankAccounts?.[0]?.iban && (
+            <p style={{ color: '#111827', fontWeight: 700, fontSize: '1.5rem', letterSpacing: '0.05em', margin: '0 0 0.75rem 0' }}>
+              IBAN: {company.bankAccounts[0].iban}
+            </p>
+          )}
           <svg ref={barcodeRef}></svg>
           <p style={{ fontFamily: 'monospace', fontSize: '0.75rem', color: '#374151', letterSpacing: '0.05em', marginTop: '0.5rem', marginBottom: '0.25rem', userSelect: 'all' }}>
             {virtualBarcode}
