@@ -261,7 +261,7 @@ export default function InvoicePreview({ invoice, onClose }) {
       </div>
 
       {/* A4 Invoice — all colors as inline HEX to avoid oklch() breaking html2canvas */}
-      <div ref={invoiceRef} className="shadow-lg print:shadow-none mx-auto" style={{ width: '210mm', minHeight: '297mm', padding: '15mm', backgroundColor: '#ffffff', color: '#111827' }}>
+      <div ref={invoiceRef} className="invoice-sheet shadow-lg print:shadow-none mx-auto" style={{ width: '210mm', minHeight: '297mm', padding: '15mm', backgroundColor: '#ffffff', color: '#111827' }}>
         {/* Header with logo */}
         <div className="flex justify-between items-start" style={{ marginBottom: '2rem' }}>
           {/* Company logo and info */}
@@ -518,11 +518,11 @@ export default function InvoicePreview({ invoice, onClose }) {
           body * {
             visibility: hidden;
           }
-          .bg-white.shadow-lg,
-          .bg-white.shadow-lg * {
+          .invoice-sheet,
+          .invoice-sheet * {
             visibility: visible;
           }
-          .bg-white.shadow-lg {
+          .invoice-sheet {
             position: absolute;
             left: 0;
             top: 0;
