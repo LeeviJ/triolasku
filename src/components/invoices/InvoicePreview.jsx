@@ -474,7 +474,22 @@ export default function InvoicePreview({ invoice, onClose }) {
           </div>
         </div>
 
-        {/* Payment details */}
+        {/* Paikka A: Maksutiedot-yhteenveto laskun lopussa */}
+        {company?.bankAccounts?.[0]?.iban && (
+          <div style={{ backgroundColor: '#f9fafb', borderRadius: '4px', padding: '1rem', marginBottom: '1.5rem', border: '1px solid #e5e7eb' }}>
+            <p style={{ fontSize: '0.875rem', color: '#374151', margin: '0 0 0.25rem 0' }}>
+              {language === 'fi' ? 'Maksutiedot' : language === 'sv' ? 'Betalningsuppgifter' : 'Payment details'}:
+            </p>
+            <p style={{ color: '#111827', fontWeight: 700, fontSize: '1.5rem', letterSpacing: '0.05em', margin: 0 }}>
+              {company.bankAccounts[0].iban}
+            </p>
+            {company.bankAccounts[0].bic && (
+              <p style={{ fontSize: '0.875rem', color: '#4b5563', margin: '0.25rem 0 0 0' }}>BIC: {company.bankAccounts[0].bic}</p>
+            )}
+          </div>
+        )}
+
+        {/* Paikka B: Payment details */}
         <div style={{ borderTop: '2px solid #d1d5db', paddingTop: '1.5rem' }}>
           <h3 style={{ fontSize: '0.875rem', fontWeight: 600, color: '#374151', marginBottom: '0.75rem' }}>
             {t('invoices.bankDetails')}
