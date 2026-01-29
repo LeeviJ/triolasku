@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import {
   Package,
   Plus,
@@ -8,9 +8,11 @@ import {
   Search,
   Check,
   Settings,
+  Download,
+  Upload,
 } from 'lucide-react'
 import { useLanguage } from '../context/LanguageContext'
-import { useData } from '../context/DataContext'
+import { useData, STORAGE_KEYS } from '../context/DataContext'
 import Card, { CardBody, CardHeader } from '../components/ui/Card'
 import Button from '../components/ui/Button'
 import Input from '../components/ui/Input'
@@ -58,6 +60,7 @@ export default function Products() {
   // Settings state
   const [newVatRate, setNewVatRate] = useState('')
   const [newUnitName, setNewUnitName] = useState('')
+  const backupFileInputRef = useRef(null)
 
   // Filter products based on search
   const filteredProducts = products.filter((product) => {
@@ -185,6 +188,39 @@ export default function Products() {
       addUnit({ id: newUnitName.toLowerCase(), name: newUnitName, nameEn: newUnitName })
       setNewUnitName('')
     }
+  }
+
+  const handleDownloadBackup = () => {
+    const backup = {}
+    Object.entries(STORAGE_KEYS).forEach(([key, storageKey]) => {
+      const data = localStorage.getItem(storageKey)
+      if (data) backup[storageKey] = JSON.parse(data)
+    })
+    const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `triolasku-backup-${new Date().toISOString().slice(0, 10)}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const handleRestoreBackup = (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      try {
+        const backup = JSON.parse(event.target.result)
+        Object.entries(backup).forEach(([key, value]) => {
+          localStorage.setItem(key, JSON.stringify(value))
+        })
+        window.location.reload()
+      } catch {
+        alert('Invalid backup file')
+      }
+    }
+    reader.readAsText(file)
   }
 
   const getUnitName = (unitId) => {
@@ -644,6 +680,38 @@ export default function Products() {
                     disabled={!newUnitName.trim()}
                   >
                     <Plus className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+
+              {/* Backup */}
+              <div>
+                <h3 className="text-sm font-medium text-gray-900 mb-3">
+                  {t('products.backup')}
+                </h3>
+                <div className="flex flex-col gap-2">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={handleDownloadBackup}
+                  >
+                    <Download className="w-4 h-4" />
+                    {t('products.downloadBackup')}
+                  </Button>
+                  <input
+                    ref={backupFileInputRef}
+                    type="file"
+                    accept=".json"
+                    onChange={handleRestoreBackup}
+                    className="hidden"
+                  />
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => backupFileInputRef.current?.click()}
+                  >
+                    <Upload className="w-4 h-4" />
+                    {t('products.restoreBackup')}
                   </Button>
                 </div>
               </div>

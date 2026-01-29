@@ -62,6 +62,18 @@ export const formatNumber = (value, maxDecimals = 2, decimalSeparator = ',') => 
 }
 
 /**
+ * Format date from YYYY-MM-DD to DD.MM.YYYY (Finnish format)
+ * @param {string} dateStr - Date string in YYYY-MM-DD format
+ * @returns {string} Formatted date string in DD.MM.YYYY format
+ */
+export const formatDateFI = (dateStr) => {
+  if (!dateStr) return ''
+  const parts = dateStr.split('-')
+  if (parts.length !== 3) return dateStr
+  return `${parts[2]}.${parts[1]}.${parts[0]}`
+}
+
+/**
  * Calculate gross price from net price and VAT rate
  *
  * @param {number|string} netPrice - Net price

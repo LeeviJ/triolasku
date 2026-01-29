@@ -1,13 +1,48 @@
+import { useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { Building2, Users, Package, FileText, ArrowRight } from 'lucide-react'
+import { Building2, Users, Package, FileText, ArrowRight, Download, Upload } from 'lucide-react'
 import { useLanguage } from '../context/LanguageContext'
-import { useData } from '../context/DataContext'
+import { useData, STORAGE_KEYS } from '../context/DataContext'
 import Card, { CardBody } from '../components/ui/Card'
 import Button from '../components/ui/Button'
 
 export default function Dashboard() {
   const { t } = useLanguage()
   const { companies, customers, products, invoices } = useData()
+  const backupFileInputRef = useRef(null)
+
+  const handleDownloadBackup = () => {
+    const backup = {}
+    Object.entries(STORAGE_KEYS).forEach(([key, storageKey]) => {
+      const data = localStorage.getItem(storageKey)
+      if (data) backup[storageKey] = JSON.parse(data)
+    })
+    const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `triolasku-backup-${new Date().toISOString().slice(0, 10)}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const handleRestoreBackup = (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      try {
+        const backup = JSON.parse(event.target.result)
+        Object.entries(backup).forEach(([key, value]) => {
+          localStorage.setItem(key, JSON.stringify(value))
+        })
+        window.location.reload()
+      } catch {
+        alert('Invalid backup file')
+      }
+    }
+    reader.readAsText(file)
+  }
 
   const stats = [
     {
@@ -102,6 +137,32 @@ export default function Dashboard() {
           </CardBody>
         </Card>
       )}
+
+      {/* Backup section */}
+      <Card className="mb-8">
+        <CardBody>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">
+            {t('dashboard.backup')}
+          </h2>
+          <div className="flex flex-wrap gap-3">
+            <Button variant="secondary" onClick={handleDownloadBackup}>
+              <Download className="w-4 h-4" />
+              {t('dashboard.downloadBackup')}
+            </Button>
+            <input
+              ref={backupFileInputRef}
+              type="file"
+              accept=".json"
+              onChange={handleRestoreBackup}
+              className="hidden"
+            />
+            <Button variant="secondary" onClick={() => backupFileInputRef.current?.click()}>
+              <Upload className="w-4 h-4" />
+              {t('dashboard.restoreBackup')}
+            </Button>
+          </div>
+        </CardBody>
+      </Card>
 
       {/* Recent invoices placeholder */}
       {invoices.length > 0 && (

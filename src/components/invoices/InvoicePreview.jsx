@@ -6,7 +6,7 @@ import JsBarcode from 'jsbarcode'
 import { useLanguage } from '../../context/LanguageContext'
 import { useData } from '../../context/DataContext'
 import Button from '../ui/Button'
-import { formatPrice, formatVatRate, calculateGrossPrice } from '../../utils/formatters'
+import { formatPrice, formatVatRate, calculateGrossPrice, formatDateFI } from '../../utils/formatters'
 
 export default function InvoicePreview({ invoice, onClose }) {
   const { t, language } = useLanguage()
@@ -354,11 +354,11 @@ export default function InvoicePreview({ invoice, onClose }) {
                 </tr>
                 <tr>
                   <td style={{ padding: '0.25rem 0', color: '#4b5563' }}>{t('invoices.invoiceDate')}:</td>
-                  <td style={{ padding: '0.25rem 0', textAlign: 'right' }}>{invoice.invoiceDate}</td>
+                  <td style={{ padding: '0.25rem 0', textAlign: 'right' }}>{formatDateFI(invoice.invoiceDate)}</td>
                 </tr>
                 <tr>
                   <td style={{ padding: '0.25rem 0', color: '#4b5563' }}>{t('invoices.dueDate')}:</td>
-                  <td style={{ padding: '0.25rem 0', fontWeight: 600, textAlign: 'right' }}>{invoice.dueDate}</td>
+                  <td style={{ padding: '0.25rem 0', fontWeight: 600, textAlign: 'right' }}>{formatDateFI(invoice.dueDate)}</td>
                 </tr>
                 <tr>
                   <td style={{ padding: '0.25rem 0', color: '#4b5563' }}>{t('invoices.paymentTerms')}:</td>
@@ -500,7 +500,7 @@ export default function InvoicePreview({ invoice, onClose }) {
               </div>
               <div>
                 <p style={{ fontSize: '0.875rem', color: '#4b5563', margin: 0 }}>{t('invoices.dueDate')}:</p>
-                <p style={{ fontWeight: 700, fontSize: '1.25rem', color: '#111827', margin: 0 }}>{invoice.dueDate}</p>
+                <p style={{ fontWeight: 700, fontSize: '1.25rem', color: '#111827', margin: 0 }}>{formatDateFI(invoice.dueDate)}</p>
               </div>
             </div>
           </div>

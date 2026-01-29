@@ -58,6 +58,9 @@ export const translations = {
       vatRate: 'ALV-kanta',
       addVatRate: 'Lisää ALV-kanta',
       defaultVatRates: 'Oletusalvit: 25,5%, 14%, 10%, 0%',
+      invoiceNumbering: 'Laskunumerointi',
+      numberPrefix: 'Laskunumeron etuliite',
+      startNumber: 'Laskunumeron aloitusnumero',
     },
     // Dashboard
     dashboard: {
@@ -72,6 +75,9 @@ export const translations = {
       recentInvoices: 'Viimeisimmät laskut',
       getStarted: 'Aloita',
       noCompanies: 'Lisää ensin yritys aloittaaksesi laskuttamisen',
+      backup: 'Varmuuskopiointi',
+      downloadBackup: 'Lataa varmuuskopio',
+      restoreBackup: 'Palauta varmuuskopio',
     },
     // Customers
     customers: {
@@ -124,6 +130,9 @@ export const translations = {
       addUnit: 'Lisää yksikkö',
       unitName: 'Yksikön nimi',
       currency: 'EUR',
+      backup: 'Varmuuskopiointi',
+      downloadBackup: 'Lataa varmuuskopio',
+      restoreBackup: 'Palauta varmuuskopio',
     },
     // Invoices
     invoices: {
@@ -261,6 +270,9 @@ export const translations = {
       vatRate: 'VAT rate',
       addVatRate: 'Add VAT rate',
       defaultVatRates: 'Default VAT: 25.5%, 14%, 10%, 0%',
+      invoiceNumbering: 'Invoice numbering',
+      numberPrefix: 'Invoice number prefix',
+      startNumber: 'Invoice start number',
     },
     // Dashboard
     dashboard: {
@@ -275,6 +287,9 @@ export const translations = {
       recentInvoices: 'Recent invoices',
       getStarted: 'Get started',
       noCompanies: 'Add a company first to start invoicing',
+      backup: 'Backup',
+      downloadBackup: 'Download backup',
+      restoreBackup: 'Restore backup',
     },
     // Customers
     customers: {
@@ -327,6 +342,9 @@ export const translations = {
       addUnit: 'Add unit',
       unitName: 'Unit name',
       currency: 'EUR',
+      backup: 'Backup',
+      downloadBackup: 'Download backup',
+      restoreBackup: 'Restore backup',
     },
     // Invoices
     invoices: {
@@ -464,6 +482,9 @@ export const translations = {
       vatRate: 'Momssats',
       addVatRate: 'Lägg till momssats',
       defaultVatRates: 'Standardmoms: 25,5%, 14%, 10%, 0%',
+      invoiceNumbering: 'Fakturanumrering',
+      numberPrefix: 'Fakturanummerprefix',
+      startNumber: 'Fakturans startnummer',
     },
     // Dashboard
     dashboard: {
@@ -478,6 +499,9 @@ export const translations = {
       recentInvoices: 'Senaste fakturor',
       getStarted: 'Kom igång',
       noCompanies: 'Lägg till ett företag först för att börja fakturera',
+      backup: 'Säkerhetskopiering',
+      downloadBackup: 'Ladda ner säkerhetskopia',
+      restoreBackup: 'Återställ säkerhetskopia',
     },
     // Customers
     customers: {
@@ -530,6 +554,9 @@ export const translations = {
       addUnit: 'Lägg till enhet',
       unitName: 'Enhetsnamn',
       currency: 'EUR',
+      backup: 'Säkerhetskopiering',
+      downloadBackup: 'Ladda ner säkerhetskopia',
+      restoreBackup: 'Återställ säkerhetskopia',
     },
     // Invoices
     invoices: {

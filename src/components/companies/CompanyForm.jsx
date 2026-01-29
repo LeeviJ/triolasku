@@ -39,6 +39,8 @@ export default function CompanyForm({ company, onClose }) {
       ? company.bankAccounts
       : [{ ...EMPTY_BANK_ACCOUNT }],
     vatRates: company?.vatRates || [...DEFAULT_VAT_RATES],
+    numberPrefix: company?.numberPrefix || '',
+    startNumber: company?.startNumber || '',
   })
 
   const [errors, setErrors] = useState({})
@@ -393,6 +395,35 @@ export default function CompanyForm({ company, onClose }) {
                 </div>
               </div>
             ))}
+          </CardBody>
+        </Card>
+
+        {/* Invoice numbering */}
+        <Card className="mb-6">
+          <CardHeader>
+            <h2 className="text-lg font-semibold text-gray-900">
+              {t('companies.invoiceNumbering')}
+            </h2>
+          </CardHeader>
+          <CardBody className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Input
+                label={t('companies.numberPrefix')}
+                name="numberPrefix"
+                value={formData.numberPrefix}
+                onChange={handleChange}
+                placeholder="esim. 1-"
+              />
+              <Input
+                label={t('companies.startNumber')}
+                name="startNumber"
+                type="number"
+                min="1"
+                value={formData.startNumber}
+                onChange={handleChange}
+                placeholder="1"
+              />
+            </div>
           </CardBody>
         </Card>
 

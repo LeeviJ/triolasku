@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect } from 'react'
 
 const DataContext = createContext()
 
-const STORAGE_KEYS = {
+export const STORAGE_KEYS = {
   companies: 'triolasku_companies',
   customers: 'triolasku_customers',
   products: 'triolasku_products',
@@ -236,10 +236,12 @@ export function DataProvider({ children }) {
   // Invoice operations (per-company numbering based on saved invoices)
   const getNextInvoiceNumberForCompany = (companyId) => {
     if (!companyId) return 1
+    const company = companies.find((c) => c.id === companyId)
+    const startNumber = parseInt(company?.startNumber, 10) || 1
     const companyInvoices = invoices.filter((inv) => inv.companyId === companyId)
-    if (companyInvoices.length === 0) return 1
+    if (companyInvoices.length === 0) return startNumber
     const maxNumber = Math.max(...companyInvoices.map((inv) => parseInt(inv.invoiceNumber, 10) || 0))
-    return maxNumber + 1
+    return Math.max(maxNumber + 1, startNumber)
   }
 
   const addInvoice = (invoice) => {

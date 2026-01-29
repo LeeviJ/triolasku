@@ -13,7 +13,7 @@ import { useLanguage } from '../context/LanguageContext'
 import { useData } from '../context/DataContext'
 import Card, { CardBody } from '../components/ui/Card'
 import Button from '../components/ui/Button'
-import { formatPrice } from '../utils/formatters'
+import { formatPrice, formatDateFI } from '../utils/formatters'
 import InvoiceForm from '../components/invoices/InvoiceForm'
 import InvoicePreview from '../components/invoices/InvoicePreview'
 
@@ -233,7 +233,7 @@ export default function Invoices() {
                       {invoice.invoiceNumber}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-500">
-                      {invoice.invoiceDate}
+                      {formatDateFI(invoice.invoiceDate)}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-500 hidden md:table-cell">
                       {getCompanyName(invoice.companyId)}
