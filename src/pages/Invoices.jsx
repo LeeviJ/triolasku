@@ -41,7 +41,11 @@ export default function Invoices() {
         company?.name?.toLowerCase().includes(query)
       )
     })
-    .sort((a, b) => (parseInt(b.invoiceNumber, 10) || 0) - (parseInt(a.invoiceNumber, 10) || 0))
+    .sort((a, b) => {
+      const dateCompare = (b.invoiceDate || '').localeCompare(a.invoiceDate || '')
+      if (dateCompare !== 0) return dateCompare
+      return (parseInt(b.invoiceNumber, 10) || 0) - (parseInt(a.invoiceNumber, 10) || 0)
+    })
 
   const handleCreate = () => {
     setEditingInvoice(null)
