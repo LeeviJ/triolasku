@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect } from 'react'
-import { ArrowLeft, Printer, Download, Share2 } from 'lucide-react'
+import { ArrowLeft, Printer, Download, Share2, Check } from 'lucide-react'
 import html2canvas from 'html2canvas'
 import { jsPDF } from 'jspdf'
 import JsBarcode from 'jsbarcode'
@@ -10,10 +10,11 @@ import { formatPrice, formatVatRate, calculateGrossPrice, formatDateFI } from '.
 
 export default function InvoicePreview({ invoice, onClose }) {
   const { t, language } = useLanguage()
-  const { companies, customers, units } = useData()
+  const { companies, customers, units, updateInvoice } = useData()
   const invoiceRef = useRef(null)
   const barcodeRef = useRef(null)
   const [generating, setGenerating] = useState(false)
+  const [statusNotice, setStatusNotice] = useState(false)
 
   const company = invoice.company || companies.find((c) => c.id === invoice.companyId)
   const customer = invoice.customer || customers.find((c) => c.id === invoice.customerId)
@@ -204,11 +205,20 @@ export default function InvoicePreview({ invoice, onClose }) {
     return pdf
   }
 
+  const markAsSent = () => {
+    if (invoice.id && (!invoice.status || invoice.status === 'draft')) {
+      updateInvoice(invoice.id, { status: 'sent' })
+      setStatusNotice(true)
+      setTimeout(() => setStatusNotice(false), 3000)
+    }
+  }
+
   const handleDownloadPdf = async () => {
     setGenerating(true)
     try {
       const pdf = await generatePdf()
       pdf.save(getFileName())
+      markAsSent()
     } catch (err) {
       alert(`PDF-generointi epäonnistui: ${err.message}`)
     } finally {
@@ -228,8 +238,10 @@ export default function InvoicePreview({ invoice, onClose }) {
           title: `${docLabel} ${invoice.invoiceNumber}`,
           files: [file],
         })
+        markAsSent()
       } else {
         pdf.save(getFileName())
+        markAsSent()
       }
     } catch (err) {
       if (err.name !== 'AbortError') {
@@ -272,6 +284,14 @@ export default function InvoicePreview({ invoice, onClose }) {
           )}
         </div>
       </div>
+
+      {/* Status notification */}
+      {statusNotice && (
+        <div className="mb-4 px-4 py-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2 text-green-800 text-sm print:hidden">
+          <Check className="w-4 h-4" />
+          {t('invoices.markedAsSent')}
+        </div>
+      )}
 
       {/* A4 Invoice — 100% inline styles, zero Tailwind classes for html2canvas compatibility */}
       <div ref={invoiceRef} className="invoice-sheet" style={{ width: '210mm', minHeight: '297mm', padding: '15mm', backgroundColor: '#ffffff', color: '#111827', margin: '0 auto', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1)', fontFamily: 'system-ui, -apple-system, sans-serif', fontSize: '14px', lineHeight: '1.5' }}>

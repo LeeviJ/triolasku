@@ -202,6 +202,7 @@ export const translations = {
       paymentStatus: 'Maksutila',
       paidWith: 'Maksettu',
       invoiceNumberEdit: 'Voit muokata numeroa',
+      markedAsSent: 'Lasku tallennettu ja merkitty lähetetyksi',
     },
     // Language
     language: {
@@ -414,6 +415,7 @@ export const translations = {
       paymentStatus: 'Payment status',
       paidWith: 'Paid with',
       invoiceNumberEdit: 'You can edit the number',
+      markedAsSent: 'Invoice saved and marked as sent',
     },
     // Language
     language: {
@@ -626,6 +628,7 @@ export const translations = {
       paymentStatus: 'Betalningsstatus',
       paidWith: 'Betald med',
       invoiceNumberEdit: 'Du kan redigera numret',
+      markedAsSent: 'Faktura sparad och markerad som skickad',
     },
     // Language
     language: {
