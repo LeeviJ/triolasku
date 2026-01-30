@@ -190,17 +190,28 @@ export default function Products() {
     }
   }
 
-  const handleDownloadBackup = () => {
+  const handleDownloadBackup = async () => {
     const backup = {}
     Object.entries(STORAGE_KEYS).forEach(([key, storageKey]) => {
       const data = localStorage.getItem(storageKey)
       if (data) backup[storageKey] = JSON.parse(data)
     })
     const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' })
+    const fileName = `triolasku-backup-${new Date().toISOString().slice(0, 10)}.json`
+    const file = new File([blob], fileName, { type: 'application/json' })
+
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({ title: 'TrioLasku backup', files: [file] })
+        return
+      } catch (err) {
+        if (err.name === 'AbortError') return
+      }
+    }
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `triolasku-backup-${new Date().toISOString().slice(0, 10)}.json`
+    a.download = fileName
     a.click()
     URL.revokeObjectURL(url)
   }

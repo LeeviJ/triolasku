@@ -174,7 +174,7 @@ export default function Dashboard() {
             <input
               ref={backupFileInputRef}
               type="file"
-              accept=".json"
+              accept=".json,application/json"
               onChange={handleRestoreBackup}
               className="hidden"
             />
