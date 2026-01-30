@@ -76,8 +76,10 @@ export const translations = {
       getStarted: 'Aloita',
       noCompanies: 'Lisää ensin yritys aloittaaksesi laskuttamisen',
       backup: 'Varmuuskopiointi',
-      downloadBackup: 'Lataa varmuuskopio',
+      downloadBackup: 'Tallenna / Jaa varmuuskopio',
       restoreBackup: 'Palauta varmuuskopio',
+      backupHint: 'Voit tallentaa varmuuskopion pilveen (esim. Drive tai WhatsApp) ja palauttaa sen tästä millä tahansa laitteella.',
+      showAll: 'Näytä kaikki',
     },
     // Customers
     customers: {
@@ -289,8 +291,10 @@ export const translations = {
       getStarted: 'Get started',
       noCompanies: 'Add a company first to start invoicing',
       backup: 'Backup',
-      downloadBackup: 'Download backup',
+      downloadBackup: 'Save / Share backup',
       restoreBackup: 'Restore backup',
+      backupHint: 'You can save a backup to the cloud (e.g. Drive or WhatsApp) and restore it on any device.',
+      showAll: 'Show all',
     },
     // Customers
     customers: {
@@ -502,8 +506,10 @@ export const translations = {
       getStarted: 'Kom igång',
       noCompanies: 'Lägg till ett företag först för att börja fakturera',
       backup: 'Säkerhetskopiering',
-      downloadBackup: 'Ladda ner säkerhetskopia',
+      downloadBackup: 'Spara / Dela säkerhetskopia',
       restoreBackup: 'Återställ säkerhetskopia',
+      backupHint: 'Du kan spara en säkerhetskopia i molnet (t.ex. Drive eller WhatsApp) och återställa den på vilken enhet som helst.',
+      showAll: 'Visa alla',
     },
     // Customers
     customers: {

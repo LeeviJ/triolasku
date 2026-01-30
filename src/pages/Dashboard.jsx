@@ -1,6 +1,6 @@
 import { useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { Building2, Users, Package, FileText, ArrowRight, Download, Upload } from 'lucide-react'
+import { Building2, Users, Package, FileText, ArrowRight, Download, Upload, Share2 } from 'lucide-react'
 import { useLanguage } from '../context/LanguageContext'
 import { useData, STORAGE_KEYS } from '../context/DataContext'
 import Card, { CardBody } from '../components/ui/Card'
@@ -12,19 +12,40 @@ export default function Dashboard() {
   const { companies, customers, products, invoices } = useData()
   const backupFileInputRef = useRef(null)
 
-  const handleDownloadBackup = () => {
+  const getBackupFileName = () => `triolasku-backup-${new Date().toISOString().slice(0, 10)}.json`
+
+  const createBackupBlob = () => {
     const backup = {}
     Object.entries(STORAGE_KEYS).forEach(([key, storageKey]) => {
       const data = localStorage.getItem(storageKey)
       if (data) backup[storageKey] = JSON.parse(data)
     })
-    const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' })
+    return new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' })
+  }
+
+  const downloadBlob = (blob) => {
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `triolasku-backup-${new Date().toISOString().slice(0, 10)}.json`
+    a.download = getBackupFileName()
     a.click()
     URL.revokeObjectURL(url)
+  }
+
+  const handleDownloadBackup = async () => {
+    const blob = createBackupBlob()
+    const fileName = getBackupFileName()
+    const file = new File([blob], fileName, { type: 'application/json' })
+
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({ title: 'TrioLasku backup', files: [file] })
+        return
+      } catch (err) {
+        if (err.name === 'AbortError') return
+      }
+    }
+    downloadBlob(blob)
   }
 
   const handleRestoreBackup = (e) => {
@@ -145,9 +166,9 @@ export default function Dashboard() {
           <h2 className="text-lg font-semibold text-gray-900 mb-4">
             {t('dashboard.backup')}
           </h2>
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-3 mb-3">
             <Button variant="secondary" onClick={handleDownloadBackup}>
-              <Download className="w-4 h-4" />
+              <Share2 className="w-4 h-4" />
               {t('dashboard.downloadBackup')}
             </Button>
             <input
@@ -162,6 +183,9 @@ export default function Dashboard() {
               {t('dashboard.restoreBackup')}
             </Button>
           </div>
+          <p className="text-xs text-gray-500">
+            {t('dashboard.backupHint')}
+          </p>
         </CardBody>
       </Card>
 
@@ -169,14 +193,9 @@ export default function Dashboard() {
       {invoices.length > 0 && (
         <Card>
           <CardBody>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-900">
-                {t('dashboard.recentInvoices')}
-              </h2>
-              <Link to="/invoices" className="text-sm text-blue-600 hover:text-blue-800">
-                {t('invoices.title')} →
-              </Link>
-            </div>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+              {t('dashboard.recentInvoices')}
+            </h2>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-gray-50 border-b border-gray-200">
@@ -224,6 +243,16 @@ export default function Dashboard() {
                 </tbody>
               </table>
             </div>
+            {invoices.length > 5 && (
+              <div className="mt-4 text-center">
+                <Link to="/invoices">
+                  <Button variant="secondary">
+                    {t('dashboard.showAll')}
+                    <ArrowRight className="w-4 h-4" />
+                  </Button>
+                </Link>
+              </div>
+            )}
           </CardBody>
         </Card>
       )}
