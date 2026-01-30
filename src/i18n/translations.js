@@ -78,7 +78,7 @@ export const translations = {
       backup: 'Varmuuskopiointi',
       downloadBackup: 'Jaa varmuuskopio',
       restoreBackup: 'Palauta varmuuskopio',
-      backupHint: 'Vinkki: Voit jakaa varmuuskopion suoraan omaan WhatsAppiin tai pilveen. Näin tiedot säilyvät, vaikka puhelin vaihtuisi.',
+      backupHint: 'Varmuuskopio tallentuu laitteesi Lataukset-kansioon. Sieltä voit kopioida sen turvaan pilvipalveluun (esim. Google Drive).',
       showAll: 'Näytä kaikki',
     },
     // Customers
@@ -293,7 +293,7 @@ export const translations = {
       backup: 'Backup',
       downloadBackup: 'Share backup',
       restoreBackup: 'Restore backup',
-      backupHint: 'Tip: You can share the backup directly to WhatsApp or cloud storage. Your data stays safe even if you switch devices.',
+      backupHint: 'The backup is saved to your Downloads folder. From there you can copy it to a cloud service (e.g. Google Drive).',
       showAll: 'Show all',
     },
     // Customers
@@ -508,7 +508,7 @@ export const translations = {
       backup: 'Säkerhetskopiering',
       downloadBackup: 'Dela säkerhetskopia',
       restoreBackup: 'Återställ säkerhetskopia',
-      backupHint: 'Tips: Du kan dela säkerhetskopian direkt till WhatsApp eller molnet. Dina uppgifter bevaras även om du byter enhet.',
+      backupHint: 'Säkerhetskopian sparas i enhetens Nedladdningar-mapp. Därifrån kan du kopiera den till en molntjänst (t.ex. Google Drive).',
       showAll: 'Visa alla',
     },
     // Customers

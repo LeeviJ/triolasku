@@ -197,7 +197,11 @@ export default function Products() {
       if (data) backup[storageKey] = JSON.parse(data)
     })
     const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' })
-    const fileName = `triolasku-backup-${new Date().toISOString().slice(0, 10)}.json`
+    const d = new Date()
+    const dd = String(d.getDate()).padStart(2, '0')
+    const mm = String(d.getMonth() + 1).padStart(2, '0')
+    const yy = String(d.getFullYear()).slice(-2)
+    const fileName = `triolasku_backup_${dd}${mm}${yy}.json`
     const file = new File([blob], fileName, { type: 'application/json' })
 
     if (navigator.canShare && navigator.canShare({ files: [file] })) {

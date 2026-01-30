@@ -12,7 +12,13 @@ export default function Dashboard() {
   const { companies, customers, products, invoices } = useData()
   const backupFileInputRef = useRef(null)
 
-  const getBackupFileName = () => `triolasku-backup-${new Date().toISOString().slice(0, 10)}.json`
+  const getBackupFileName = () => {
+    const d = new Date()
+    const dd = String(d.getDate()).padStart(2, '0')
+    const mm = String(d.getMonth() + 1).padStart(2, '0')
+    const yy = String(d.getFullYear()).slice(-2)
+    return `triolasku_backup_${dd}${mm}${yy}.json`
+  }
 
   const createBackupBlob = () => {
     const backup = {}
