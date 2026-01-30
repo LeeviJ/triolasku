@@ -28,18 +28,20 @@ export default function Invoices() {
   const [deleteConfirm, setDeleteConfirm] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
 
-  // Filter invoices based on search
-  const filteredInvoices = invoices.filter((invoice) => {
-    if (!searchQuery) return true
-    const query = searchQuery.toLowerCase()
-    const customer = customers.find((c) => c.id === invoice.customerId)
-    const company = companies.find((c) => c.id === invoice.companyId)
-    return (
-      invoice.invoiceNumber?.toString().includes(query) ||
-      customer?.name?.toLowerCase().includes(query) ||
-      company?.name?.toLowerCase().includes(query)
-    )
-  })
+  // Filter and sort invoices (newest first)
+  const filteredInvoices = invoices
+    .filter((invoice) => {
+      if (!searchQuery) return true
+      const query = searchQuery.toLowerCase()
+      const customer = customers.find((c) => c.id === invoice.customerId)
+      const company = companies.find((c) => c.id === invoice.companyId)
+      return (
+        invoice.invoiceNumber?.toString().includes(query) ||
+        customer?.name?.toLowerCase().includes(query) ||
+        company?.name?.toLowerCase().includes(query)
+      )
+    })
+    .sort((a, b) => (parseInt(b.invoiceNumber, 10) || 0) - (parseInt(a.invoiceNumber, 10) || 0))
 
   const handleCreate = () => {
     setEditingInvoice(null)

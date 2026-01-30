@@ -5,6 +5,7 @@ import { useLanguage } from '../context/LanguageContext'
 import { useData, STORAGE_KEYS } from '../context/DataContext'
 import Card, { CardBody } from '../components/ui/Card'
 import Button from '../components/ui/Button'
+import { formatPrice, formatDateFI } from '../utils/formatters'
 
 export default function Dashboard() {
   const { t } = useLanguage()
@@ -164,16 +165,64 @@ export default function Dashboard() {
         </CardBody>
       </Card>
 
-      {/* Recent invoices placeholder */}
+      {/* Recent invoices */}
       {invoices.length > 0 && (
         <Card>
           <CardBody>
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
-              {t('dashboard.recentInvoices')}
-            </h2>
-            <div className="text-gray-500 text-sm">
-              {/* Invoice list will be implemented later */}
-              {t('common.noData')}
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-gray-900">
+                {t('dashboard.recentInvoices')}
+              </h2>
+              <Link to="/invoices" className="text-sm text-blue-600 hover:text-blue-800">
+                {t('invoices.title')} →
+              </Link>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">#</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">{t('invoices.invoiceDate')}</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase hidden sm:table-cell">{t('invoices.recipient')}</th>
+                    <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">{t('invoices.total')}</th>
+                    <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">{t('invoices.status')}</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {[...invoices]
+                    .sort((a, b) => (parseInt(b.invoiceNumber, 10) || 0) - (parseInt(a.invoiceNumber, 10) || 0))
+                    .slice(0, 5)
+                    .map((invoice) => {
+                      const customer = customers.find((c) => c.id === invoice.customerId)
+                      const statusStyles = {
+                        draft: 'bg-gray-100 text-gray-700',
+                        sent: 'bg-blue-100 text-blue-700',
+                        paid: 'bg-green-100 text-green-700',
+                        overdue: 'bg-red-100 text-red-700',
+                      }
+                      const statusLabels = {
+                        draft: t('invoices.statusDraft'),
+                        sent: t('invoices.statusSent'),
+                        paid: t('invoices.statusPaid'),
+                        overdue: t('invoices.statusOverdue'),
+                      }
+                      const status = invoice.status || 'draft'
+                      return (
+                        <tr key={invoice.id} className="hover:bg-gray-50">
+                          <td className="px-4 py-2 text-sm font-medium text-gray-900">{invoice.invoiceNumber}</td>
+                          <td className="px-4 py-2 text-sm text-gray-500">{formatDateFI(invoice.invoiceDate)}</td>
+                          <td className="px-4 py-2 text-sm text-gray-900 hidden sm:table-cell">{customer?.name || '-'}</td>
+                          <td className="px-4 py-2 text-sm font-medium text-gray-900 text-right">{formatPrice(invoice.totalGross)} EUR</td>
+                          <td className="px-4 py-2 text-center">
+                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${statusStyles[status] || statusStyles.draft}`}>
+                              {statusLabels[status] || statusLabels.draft}
+                            </span>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                </tbody>
+              </table>
             </div>
           </CardBody>
         </Card>
