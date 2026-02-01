@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, useEffect } from 'react'
+import { createContext, useContext, useState, useEffect, useRef } from 'react'
+import { sendEmailBackup } from '../utils/emailBackup'
 
 const DataContext = createContext()
 
@@ -12,6 +13,12 @@ export const STORAGE_KEYS = {
   invoiceCounter: 'triolasku_invoice_counter',
   vatRates: 'triolasku_vat_rates',
   units: 'triolasku_units',
+  settings: 'triolasku_settings',
+}
+
+const DEFAULT_SETTINGS = {
+  backupEmail: '',
+  autoEmailBackup: false,
 }
 
 const MAX_COMPANIES = 3
@@ -61,6 +68,10 @@ export function DataProvider({ children }) {
   const [units, setUnits] = useState(() =>
     loadFromStorage(STORAGE_KEYS.units, DEFAULT_UNITS)
   )
+  const [settings, setSettings] = useState(() =>
+    loadFromStorage(STORAGE_KEYS.settings, DEFAULT_SETTINGS)
+  )
+  const prevInvoiceLen = useRef(invoices.length)
 
   // Persist to localStorage
   useEffect(() => {
@@ -86,6 +97,19 @@ export function DataProvider({ children }) {
   useEffect(() => {
     saveToStorage(STORAGE_KEYS.units, units)
   }, [units])
+
+  useEffect(() => {
+    saveToStorage(STORAGE_KEYS.settings, settings)
+  }, [settings])
+
+  // Auto email backup when new invoice is added
+  useEffect(() => {
+    if (settings.autoEmailBackup && settings.backupEmail && invoices.length > prevInvoiceLen.current) {
+      const backupData = { companies, customers, products, invoices, vatRates, units, exportedAt: new Date().toISOString() }
+      sendEmailBackup(settings.backupEmail, backupData, 'TrioLasku').catch(() => {})
+    }
+    prevInvoiceLen.current = invoices.length
+  }, [invoices, settings.autoEmailBackup, settings.backupEmail])
 
   // VAT rate operations
   const addVatRate = (rate) => {
@@ -309,6 +333,10 @@ export function DataProvider({ children }) {
     updateInvoice,
     deleteInvoice,
     getNextInvoiceNumberForCompany,
+    // Settings & email backup
+    settings,
+    setSettings,
+    sendEmailBackup,
   }
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>

@@ -1,6 +1,6 @@
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Building2, Users, Package, FileText, ArrowRight, Download, Upload, Share2 } from 'lucide-react'
+import { Building2, Users, Package, FileText, ArrowRight, Download, Upload, Share2, Mail } from 'lucide-react'
 import { useLanguage } from '../context/LanguageContext'
 import { useData, STORAGE_KEYS } from '../context/DataContext'
 import Card, { CardBody } from '../components/ui/Card'
@@ -9,8 +9,9 @@ import { formatPrice, formatDateFI } from '../utils/formatters'
 
 export default function Dashboard() {
   const { t } = useLanguage()
-  const { companies, customers, products, invoices } = useData()
+  const { companies, customers, products, invoices, settings, setSettings, sendEmailBackup: sendEmail } = useData()
   const backupFileInputRef = useRef(null)
+  const [emailMsg, setEmailMsg] = useState(null)
 
   const getBackupFileName = () => {
     const d = new Date()
@@ -188,8 +189,58 @@ export default function Dashboard() {
               <Upload className="w-4 h-4" />
               {t('dashboard.restoreBackup')}
             </Button>
+            <Button
+              variant="secondary"
+              onClick={async () => {
+                if (!settings.backupEmail) { setEmailMsg('Aseta ensin sähköpostiosoite.'); setTimeout(() => setEmailMsg(null), 3000); return }
+                try {
+                  const backupData = {}
+                  Object.entries(STORAGE_KEYS).forEach(([key, storageKey]) => {
+                    const data = localStorage.getItem(storageKey)
+                    if (data) backupData[storageKey] = JSON.parse(data)
+                  })
+                  await sendEmail(settings.backupEmail, backupData, 'TrioLasku')
+                  setEmailMsg('Varmuuskopio lähetetty sähköpostiin!')
+                } catch {
+                  setEmailMsg('Sähköpostin lähetys epäonnistui.')
+                }
+                setTimeout(() => setEmailMsg(null), 3000)
+              }}
+            >
+              <Mail className="w-4 h-4" />
+              Lähetä sähköpostiin
+            </Button>
           </div>
-          <p className="text-xs text-gray-500">
+          {emailMsg && <p className="text-sm text-green-600 mb-3">{emailMsg}</p>}
+
+          {/* Email backup settings */}
+          <div className="border-t border-gray-200 pt-4 mt-4 space-y-3">
+            <h3 className="text-sm font-semibold text-gray-700">Sähköpostivarmuuskopio</h3>
+            <input
+              type="email"
+              value={settings.backupEmail || ''}
+              onChange={(e) => setSettings((prev) => ({ ...prev, backupEmail: e.target.value }))}
+              placeholder="nimi@esimerkki.fi"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+            />
+            <label className="flex items-center justify-between cursor-pointer">
+              <span className="text-sm text-gray-600">Lähetä automaattisesti kun lasku luodaan</span>
+              <div
+                onClick={() => setSettings((prev) => ({ ...prev, autoEmailBackup: !prev.autoEmailBackup }))}
+                className={`relative w-12 h-6 rounded-full transition-colors cursor-pointer ${
+                  settings.autoEmailBackup ? 'bg-green-500' : 'bg-gray-300'
+                }`}
+              >
+                <div
+                  className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${
+                    settings.autoEmailBackup ? 'translate-x-6' : 'translate-x-0.5'
+                  }`}
+                />
+              </div>
+            </label>
+          </div>
+
+          <p className="text-xs text-gray-500 mt-3">
             {t('dashboard.backupHint')}
           </p>
         </CardBody>
