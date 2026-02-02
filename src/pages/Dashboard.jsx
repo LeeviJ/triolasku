@@ -201,8 +201,9 @@ export default function Dashboard() {
                   })
                   await sendEmail(settings.backupEmail, backupData, 'TrioLasku')
                   setEmailMsg('Varmuuskopio lähetetty sähköpostiin!')
-                } catch {
-                  setEmailMsg('Sähköpostin lähetys epäonnistui.')
+                } catch (err) {
+                  console.error('[Dashboard] Email send error:', err)
+                  setEmailMsg(`Sähköpostin lähetys epäonnistui: ${err?.text || err?.message || 'tuntematon virhe'}`)
                 }
                 setTimeout(() => setEmailMsg(null), 3000)
               }}
