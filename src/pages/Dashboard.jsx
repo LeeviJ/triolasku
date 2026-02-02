@@ -41,12 +41,15 @@ export default function Dashboard() {
 
   const handleDownloadBackup = async () => {
     const blob = createBackupBlob()
-    const fileName = getBackupFileName()
-    const file = new File([blob], fileName, { type: 'application/json' })
+    const backupText = await blob.text()
 
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    // Try text-based sharing first (works with Gmail, WhatsApp, etc.)
+    if (navigator.share) {
       try {
-        await navigator.share({ title: 'TrioLasku backup', files: [file] })
+        await navigator.share({
+          title: 'TrioLasku varmuuskopio',
+          text: backupText,
+        })
         return
       } catch (err) {
         if (err.name === 'AbortError') return

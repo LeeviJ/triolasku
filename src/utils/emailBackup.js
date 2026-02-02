@@ -14,36 +14,40 @@ export function sendEmailBackup(email, invoice, appName = 'TrioLasku') {
   const now = new Date()
   const date = `${String(now.getDate()).padStart(2, '0')}.${String(now.getMonth() + 1).padStart(2, '0')}.${now.getFullYear()}`
 
-  const minimal = {
-    n: invoice.invoiceNumber,
-    d: invoice.invoiceDate || invoice.createdAt?.slice(0, 10),
-    s: invoice.totalGross ?? invoice.total ?? null,
-    c: invoice._customerName || null,
-  }
-  const payload = JSON.stringify(minimal)
-  const sizeKb = (new TextEncoder().encode(payload).length / 1024).toFixed(1)
-
-  const amount = invoice.totalGross ?? invoice.total ?? '0'
   const num = invoice.invoiceNumber ?? '-'
+  const amount = Number(invoice.totalGross ?? invoice.total ?? 0).toFixed(2).replace('.', ',')
   const customerName = invoice._customerName || 'Tuntematon asiakas'
+  const companyName = invoice._companyName || appName
+  const invoiceDate = invoice.invoiceDate || invoice.createdAt?.slice(0, 10) || '-'
 
-  const nimi = invoice._companyName || appName
-  const title = `Laskun varmuuskopio: #${num} - ${Number(amount).toFixed(2).replace('.', ',')}€`
-  const sisalto = `${appName} — automaattinen varmuuskopio ${date}\n\nLasku #${num}\nAsiakas: ${customerName}\nPäivämäärä: ${minimal.d || '-'}\nSumma: ${Number(amount).toFixed(2).replace('.', ',')} €\n\n--- JSON-data ---\n${payload}`
+  const body = [
+    `${appName} \u2014 varmuuskopio ${date}`,
+    '',
+    `Lasku #${num}`,
+    `Asiakas: ${customerName}`,
+    `P\u00e4iv\u00e4m\u00e4\u00e4r\u00e4: ${invoiceDate}`,
+    `Summa: ${amount} \u20ac`,
+    '',
+    '--- JSON ---',
+    JSON.stringify({ n: num, d: invoiceDate, s: amount, c: customerName }),
+  ].join('\n')
 
-  const templateParams = {
+  const sizeKb = (new TextEncoder().encode(body).length / 1024).toFixed(1)
+
+  // Send under every possible key spelling so the template finds it
+  const params = {
     to_email: email,
-    email_to: email,
-    email: email,
-    recipient: email,
-    nimi,
-    title,
-    'sisältö': sisalto,
+    nimi: companyName,
+    title: `Laskun varmuuskopio: #${num} - ${amount}\u20ac`,
   }
+  // Cover both sisalto and sisältö - one of them will match the template
+  params.sisalto = body
+  params[decodeURIComponent('sis%C3%A4lt%C3%B6')] = body
 
-  console.log(`[EmailJS] Sending (${sizeKb} kt)`, { to: email, title, nimi })
+  console.log(`[EmailJS] Sending (${sizeKb} kt)`, { to: email, nimi: params.nimi, title: params.title })
+  console.log('[EmailJS] Param keys:', Object.keys(params))
 
-  return emailjs.send(SERVICE_ID, TEMPLATE_ID, templateParams).then(
+  return emailjs.send(SERVICE_ID, TEMPLATE_ID, params).then(
     (response) => {
       console.log('[EmailJS] OK', response.status, response.text)
       return { response, sizeKb }
