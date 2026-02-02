@@ -107,7 +107,8 @@ export function DataProvider({ children }) {
     if (settings.autoEmailBackup && settings.backupEmail && invoices.length > prevInvoiceLen.current) {
       const latest = invoices[invoices.length - 1]
       const customer = customers.find((c) => c.id === latest?.customerId)
-      sendEmailBackup(settings.backupEmail, { ...latest, _customerName: customer?.name }, 'TrioLasku').catch(() => {})
+      const company = companies.find((c) => c.id === latest?.companyId)
+      sendEmailBackup(settings.backupEmail, { ...latest, _customerName: customer?.name, _companyName: company?.name }, 'TrioLasku').catch(() => {})
     }
     prevInvoiceLen.current = invoices.length
   }, [invoices, settings.autoEmailBackup, settings.backupEmail])

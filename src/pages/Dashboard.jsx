@@ -196,7 +196,8 @@ export default function Dashboard() {
                 if (invoices.length === 0) { setEmailMsg('Ei laskuja lähetettäväksi.'); setTimeout(() => setEmailMsg(null), 5000); return }
                 const latest = invoices[invoices.length - 1]
                 const customer = customers.find((c) => c.id === latest?.customerId)
-                const invoiceWithName = { ...latest, _customerName: customer?.name }
+                const company = companies.find((c) => c.id === latest?.companyId)
+                const invoiceWithName = { ...latest, _customerName: customer?.name, _companyName: company?.name }
                 const previewSize = (new TextEncoder().encode(JSON.stringify({ n: latest.invoiceNumber, d: latest.invoiceDate, s: latest.totalGross })).length / 1024).toFixed(1)
                 setEmailMsg(`Yritetään lähettää vain viimeisin lasku (Koko: ${previewSize} kt)...`)
                 try {

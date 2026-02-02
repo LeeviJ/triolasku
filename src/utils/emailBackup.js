@@ -23,18 +23,22 @@ export function sendEmailBackup(email, invoice, appName = 'TrioLasku') {
   const payload = JSON.stringify(minimal)
   const sizeKb = (new TextEncoder().encode(payload).length / 1024).toFixed(1)
 
+  const amount = invoice.totalGross ?? invoice.total ?? '0'
+  const num = invoice.invoiceNumber ?? '-'
+  const title = `Lasku #${num} - ${Number(amount).toFixed(2).replace('.', ',')}€`
+  const nimi = invoice._companyName || appName
+
   const templateParams = {
     to_email: email,
     email_to: email,
     email: email,
     recipient: email,
-    subject: `${appName} Varmuuskopio ${date}`,
-    backup_data: payload,
-    app_name: appName,
-    date,
+    nimi,
+    title,
+    sisalto: payload,
   }
 
-  console.log(`[EmailJS] Sending single invoice backup (${sizeKb} kt)`, { to: email, params: Object.keys(templateParams) })
+  console.log(`[EmailJS] Sending (${sizeKb} kt)`, { to: email, title, nimi })
 
   return emailjs.send(SERVICE_ID, TEMPLATE_ID, templateParams).then(
     (response) => {
