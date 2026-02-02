@@ -12,7 +12,7 @@ export function sendEmailBackup(email, jsonData, appName = 'TrioLasku') {
 
   return emailjs.send(SERVICE_ID, TEMPLATE_ID, {
     to_email: email,
-    subject: `Varmuuskopio: ${appName} ${date}`,
+    subject: `TrioLasku Varmuuskopio ${date}`,
     backup_data: JSON.stringify(jsonData, null, 2),
     app_name: appName,
     date,
