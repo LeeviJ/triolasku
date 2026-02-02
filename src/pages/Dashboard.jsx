@@ -210,7 +210,7 @@ export default function Dashboard() {
               }}
             >
               <Mail className="w-4 h-4" />
-              Lähetä sähköpostiin
+              Lähetä pika-varmuuskopio (vain 5 viimeisintä)
             </Button>
           </div>
           {emailMsg && <p className="text-sm text-green-600 mb-3">{emailMsg}</p>}
@@ -244,7 +244,7 @@ export default function Dashboard() {
 
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-3">
             <p className="text-sm text-blue-800">
-              Sähköpostivarmuuskopio sisältää vain tärkeimmät tiedot koon vuoksi. Käytä &quot;Jaa varmuuskopio&quot; -nappia täydelliseen varmuuskopiointiin.
+              Sähköpostivarmuuskopio sisältää vain 5 viimeisimmän laskun perustiedot (numero, päiväys, summa, asiakas). Täysi varmuuskopiointi on tehtävä manuaalisesti &quot;Jaa varmuuskopio&quot; -toiminnolla.
             </p>
           </div>
           <p className="text-xs text-gray-500 mt-3">
