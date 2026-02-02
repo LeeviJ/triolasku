@@ -112,50 +112,41 @@ export default function InvoicePreview({ invoice, onClose }) {
     }
   }, [virtualBarcode])
 
-  // Remove all stylesheets that contain oklch and force computed colors
-  // as inline styles so html2canvas never encounters oklch()
+  // Fix for Tailwind CSS v4 which generates oklch() colors that html2canvas cannot parse.
+  // Order matters: read computed styles FIRST (browser resolves oklch->rgb), inline them,
+  // THEN remove all stylesheets so html2canvas only sees inline rgb values.
   const fixColorsForHtml2Canvas = (clonedDoc, clonedElement) => {
-    // Step 1: Remove/disable stylesheets containing oklch
-    const sheets = clonedDoc.querySelectorAll('style, link[rel="stylesheet"]')
-    sheets.forEach((sheet) => {
-      try {
-        const text = sheet.textContent || ''
-        if (text.includes('oklch') || text.includes('oklab')) {
-          sheet.remove()
-        }
-      } catch (e) {
-        // cross-origin stylesheet, ignore
-      }
-    })
-
-    // Step 2: Force all computed colors as inline rgb() on every element
-    // Also convert any oklch/oklab values that getComputedStyle may return
     const colorProps = [
       'color', 'background-color', 'border-color',
       'border-top-color', 'border-bottom-color', 'border-left-color', 'border-right-color',
       'box-shadow', 'outline-color', 'text-decoration-color',
     ]
-    const allElements = clonedDoc.querySelectorAll('*')
     const win = clonedDoc.defaultView
 
-    // Helper: convert any oklch/oklab value to a safe fallback
-    const sanitizeColor = (value) => {
-      if (!value || value === 'none' || value === 'transparent') return value
-      if (value.includes('oklch') || value.includes('oklab')) return '#000000'
-      return value
+    const sanitize = (v) => {
+      if (!v || v === 'none' || v === 'transparent') return v
+      if (v.includes('oklch') || v.includes('oklab')) return '#000000'
+      return v
     }
 
+    // Step 1: WHILE stylesheets are still active, read all computed colors
+    // and bake them as inline styles. The browser resolves oklch to rgb for us.
+    const allElements = clonedDoc.querySelectorAll('*')
     for (const el of allElements) {
       const computed = win.getComputedStyle(el)
       for (const prop of colorProps) {
         const resolved = computed.getPropertyValue(prop)
-        if (resolved && resolved !== 'none') {
-          el.style.setProperty(prop, sanitizeColor(resolved), 'important')
+        if (resolved && resolved !== 'none' && resolved !== 'transparent') {
+          el.style.setProperty(prop, sanitize(resolved), 'important')
         }
       }
     }
 
-    // Step 3: Ensure the invoice element is visible and properly positioned
+    // Step 2: NOW remove ALL stylesheets so html2canvas never parses oklch()
+    const sheets = clonedDoc.querySelectorAll('style, link[rel="stylesheet"]')
+    sheets.forEach((sheet) => sheet.remove())
+
+    // Step 3: Ensure the invoice container is visible
     clonedElement.style.visibility = 'visible'
     clonedElement.style.position = 'static'
     clonedElement.style.display = 'block'
