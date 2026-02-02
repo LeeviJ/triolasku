@@ -17,17 +17,20 @@ export function sendEmailBackup(email, invoice, appName = 'TrioLasku') {
   const companyName = invoice._companyName || appName
   const invoiceDate = invoice.invoiceDate || invoice.createdAt?.slice(0, 10) || '-'
 
-  const sisältö = JSON.stringify({ numero: num, pvm: invoiceDate, summa: amount, asiakas: customerName })
-  const sizeKb = (new TextEncoder().encode(sisältö).length / 1024).toFixed(1)
+  const data = JSON.stringify({ numero: num, pvm: invoiceDate, summa: amount, asiakas: customerName })
+  const content = data || 'Varmuuskopiointi epäonnistui - data puuttuu'
+  const sizeKb = (new TextEncoder().encode(content).length / 1024).toFixed(1)
 
-  const templateParams = {
-    to_email: email,
-    nimi: companyName,
-    title: `Laskun varmuuskopio: #${num} - ${amount}€`,
-    sisältö: sisältö,
-  }
+  // Build params object, then assign sisältö key explicitly
+  const templateParams = Object.create(null)
+  templateParams['to_email'] = email
+  templateParams['nimi'] = companyName
+  templateParams['title'] = 'Laskun varmuuskopio: #' + num + ' - ' + amount + '\u20ac'
+  // Assign with literal Unicode key - this is the key EmailJS template {{sisältö}} expects
+  templateParams['sis\u00e4lt\u00f6'] = content
 
-  console.log(`[EmailJS] Sending (${sizeKb} kt)`, templateParams)
+  console.log('[EmailJS] templateParams:', JSON.stringify(templateParams))
+  console.log('[EmailJS] size:', sizeKb, 'kt')
 
   return emailjs.send(SERVICE_ID, TEMPLATE_ID, templateParams).then(
     (response) => {
