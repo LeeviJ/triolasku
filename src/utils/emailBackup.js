@@ -7,6 +7,10 @@ const PUBLIC_KEY = 'lg6qe5VWQC2tML2zo'
 emailjs.init(PUBLIC_KEY)
 
 export function sendEmailBackup(email, invoice, appName = 'TrioLasku') {
+  if (!email || !email.includes('@')) {
+    return Promise.reject(new Error('Sähköpostiosoite puuttuu tai on virheellinen.'))
+  }
+
   const now = new Date()
   const date = `${String(now.getDate()).padStart(2, '0')}.${String(now.getMonth() + 1).padStart(2, '0')}.${now.getFullYear()}`
 
@@ -21,13 +25,16 @@ export function sendEmailBackup(email, invoice, appName = 'TrioLasku') {
 
   const templateParams = {
     to_email: email,
+    email_to: email,
+    email: email,
+    recipient: email,
     subject: `${appName} Varmuuskopio ${date}`,
     backup_data: payload,
     app_name: appName,
     date,
   }
 
-  console.log(`[EmailJS] Sending single invoice backup (${sizeKb} kt)`, { to: email })
+  console.log(`[EmailJS] Sending single invoice backup (${sizeKb} kt)`, { to: email, params: Object.keys(templateParams) })
 
   return emailjs.send(SERVICE_ID, TEMPLATE_ID, templateParams).then(
     (response) => {
