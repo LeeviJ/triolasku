@@ -43,7 +43,7 @@ export default function Dashboard() {
     const blob = createBackupBlob()
     const backupText = await blob.text()
 
-    // Try text-based sharing first (works with Gmail, WhatsApp, etc.)
+    // Try native text sharing first (works with Gmail, WhatsApp, etc.)
     if (navigator.share) {
       try {
         await navigator.share({
@@ -55,6 +55,15 @@ export default function Dashboard() {
         if (err.name === 'AbortError') return
       }
     }
+
+    // Fallback: open mailto: link so Gmail/Outlook opens with content
+    if (settings.backupEmail) {
+      const subject = encodeURIComponent('TrioLasku varmuuskopio')
+      const body = encodeURIComponent(backupText.slice(0, 5000))
+      window.open(`mailto:${settings.backupEmail}?subject=${subject}&body=${body}`, '_blank')
+      return
+    }
+
     downloadBlob(blob)
   }
 
