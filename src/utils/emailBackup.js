@@ -6,37 +6,18 @@ const PUBLIC_KEY = 'lg6qe5VWQC2tML2zo'
 
 emailjs.init(PUBLIC_KEY)
 
-function toUltraLight(data) {
-  const invoices = Array.isArray(data.invoices)
-    ? data.invoices
-    : Array.isArray(data[Object.keys(data).find((k) => k.includes('invoices'))])
-      ? data[Object.keys(data).find((k) => k.includes('invoices'))]
-      : []
-
-  const customers = Array.isArray(data.customers)
-    ? data.customers
-    : Array.isArray(data[Object.keys(data).find((k) => k.includes('customers'))])
-      ? data[Object.keys(data).find((k) => k.includes('customers'))]
-      : []
-
-  const last5 = invoices.slice(-5)
-
-  return last5.map((inv) => {
-    const customer = customers.find((c) => c.id === inv.customerId)
-    return {
-      n: inv.invoiceNumber,
-      d: inv.invoiceDate || inv.createdAt?.slice(0, 10),
-      s: inv.totalGross ?? inv.total ?? null,
-      c: customer?.name || null,
-    }
-  })
-}
-
-export function sendEmailBackup(email, jsonData, appName = 'TrioLasku') {
+export function sendEmailBackup(email, invoice, appName = 'TrioLasku') {
   const now = new Date()
   const date = `${String(now.getDate()).padStart(2, '0')}.${String(now.getMonth() + 1).padStart(2, '0')}.${now.getFullYear()}`
 
-  const payload = JSON.stringify(toUltraLight(jsonData))
+  const minimal = {
+    n: invoice.invoiceNumber,
+    d: invoice.invoiceDate || invoice.createdAt?.slice(0, 10),
+    s: invoice.totalGross ?? invoice.total ?? null,
+    c: invoice._customerName || null,
+  }
+  const payload = JSON.stringify(minimal)
+  const sizeKb = (new TextEncoder().encode(payload).length / 1024).toFixed(1)
 
   const templateParams = {
     to_email: email,
@@ -46,12 +27,12 @@ export function sendEmailBackup(email, jsonData, appName = 'TrioLasku') {
     date,
   }
 
-  console.log('[EmailJS] Sending ultra-light backup...', { service: SERVICE_ID, template: TEMPLATE_ID, to: email, size: payload.length })
+  console.log(`[EmailJS] Sending single invoice backup (${sizeKb} kt)`, { to: email })
 
   return emailjs.send(SERVICE_ID, TEMPLATE_ID, templateParams).then(
     (response) => {
       console.log('[EmailJS] OK', response.status, response.text)
-      return response
+      return { response, sizeKb }
     },
     (error) => {
       console.error('[EmailJS] FAILED', error?.status, error?.text || error)

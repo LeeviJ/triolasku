@@ -192,25 +192,25 @@ export default function Dashboard() {
             <Button
               variant="secondary"
               onClick={async () => {
-                if (!settings.backupEmail) { setEmailMsg('Aseta ensin sähköpostiosoite.'); setTimeout(() => setEmailMsg(null), 3000); return }
-                if (invoices.length === 0) { setEmailMsg('Ei laskuja lähetettäväksi.'); setTimeout(() => setEmailMsg(null), 3000); return }
+                if (!settings.backupEmail) { setEmailMsg('Aseta ensin sähköpostiosoite.'); setTimeout(() => setEmailMsg(null), 5000); return }
+                if (invoices.length === 0) { setEmailMsg('Ei laskuja lähetettäväksi.'); setTimeout(() => setEmailMsg(null), 5000); return }
+                const latest = invoices[invoices.length - 1]
+                const customer = customers.find((c) => c.id === latest?.customerId)
+                const invoiceWithName = { ...latest, _customerName: customer?.name }
+                const previewSize = (new TextEncoder().encode(JSON.stringify({ n: latest.invoiceNumber, d: latest.invoiceDate, s: latest.totalGross })).length / 1024).toFixed(1)
+                setEmailMsg(`Yritetään lähettää vain viimeisin lasku (Koko: ${previewSize} kt)...`)
                 try {
-                  const backupData = {}
-                  Object.entries(STORAGE_KEYS).forEach(([key, storageKey]) => {
-                    const data = localStorage.getItem(storageKey)
-                    if (data) backupData[storageKey] = JSON.parse(data)
-                  })
-                  await sendEmail(settings.backupEmail, backupData, 'TrioLasku')
-                  setEmailMsg('Varmuuskopio lähetetty sähköpostiin!')
+                  const { sizeKb } = await sendEmail(settings.backupEmail, invoiceWithName, 'TrioLasku')
+                  setEmailMsg(`Varmuuskopio lähetetty! (Koko: ${sizeKb} kt)`)
                 } catch (err) {
                   console.error('[Dashboard] Email send error:', err)
-                  setEmailMsg(`Sähköpostin lähetys epäonnistui: ${err?.text || err?.message || 'tuntematon virhe'}`)
+                  setEmailMsg(`Lähetys epäonnistui: ${err?.text || err?.message || 'tuntematon virhe'}`)
                 }
-                setTimeout(() => setEmailMsg(null), 3000)
+                setTimeout(() => setEmailMsg(null), 5000)
               }}
             >
               <Mail className="w-4 h-4" />
-              Lähetä pika-varmuuskopio (vain 5 viimeisintä)
+              Lähetä viimeisin lasku sähköpostiin
             </Button>
           </div>
           {emailMsg && <p className="text-sm text-green-600 mb-3">{emailMsg}</p>}
@@ -244,7 +244,7 @@ export default function Dashboard() {
 
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-3">
             <p className="text-sm text-blue-800">
-              Sähköpostivarmuuskopio sisältää vain 5 viimeisimmän laskun perustiedot (numero, päiväys, summa, asiakas). Täysi varmuuskopiointi on tehtävä manuaalisesti &quot;Jaa varmuuskopio&quot; -toiminnolla.
+              Sähköposti sisältää vain viimeisimmän laskun numeron, päiväyksen ja summan. Täysi varmuuskopiointi on tehtävä manuaalisesti &quot;Jaa varmuuskopio&quot; -toiminnolla.
             </p>
           </div>
           <p className="text-xs text-gray-500 mt-3">
