@@ -4,47 +4,63 @@ const SERVICE_ID = 'service_ntldw1a'
 const TEMPLATE_ID = 'template_57uxo1s'
 const PUBLIC_KEY = 'lg6qe5VWQC2tML2zo'
 
+const FALLBACK_TEXT = 'HUOM: Laskun tiedot olivat tyhjät sovelluksen muistissa'
+
 export function sendEmailBackup(email, invoice, appName = 'TrioLasku') {
   if (!email || !email.includes('@')) {
     return Promise.reject(new Error('Sähköpostiosoite puuttuu tai on virheellinen.'))
   }
 
-  let textContent = 'HUOM: Laskun tiedot olivat tyhjät sovelluksen muistissa'
+  let content = FALLBACK_TEXT
 
   if (invoice && invoice.invoiceNumber) {
     const num = invoice.invoiceNumber
     const amount = Number(invoice.totalGross ?? invoice.total ?? 0).toFixed(2).replace('.', ',')
     const customerName = invoice._customerName || 'Tuntematon asiakas'
     const invoiceDate = invoice.invoiceDate || invoice.createdAt?.slice(0, 10) || '-'
-    textContent = 'Lasku #' + num + ' | ' + invoiceDate + ' | ' + amount + ' EUR | ' + customerName
+    content = 'Lasku #' + num + ' | ' + invoiceDate + ' | ' + amount + ' EUR | ' + customerName
   }
 
   const companyName = (invoice && invoice._companyName) || appName
-  const sizeKb = (new TextEncoder().encode(textContent).length / 1024).toFixed(1)
+  const sizeKb = (new TextEncoder().encode(content).length / 1024).toFixed(1)
 
-  // Plain object literal - key "sisältö" written directly in source
-  const p = {
-    'to_email': email,
-    'nimi': companyName,
-    'title': 'Varmuuskopio',
-    'sisältö': textContent,
-    'sisalto': textContent,
-    'message': textContent,
+  // Use a hidden HTML form + emailjs.sendForm() so that
+  // UTF-8 field names (like "sisältö") are preserved by the browser's
+  // native FormData encoding instead of JS object key serialization.
+  const form = document.createElement('form')
+  form.style.display = 'none'
+
+  const addField = (name, value) => {
+    const input = document.createElement('input')
+    input.type = 'hidden'
+    input.name = name
+    input.value = value
+    form.appendChild(input)
   }
 
-  console.log('[EmailJS] send() with PUBLIC_KEY as 4th arg')
-  console.log('[EmailJS] params:', JSON.stringify(p))
+  addField('to_email', email)
+  addField('nimi', companyName)
+  addField('title', 'Varmuuskopio')
+  addField('sisältö', content)
+  addField('sisalto', content)
+  addField('message', content)
+
+  document.body.appendChild(form)
+
+  console.log('[EmailJS] sendForm() with fields: to_email, nimi, title, sisältö, sisalto, message')
+  console.log('[EmailJS] content:', content)
   console.log('[EmailJS] size:', sizeKb, 'kt')
 
-  // Pass PUBLIC_KEY directly instead of relying on init()
-  return emailjs.send(SERVICE_ID, TEMPLATE_ID, p, PUBLIC_KEY).then(
-    (res) => {
-      console.log('[EmailJS] OK', res.status)
-      return { response: res, sizeKb }
+  return emailjs.sendForm(SERVICE_ID, TEMPLATE_ID, form, PUBLIC_KEY).then(
+    (response) => {
+      document.body.removeChild(form)
+      console.log('[EmailJS] OK', response.status)
+      return { response, sizeKb }
     },
-    (err) => {
-      console.error('[EmailJS] FAILED', err?.status, err?.text || err)
-      throw err
+    (error) => {
+      document.body.removeChild(form)
+      console.error('[EmailJS] FAILED', error?.status, error?.text || error)
+      throw error
     }
   )
 }

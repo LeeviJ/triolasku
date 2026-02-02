@@ -129,6 +129,7 @@ export default function InvoicePreview({ invoice, onClose }) {
     })
 
     // Step 2: Force all computed colors as inline rgb() on every element
+    // Also convert any oklch/oklab values that getComputedStyle may return
     const colorProps = [
       'color', 'background-color', 'border-color',
       'border-top-color', 'border-bottom-color', 'border-left-color', 'border-right-color',
@@ -137,12 +138,19 @@ export default function InvoicePreview({ invoice, onClose }) {
     const allElements = clonedDoc.querySelectorAll('*')
     const win = clonedDoc.defaultView
 
+    // Helper: convert any oklch/oklab value to a safe fallback
+    const sanitizeColor = (value) => {
+      if (!value || value === 'none' || value === 'transparent') return value
+      if (value.includes('oklch') || value.includes('oklab')) return '#000000'
+      return value
+    }
+
     for (const el of allElements) {
       const computed = win.getComputedStyle(el)
       for (const prop of colorProps) {
         const resolved = computed.getPropertyValue(prop)
         if (resolved && resolved !== 'none') {
-          el.style.setProperty(prop, resolved, 'important')
+          el.style.setProperty(prop, sanitizeColor(resolved), 'important')
         }
       }
     }
@@ -214,12 +222,13 @@ export default function InvoicePreview({ invoice, onClose }) {
   }
 
   const handleDownloadPdf = async () => {
+    markAsSent()
     setGenerating(true)
     try {
       const pdf = await generatePdf()
       pdf.save(getFileName())
-      markAsSent()
     } catch (err) {
+      console.error('PDF error:', err)
       alert(`PDF-generointi epäonnistui: ${err.message}`)
     } finally {
       setGenerating(false)
@@ -227,6 +236,7 @@ export default function InvoicePreview({ invoice, onClose }) {
   }
 
   const handleShare = async () => {
+    markAsSent()
     setGenerating(true)
     try {
       const pdf = await generatePdf()
@@ -238,19 +248,13 @@ export default function InvoicePreview({ invoice, onClose }) {
           title: `${docLabel} ${invoice.invoiceNumber}`,
           files: [file],
         })
-        markAsSent()
       } else {
         pdf.save(getFileName())
-        markAsSent()
       }
     } catch (err) {
       if (err.name !== 'AbortError') {
-        try {
-          const pdf = await generatePdf()
-          pdf.save(getFileName())
-        } catch (downloadErr) {
-          alert(`PDF-jako epäonnistui: ${err.message}`)
-        }
+        console.error('Share/PDF error:', err)
+        alert(`PDF-jako epäonnistui: ${err.message}`)
       }
     } finally {
       setGenerating(false)
