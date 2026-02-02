@@ -25,8 +25,11 @@ export function sendEmailBackup(email, invoice, appName = 'TrioLasku') {
 
   const amount = invoice.totalGross ?? invoice.total ?? '0'
   const num = invoice.invoiceNumber ?? '-'
-  const title = `Lasku #${num} - ${Number(amount).toFixed(2).replace('.', ',')}€`
+  const customerName = invoice._customerName || 'Tuntematon asiakas'
+
   const nimi = invoice._companyName || appName
+  const title = `Laskun varmuuskopio: #${num} - ${Number(amount).toFixed(2).replace('.', ',')}€`
+  const sisalto = `${appName} — automaattinen varmuuskopio ${date}\n\nLasku #${num}\nAsiakas: ${customerName}\nPäivämäärä: ${minimal.d || '-'}\nSumma: ${Number(amount).toFixed(2).replace('.', ',')} €\n\n--- JSON-data ---\n${payload}`
 
   const templateParams = {
     to_email: email,
@@ -35,7 +38,7 @@ export function sendEmailBackup(email, invoice, appName = 'TrioLasku') {
     recipient: email,
     nimi,
     title,
-    sisalto: payload,
+    'sisältö': sisalto,
   }
 
   console.log(`[EmailJS] Sending (${sizeKb} kt)`, { to: email, title, nimi })
