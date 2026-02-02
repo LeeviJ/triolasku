@@ -13,7 +13,7 @@ export function sendEmailBackup(email, jsonData, appName = 'TrioLasku') {
   const templateParams = {
     to_email: email,
     subject: `${appName} Varmuuskopio ${date}`,
-    backup_data: JSON.stringify(jsonData, null, 2),
+    backup_data: JSON.stringify(jsonData),
     app_name: appName,
     date,
   }

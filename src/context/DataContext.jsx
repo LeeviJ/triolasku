@@ -102,10 +102,18 @@ export function DataProvider({ children }) {
     saveToStorage(STORAGE_KEYS.settings, settings)
   }, [settings])
 
-  // Auto email backup when new invoice is added
+  // Auto email backup when new invoice is added (send only the latest invoice)
   useEffect(() => {
     if (settings.autoEmailBackup && settings.backupEmail && invoices.length > prevInvoiceLen.current) {
-      const backupData = { companies, customers, products, invoices, vatRates, units, exportedAt: new Date().toISOString() }
+      const latestInvoice = invoices[invoices.length - 1]
+      const company = companies.find((c) => c.id === latestInvoice?.companyId)
+      const customer = customers.find((c) => c.id === latestInvoice?.customerId)
+      const backupData = {
+        invoice: latestInvoice,
+        company: company || null,
+        customer: customer || null,
+        exportedAt: new Date().toISOString(),
+      }
       sendEmailBackup(settings.backupEmail, backupData, 'TrioLasku').catch(() => {})
     }
     prevInvoiceLen.current = invoices.length

@@ -193,12 +193,17 @@ export default function Dashboard() {
               variant="secondary"
               onClick={async () => {
                 if (!settings.backupEmail) { setEmailMsg('Aseta ensin sähköpostiosoite.'); setTimeout(() => setEmailMsg(null), 3000); return }
+                if (invoices.length === 0) { setEmailMsg('Ei laskuja lähetettäväksi.'); setTimeout(() => setEmailMsg(null), 3000); return }
                 try {
-                  const backupData = {}
-                  Object.entries(STORAGE_KEYS).forEach(([key, storageKey]) => {
-                    const data = localStorage.getItem(storageKey)
-                    if (data) backupData[storageKey] = JSON.parse(data)
-                  })
+                  const latestInvoice = invoices[invoices.length - 1]
+                  const company = companies.find((c) => c.id === latestInvoice?.companyId)
+                  const customer = customers.find((c) => c.id === latestInvoice?.customerId)
+                  const backupData = {
+                    invoice: latestInvoice,
+                    company: company || null,
+                    customer: customer || null,
+                    exportedAt: new Date().toISOString(),
+                  }
                   await sendEmail(settings.backupEmail, backupData, 'TrioLasku')
                   setEmailMsg('Varmuuskopio lähetetty sähköpostiin!')
                 } catch (err) {
@@ -241,6 +246,13 @@ export default function Dashboard() {
             </label>
           </div>
 
+          {invoices.length >= 20 && (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mt-3">
+              <p className="text-sm text-yellow-800">
+                Tietokantasi on kasvanut suureksi. Suosittelemme käyttämään manuaalista &quot;Jaa varmuuskopio&quot; -toimintoa säännöllisesti sähköpostin rinnalla.
+              </p>
+            </div>
+          )}
           <p className="text-xs text-gray-500 mt-3">
             {t('dashboard.backupHint')}
           </p>
