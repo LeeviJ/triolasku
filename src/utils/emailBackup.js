@@ -51,29 +51,30 @@ export function sendEmailBackup(email, invoice, appName = 'TrioLasku') {
     return Promise.reject(new Error('Sähköpostiosoite puuttuu tai on virheellinen.'))
   }
 
-  // Build message content - EXACT same as Gmail button
-  const message = 'Lasku nro: ' + String(invoice?.invoiceNumber || '') + ' | Summa: ' + String(invoice?.totalGross || '0')
+  // Build message - includes invoice number, amount, and customer name
+  const invoiceNum = String(invoice?.invoiceNumber || '')
+  const totalAmount = String(invoice?.totalGross || '0')
+  const customerName = String(invoice?._customerName || '')
+
+  // Format: "Lasku nro: 123 | Summa: 150.00 | Asiakas: Firma Oy"
+  const message = 'Lasku nro: ' + invoiceNum + ' | Summa: ' + totalAmount + ' | Asiakas: ' + customerName
   const nimi = String(invoice?._companyName || appName)
 
-  console.log('[EmailJS] message:', message)
-  console.log('[EmailJS] nimi:', nimi)
+  console.log('[EmailJS] Sending message:', message)
 
-  // Send with "message" field name instead of "sisalto"
+  // ONLY use 'message' field - nothing else
   return emailjs.send(SERVICE_ID, TEMPLATE_ID, {
     to_email: email,
     nimi: nimi,
     title: 'Varmuuskopio',
-    message: message,
-    sisalto: message,
-    content: message,
-    body: message
+    message: message
   }, PUBLIC_KEY).then(
     (res) => {
-      console.log('[EmailJS] SUCCESS')
+      console.log('[EmailJS] OK')
       return { response: res, message: message }
     },
     (err) => {
-      console.error('[EmailJS] FAILED:', err)
+      console.error('[EmailJS] FAIL:', err)
       throw err
     }
   )
