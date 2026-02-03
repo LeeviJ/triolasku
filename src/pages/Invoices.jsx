@@ -96,22 +96,20 @@ export default function Invoices() {
     )
   }
 
-  // Get company name - use embedded data if company was deleted
+  // Get company name - use snapshot if company was deleted
   const getCompanyName = (invoice) => {
     const company = companies.find((c) => c.id === invoice.companyId)
     if (company) return company.name
-    // Fallback to embedded data
-    if (invoice._companyName) return invoice._companyName + ' (poistettu)'
-    return '-'
+    // Use snapshot data
+    return invoice._companyName || '-'
   }
 
-  // Get customer name - use embedded data if customer was deleted
+  // Get customer name - use snapshot if customer was deleted
   const getCustomerName = (invoice) => {
     const customer = customers.find((c) => c.id === invoice.customerId)
     if (customer) return customer.name
-    // Fallback to embedded data
-    if (invoice._customerName) return invoice._customerName + ' (poistettu)'
-    return 'Poistettu asiakas'
+    // Use snapshot data (customer was deleted but data preserved)
+    return invoice._customerName || '-'
   }
 
   // Check if we can create invoices

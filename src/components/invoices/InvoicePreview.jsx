@@ -231,7 +231,8 @@ export default function InvoicePreview({ invoice, onClose }) {
   }
 
   const markAsSent = () => {
-    if (invoice.id && (!invoice.status || invoice.status === 'draft')) {
+    // Mark as 'sent' when PDF is downloaded (from draft or ready status)
+    if (invoice.id && (!invoice.status || invoice.status === 'draft' || invoice.status === 'ready')) {
       updateInvoice(invoice.id, { status: 'sent' })
       setStatusNotice(true)
       setTimeout(() => setStatusNotice(false), 3000)

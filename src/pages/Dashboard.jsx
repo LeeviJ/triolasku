@@ -213,16 +213,12 @@ export default function Dashboard() {
                 const company = companies.find((c) => c.id === latest?.companyId)
                 const invoiceWithName = { ...latest, _companyName: company?.name }
 
-                // message is built inside sendEmail: "Lasku nro: X | Summa: Y EUR"
-                console.log('[Dashboard] Sending email for invoice:', latest.invoiceNumber)
-
                 setEmailMsg('Lähetetään...')
                 try {
                   await sendEmail(settings.backupEmail, invoiceWithName, 'TrioLasku')
                   setEmailMsg('Varmuuskopio lähetetty!')
                   setTimeout(() => setEmailMsg(null), 5000)
-                } catch (err) {
-                  console.error('[Dashboard] Email error:', err)
+                } catch {
                   setEmailMsg('Lähetys epäonnistui. Käytä "Lähetä Gmaililla" -nappia.')
                 }
               }}
@@ -242,11 +238,10 @@ export default function Dashboard() {
                 // Build message: "Lasku nro: X | Summa: Y EUR"
                 const message = 'Lasku nro: ' + String(latest.invoiceNumber || '') + ' | Summa: ' + String(latest.totalGross || '0') + ' EUR'
 
-                // Direct Gmail URL with hardcoded email
+                // Gmail URL
                 const gmailUrl = 'https://mail.google.com/mail/?view=cm&fs=1&to=leevi.latvatalo@gmail.com&su=' + encodeURIComponent('Varmuuskopio') + '&body=' + encodeURIComponent(message)
 
-                console.log('[Dashboard] Gmail URL:', gmailUrl)
-                // Open as popup window sized for tablet (600x700)
+                // Open popup sized for tablet
                 const popupWidth = 600
                 const popupHeight = 700
                 const left = (window.screen.width - popupWidth) / 2

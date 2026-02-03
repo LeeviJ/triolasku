@@ -244,16 +244,12 @@ export default function InvoiceForm({ invoice, onClose, onPreview }) {
       _companyLogo: company?.logo || '',
     }
 
-    // STEP 3: SAVE NOW - synchronous, immediate, no waiting
-    console.log('[InvoiceForm] SAVING with status:', invoiceData.status)
+    // SAVE NOW - synchronous, immediate
     if (invoice) {
       updateInvoice(invoice.id, invoiceData)
     } else {
       addInvoice(invoiceData)
     }
-    console.log('[InvoiceForm] SAVED - status is now ready')
-
-    // PDF/Email run in background via DataContext useEffect - we don't wait
 
     setSaved(true)
     setTimeout(() => {

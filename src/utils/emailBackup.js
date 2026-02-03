@@ -28,22 +28,10 @@ export function sendEmailBackup(email, invoice, appName = 'TrioLasku') {
   const message = 'Lasku nro: ' + String(invoice?.invoiceNumber || '') + ' | Summa: ' + String(invoice?.totalGross || '0') + ' EUR'
   const nimi = String(invoice?._companyName || appName)
 
-  console.log('[EmailJS] message:', message)
-
-  // Send with ONLY 'message' field
   return emailjs.send(SERVICE_ID, TEMPLATE_ID, {
     to_email: email,
     nimi: nimi,
     title: 'Varmuuskopio',
     message: message
-  }, PUBLIC_KEY).then(
-    (res) => {
-      console.log('[EmailJS] OK')
-      return { response: res, message: message }
-    },
-    (err) => {
-      console.error('[EmailJS] FAIL:', err)
-      throw err
-    }
-  )
+  }, PUBLIC_KEY)
 }
