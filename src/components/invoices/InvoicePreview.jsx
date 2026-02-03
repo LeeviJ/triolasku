@@ -240,11 +240,12 @@ export default function InvoicePreview({ invoice, onClose }) {
   }
 
   const handleDownloadPdf = async () => {
-    markAsSent()
     setGenerating(true)
     try {
       const pdf = await generatePdf()
       pdf.save(getFileName())
+      // Mark as sent ONLY after successful PDF generation
+      markAsSent()
     } catch (err) {
       console.error('PDF error:', err)
       alert(`PDF-generointi epäonnistui: ${err.message}`)
@@ -254,7 +255,6 @@ export default function InvoicePreview({ invoice, onClose }) {
   }
 
   const handleShare = async () => {
-    markAsSent()
     setGenerating(true)
     try {
       const pdf = await generatePdf()
@@ -269,6 +269,8 @@ export default function InvoicePreview({ invoice, onClose }) {
       } else {
         pdf.save(getFileName())
       }
+      // Mark as sent ONLY after successful share/download
+      markAsSent()
     } catch (err) {
       if (err.name !== 'AbortError') {
         console.error('Share/PDF error:', err)

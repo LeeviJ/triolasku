@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Building2, Users, Package, FileText, ArrowRight, Download, Upload, Share2, Mail, ExternalLink } from 'lucide-react'
+import { Building2, Users, Package, FileText, ArrowRight, Download, Upload, Mail, ExternalLink } from 'lucide-react'
 import { useLanguage } from '../context/LanguageContext'
 import { useData, STORAGE_KEYS } from '../context/DataContext'
 import Card, { CardBody } from '../components/ui/Card'
@@ -15,11 +15,7 @@ export default function Dashboard() {
   const [emailMsg, setEmailMsg] = useState(null)
 
   const getBackupFileName = () => {
-    const d = new Date()
-    const dd = String(d.getDate()).padStart(2, '0')
-    const mm = String(d.getMonth() + 1).padStart(2, '0')
-    const yy = String(d.getFullYear()).slice(-2)
-    return `triolasku_backup_${dd}${mm}${yy}.json`
+    return 'triolasku_varmuuskopio.json'
   }
 
   const createBackupBlob = () => {
@@ -166,7 +162,7 @@ export default function Dashboard() {
           </h2>
           <div className="flex flex-wrap gap-3 mb-3">
             <Button variant="secondary" onClick={handleDownloadBackup}>
-              <Share2 className="w-4 h-4" />
+              <Download className="w-4 h-4" />
               {t('dashboard.downloadBackup')}
             </Button>
             <input
