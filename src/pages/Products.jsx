@@ -211,16 +211,41 @@ export default function Products() {
   const handleRestoreBackup = (e) => {
     const file = e.target.files?.[0]
     if (!file) return
+
+    // Reset file input so same file can be selected again
+    e.target.value = ''
+
+    // Confirmation dialog
+    const confirmed = window.confirm(
+      'Oletko varma? Tämä poistaa kaikki nykyiset tiedot ja korvaa ne varmuuskopion tiedoilla.'
+    )
+    if (!confirmed) return
+
     const reader = new FileReader()
     reader.onload = (event) => {
       try {
         const backup = JSON.parse(event.target.result)
+
+        // Validate that it looks like a TrioLasku backup
+        const validKeys = Object.values(STORAGE_KEYS)
+        const backupKeys = Object.keys(backup)
+        const hasValidData = backupKeys.some(key => validKeys.includes(key))
+
+        if (!hasValidData) {
+          alert('Virheellinen tiedosto. Valitse oikea .json-varmuuskopio.')
+          return
+        }
+
+        // Restore data to localStorage
         Object.entries(backup).forEach(([key, value]) => {
           localStorage.setItem(key, JSON.stringify(value))
         })
+
+        // Success message and reload
+        alert('Tiedot palautettu! Sivu ladataan uudelleen...')
         window.location.reload()
       } catch {
-        alert('Invalid backup file')
+        alert('Virheellinen tiedosto. Valitse oikea .json-varmuuskopio.')
       }
     }
     reader.readAsText(file)
