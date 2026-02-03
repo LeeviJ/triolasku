@@ -326,12 +326,14 @@ export default function Dashboard() {
                       const customer = customers.find((c) => c.id === invoice.customerId)
                       const statusStyles = {
                         draft: 'bg-gray-100 text-gray-700',
+                        ready: 'bg-purple-100 text-purple-700',
                         sent: 'bg-blue-100 text-blue-700',
                         paid: 'bg-green-100 text-green-700',
                         overdue: 'bg-red-100 text-red-700',
                       }
                       const statusLabels = {
                         draft: t('invoices.statusDraft'),
+                        ready: t('invoices.statusReady'),
                         sent: t('invoices.statusSent'),
                         paid: t('invoices.statusPaid'),
                         overdue: t('invoices.statusOverdue'),

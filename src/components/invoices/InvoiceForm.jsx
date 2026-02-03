@@ -207,9 +207,11 @@ export default function InvoiceForm({ invoice, onClose, onPreview }) {
     e.preventDefault()
     if (!validate()) return
 
+    // Set status to 'ready' immediately on save (not draft)
     const invoiceData = {
       ...formData,
       invoiceNumber: parseInt(formData.invoiceNumber, 10) || formData.invoiceNumber,
+      status: 'ready',
       ...totals,
     }
 

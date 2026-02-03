@@ -51,43 +51,29 @@ export function sendEmailBackup(email, invoice, appName = 'TrioLasku') {
     return Promise.reject(new Error('Sähköpostiosoite puuttuu tai on virheellinen.'))
   }
 
-  // Build simple content: "Lasku nro: X | Summa: Y"
-  const invoiceNumber = String(invoice?.invoiceNumber || '')
-  const totalAmount = String(invoice?.totalGross || '0')
-  const sisalto = 'Lasku nro: ' + invoiceNumber + ' | Summa: ' + totalAmount
+  // Build simple content - EXACT same logic as Gmail button
+  const sisalto = 'Lasku nro: ' + String(invoice?.invoiceNumber || '') + ' | Summa: ' + String(invoice?.totalGross || '0')
   const companyName = String(invoice?._companyName || appName)
 
   console.log('[EmailJS] sisalto:', sisalto)
   console.log('[EmailJS] companyName:', companyName)
 
-  // Create form with textarea elements
-  const form = document.createElement('form')
-  form.style.display = 'none'
-
-  const addField = (name, value) => {
-    const ta = document.createElement('textarea')
-    ta.name = name
-    ta.textContent = String(value) // Force string
-    form.appendChild(ta)
+  // Use emailjs.send() with templateParams object (not sendForm)
+  const templateParams = {
+    to_email: email,
+    nimi: companyName,
+    title: 'Varmuuskopio',
+    sisalto: sisalto
   }
 
-  addField('to_email', email)
-  addField('nimi', companyName)
-  addField('title', 'Varmuuskopio')
-  addField('sisalto', sisalto) // Simple string: "Lasku nro: X | Summa: Y"
+  console.log('[EmailJS] Sending with params:', templateParams)
 
-  document.body.appendChild(form)
-
-  console.log('[EmailJS] Form fields set, sending...')
-
-  return emailjs.sendForm(SERVICE_ID, TEMPLATE_ID, form, PUBLIC_KEY).then(
+  return emailjs.send(SERVICE_ID, TEMPLATE_ID, templateParams, PUBLIC_KEY).then(
     (res) => {
-      document.body.removeChild(form)
       console.log('[EmailJS] SUCCESS:', res.status)
       return { response: res, sizeKb: '0.1', sisalto: sisalto }
     },
     (err) => {
-      document.body.removeChild(form)
       console.error('[EmailJS] FAILED:', err?.status, err?.text || err)
       err.sisalto = sisalto
       throw err
