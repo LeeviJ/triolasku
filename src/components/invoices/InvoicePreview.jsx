@@ -16,8 +16,32 @@ export default function InvoicePreview({ invoice, onClose }) {
   const [generating, setGenerating] = useState(false)
   const [statusNotice, setStatusNotice] = useState(false)
 
-  const company = invoice.company || companies.find((c) => c.id === invoice.companyId)
-  const customer = invoice.customer || customers.find((c) => c.id === invoice.customerId)
+  // Use live data if available, fallback to embedded data (survives deletion)
+  const liveCompany = companies.find((c) => c.id === invoice.companyId)
+  const liveCustomer = customers.find((c) => c.id === invoice.customerId)
+
+  // Build company object from embedded data if company was deleted
+  const company = invoice.company || liveCompany || {
+    name: invoice._companyName || '',
+    businessId: invoice._companyBusinessId || '',
+    vatNumber: invoice._companyVatNumber || '',
+    streetAddress: invoice._companyAddress || '',
+    postalCode: invoice._companyPostalCode || '',
+    city: invoice._companyCity || '',
+    phone: invoice._companyPhone || '',
+    email: invoice._companyEmail || '',
+    bankAccounts: invoice.company?.bankAccounts || [],
+  }
+
+  // Build customer object from embedded data if customer was deleted
+  const customer = invoice.customer || liveCustomer || {
+    name: invoice._customerName || '',
+    businessId: invoice._customerBusinessId || '',
+    streetAddress: invoice._customerAddress || '',
+    postalCode: invoice._customerPostalCode || '',
+    city: invoice._customerCity || '',
+    contactPerson: invoice._customerContactPerson || '',
+  }
 
   const isReceipt = invoice.paymentMethod && invoice.paymentMethod !== 'invoice'
   const docLabel = isReceipt
@@ -25,7 +49,7 @@ export default function InvoicePreview({ invoice, onClose }) {
     : (language === 'fi' ? 'Lasku' : language === 'sv' ? 'Faktura' : 'Invoice')
 
   const getFileName = () => {
-    const companyName = (company?.name || 'Yritys').replace(/[^a-zA-Z0-9äöåÄÖÅ]/g, '_')
+    const companyName = (company?.name || invoice._companyName || 'Yritys').replace(/[^a-zA-Z0-9äöåÄÖÅ]/g, '_')
     return `${docLabel}_${invoice.invoiceNumber}_${companyName}.pdf`
   }
 

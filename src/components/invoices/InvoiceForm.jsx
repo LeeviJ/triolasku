@@ -207,12 +207,34 @@ export default function InvoiceForm({ invoice, onClose, onPreview }) {
     e.preventDefault()
     if (!validate()) return
 
-    // Set status to 'ready' immediately on save (not draft)
+    // Find customer and company data
+    const customer = customers.find((c) => c.id === formData.customerId)
+    const company = companies.find((c) => c.id === formData.companyId)
+
+    // Set status to 'ready' immediately on save
+    // IMPORTANT: Embed customer/company data directly into invoice to prevent "ghost invoices"
+    // This ensures invoice data persists even if customer/company is later deleted
     const invoiceData = {
       ...formData,
       invoiceNumber: parseInt(formData.invoiceNumber, 10) || formData.invoiceNumber,
       status: 'ready',
       ...totals,
+      // Embedded customer data (survives customer deletion)
+      _customerName: customer?.name || '',
+      _customerBusinessId: customer?.businessId || '',
+      _customerAddress: customer?.streetAddress || '',
+      _customerPostalCode: customer?.postalCode || '',
+      _customerCity: customer?.city || '',
+      _customerContactPerson: customer?.contactPerson || '',
+      // Embedded company data (survives company deletion)
+      _companyName: company?.name || '',
+      _companyBusinessId: company?.businessId || '',
+      _companyVatNumber: company?.vatNumber || '',
+      _companyAddress: company?.streetAddress || '',
+      _companyPostalCode: company?.postalCode || '',
+      _companyCity: company?.city || '',
+      _companyPhone: company?.phone || '',
+      _companyEmail: company?.email || '',
     }
 
     if (invoice) {

@@ -96,14 +96,22 @@ export default function Invoices() {
     )
   }
 
-  const getCompanyName = (companyId) => {
-    const company = companies.find((c) => c.id === companyId)
-    return company?.name || '-'
+  // Get company name - use embedded data if company was deleted
+  const getCompanyName = (invoice) => {
+    const company = companies.find((c) => c.id === invoice.companyId)
+    if (company) return company.name
+    // Fallback to embedded data
+    if (invoice._companyName) return invoice._companyName + ' (poistettu)'
+    return '-'
   }
 
-  const getCustomerName = (customerId) => {
-    const customer = customers.find((c) => c.id === customerId)
-    return customer?.name || '-'
+  // Get customer name - use embedded data if customer was deleted
+  const getCustomerName = (invoice) => {
+    const customer = customers.find((c) => c.id === invoice.customerId)
+    if (customer) return customer.name
+    // Fallback to embedded data
+    if (invoice._customerName) return invoice._customerName + ' (poistettu)'
+    return 'Poistettu asiakas'
   }
 
   // Check if we can create invoices
@@ -244,10 +252,10 @@ export default function Invoices() {
                       {formatDateFI(invoice.invoiceDate)}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-500 hidden md:table-cell">
-                      {getCompanyName(invoice.companyId)}
+                      {getCompanyName(invoice)}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-900">
-                      {getCustomerName(invoice.customerId)}
+                      {getCustomerName(invoice)}
                     </td>
                     <td className="px-4 py-3 text-sm font-medium text-gray-900 text-right hidden sm:table-cell">
                       {formatPrice(invoice.totalGross)} {t('invoices.currency')}

@@ -348,7 +348,7 @@ export default function Dashboard() {
                         <tr key={invoice.id} className="hover:bg-gray-50">
                           <td className="px-4 py-2 text-sm font-medium text-gray-900">{invoice.invoiceNumber}</td>
                           <td className="px-4 py-2 text-sm text-gray-500">{formatDateFI(invoice.invoiceDate)}</td>
-                          <td className="px-4 py-2 text-sm text-gray-900 hidden sm:table-cell">{customer?.name || '-'}</td>
+                          <td className="px-4 py-2 text-sm text-gray-900 hidden sm:table-cell">{customer?.name || invoice._customerName || '-'}</td>
                           <td className="px-4 py-2 text-sm font-medium text-gray-900 text-right">{formatPrice(invoice.totalGross)} EUR</td>
                           <td className="px-4 py-2 text-center">
                             <span className={`px-2 py-1 text-xs font-medium rounded-full ${statusStyles[status] || statusStyles.draft}`}>
