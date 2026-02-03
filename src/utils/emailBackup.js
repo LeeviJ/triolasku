@@ -81,12 +81,13 @@ export function sendEmailBackup(email, invoice, appName = 'TrioLasku') {
   addField('to_email', email)
   addField('nimi', companyName)
   addField('title', 'Varmuuskopio')
-  // The exact field name the EmailJS template uses: {{sisältö}}
-  addField('sisältö', text)
+  // Use 'sisalto' without ä - special characters may cause encoding issues with EmailJS
+  // NOTE: User must also update EmailJS template to use {{sisalto}} instead of {{sisältö}}
+  addField('sisalto', text)
 
   document.body.appendChild(form)
 
-  console.log('[EmailJS] Sending:', { nimi: companyName, title: 'Varmuuskopio', 'sisältö': text })
+  console.log('[EmailJS] Sending:', { nimi: companyName, title: 'Varmuuskopio', sisalto: text })
 
   return emailjs.sendForm(SERVICE_ID, TEMPLATE_ID, form, PUBLIC_KEY).then(
     (res) => {

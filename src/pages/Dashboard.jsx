@@ -13,8 +13,6 @@ export default function Dashboard() {
   const { companies, customers, products, invoices, settings, setSettings, sendEmailBackup: sendEmail } = useData()
   const backupFileInputRef = useRef(null)
   const [emailMsg, setEmailMsg] = useState(null)
-  const [showGmailFallback, setShowGmailFallback] = useState(false)
-  const [gmailFallbackData, setGmailFallbackData] = useState(null)
 
   const getBackupFileName = () => {
     const d = new Date()
@@ -228,37 +226,42 @@ export default function Dashboard() {
                   setTimeout(() => setEmailMsg(null), 5000)
                 } catch (err) {
                   console.error('[Dashboard] Email send error:', err)
-                  setEmailMsg(`Automaattinen lähetys epäonnistui. Käytä alla olevaa Gmail-linkkiä.`)
-                  // Store data for Gmail fallback
-                  setGmailFallbackData({
-                    email: settings.backupEmail,
-                    subject: `TrioLasku varmuuskopio - Lasku ${cached.invoiceNumber || ''}`,
-                    body: cached.text
-                  })
-                  setShowGmailFallback(true)
+                  setEmailMsg(`Automaattinen lähetys epäonnistui. Käytä "Jaa Gmaililla" -nappia.`)
+                  setShowGmailFallback(false)
                 }
               }}
             >
               <Mail className="w-4 h-4" />
               Lähetä viimeisin lasku sähköpostiin
             </Button>
-          </div>
-          {emailMsg && <p className={`text-sm mb-3 ${showGmailFallback ? 'text-orange-600' : 'text-green-600'}`}>{emailMsg}</p>}
-          {showGmailFallback && gmailFallbackData && (
+            {/* Direct Gmail button - always visible, bypasses Outlook completely */}
             <Button
               variant="secondary"
               onClick={() => {
-                openGmailCompose(gmailFallbackData.email, gmailFallbackData.subject, gmailFallbackData.body)
+                if (!settings.backupEmail) { setEmailMsg('Aseta ensin sähköpostiosoite.'); setTimeout(() => setEmailMsg(null), 5000); return }
+                if (invoices.length === 0) { setEmailMsg('Ei laskuja lähetettäväksi.'); setTimeout(() => setEmailMsg(null), 5000); return }
+                const latest = invoices[invoices.length - 1]
+                const customer = customers.find((c) => c.id === latest?.customerId)
+                const company = companies.find((c) => c.id === latest?.companyId)
+                const invoiceWithName = { ...latest, _customerName: customer?.name, _companyName: company?.name }
+
+                // Build content for Gmail
+                const cached = cacheEmailContent(invoiceWithName, 'TrioLasku')
+                const subject = `TrioLasku varmuuskopio - Lasku ${cached.invoiceNumber || ''}`
+                const body = cached.text
+
+                // Open Gmail directly in new tab - bypasses Windows Outlook forcing
+                openGmailCompose(settings.backupEmail, subject, body)
                 setEmailMsg('Gmail avattu uuteen välilehteen.')
-                setShowGmailFallback(false)
                 setTimeout(() => setEmailMsg(null), 3000)
               }}
-              className="mb-3 bg-red-50 border-red-200 text-red-700 hover:bg-red-100"
+              className="bg-red-50 border-red-300 text-red-700 hover:bg-red-100"
             >
               <ExternalLink className="w-4 h-4" />
-              Avaa Gmail-verkkosivu (ohittaa Outlookin)
+              Jaa Gmaililla
             </Button>
-          )}
+          </div>
+          {emailMsg && <p className={`text-sm mb-3 ${emailMsg.includes('epäonnistui') ? 'text-orange-600' : 'text-green-600'}`}>{emailMsg}</p>}
 
           {/* Email backup settings */}
           <div className="border-t border-gray-200 pt-4 mt-4 space-y-3">
