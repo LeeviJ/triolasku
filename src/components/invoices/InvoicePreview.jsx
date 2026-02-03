@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect } from 'react'
-import { ArrowLeft, Printer, Download, Share2, Check } from 'lucide-react'
+import { ArrowLeft, Printer, Download, Check } from 'lucide-react'
 import html2canvas from 'html2canvas'
 import { jsPDF } from 'jspdf'
 import JsBarcode from 'jsbarcode'
@@ -254,34 +254,7 @@ export default function InvoicePreview({ invoice, onClose }) {
     }
   }
 
-  const handleShare = async () => {
-    setGenerating(true)
-    try {
-      const pdf = await generatePdf()
-      const blob = pdf.output('blob')
-      const file = new File([blob], getFileName(), { type: 'application/pdf' })
-
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({
-          title: `${docLabel} ${invoice.invoiceNumber}`,
-          files: [file],
-        })
-      } else {
-        pdf.save(getFileName())
-      }
-      // Mark as sent ONLY after successful share/download
-      markAsSent()
-    } catch (err) {
-      if (err.name !== 'AbortError') {
-        console.error('Share/PDF error:', err)
-        alert(`PDF-jako epäonnistui: ${err.message}`)
-      }
-    } finally {
-      setGenerating(false)
-    }
-  }
-
-  const canShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function'
+  // Share removed - just use download to avoid "Share too large" errors
 
   return (
     <div className="max-w-5xl mx-auto">
@@ -300,12 +273,6 @@ export default function InvoicePreview({ invoice, onClose }) {
             <Download className="w-4 h-4" />
             {generating ? t('common.loading') : t('invoices.download')}
           </Button>
-          {canShare && (
-            <Button variant="secondary" onClick={handleShare} disabled={generating}>
-              <Share2 className="w-4 h-4" />
-              {language === 'fi' ? 'Jaa' : language === 'sv' ? 'Dela' : 'Share'}
-            </Button>
-          )}
         </div>
       </div>
 

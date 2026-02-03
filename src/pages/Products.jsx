@@ -191,7 +191,7 @@ export default function Products() {
   }
 
   const handleDownloadBackup = () => {
-    // Direct file download - no navigator.share to avoid "Share too large" error
+    // Direct file download - completely invisible, no share or popup
     const backup = {}
     Object.entries(STORAGE_KEYS).forEach(([key, storageKey]) => {
       const data = localStorage.getItem(storageKey)
@@ -202,7 +202,9 @@ export default function Products() {
     const a = document.createElement('a')
     a.href = url
     a.download = 'triolasku_backup.json'
+    document.body.appendChild(a)
     a.click()
+    document.body.removeChild(a)
     URL.revokeObjectURL(url)
   }
 

@@ -14,32 +14,22 @@ export default function Dashboard() {
   const backupFileInputRef = useRef(null)
   const [emailMsg, setEmailMsg] = useState(null)
 
-  const getBackupFileName = () => {
-    return 'triolasku_backup.json'
-  }
-
-  const createBackupBlob = () => {
+  const handleDownloadBackup = () => {
+    // Direct file download - completely invisible, no share or popup
     const backup = {}
     Object.entries(STORAGE_KEYS).forEach(([key, storageKey]) => {
       const data = localStorage.getItem(storageKey)
       if (data) backup[storageKey] = JSON.parse(data)
     })
-    return new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' })
-  }
-
-  const downloadBlob = (blob) => {
+    const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = getBackupFileName()
+    a.download = 'triolasku_backup.json'
+    document.body.appendChild(a)
     a.click()
+    document.body.removeChild(a)
     URL.revokeObjectURL(url)
-  }
-
-  const handleDownloadBackup = () => {
-    // Direct file download - no navigator.share or window.open to avoid tablet freezing
-    const blob = createBackupBlob()
-    downloadBlob(blob)
   }
 
   const handleRestoreBackup = (e) => {

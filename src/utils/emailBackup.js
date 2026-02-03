@@ -5,17 +5,6 @@ const TEMPLATE_ID = 'template_57uxo1s'
 const PUBLIC_KEY = 'lg6qe5VWQC2tML2zo'
 
 /**
- * Open Gmail compose - bypasses Outlook
- */
-export function openGmailCompose(email, subject, body) {
-  const url = 'https://mail.google.com/mail/?view=cm&fs=1' +
-    '&to=' + encodeURIComponent(email) +
-    '&su=' + encodeURIComponent(subject) +
-    '&body=' + encodeURIComponent(body)
-  window.open(url, '_blank')
-}
-
-/**
  * Send email backup via EmailJS
  * Uses ONLY 'message' field with rich content
  */
