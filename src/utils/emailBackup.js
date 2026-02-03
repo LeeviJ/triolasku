@@ -51,22 +51,28 @@ export function sendEmailBackup(email, invoice, appName = 'TrioLasku') {
     return Promise.reject(new Error('Sähköpostiosoite puuttuu tai on virheellinen.'))
   }
 
-  // Build simple content - EXACT same logic as Gmail button
-  const sisalto = 'Lasku nro: ' + String(invoice?.invoiceNumber || '') + ' | Summa: ' + String(invoice?.totalGross || '0')
+  // EXACT same logic as Gmail button - build content string
+  const invoiceNumber = String(invoice?.invoiceNumber || '')
+  const totalAmount = String(invoice?.totalGross || '0')
+  const sisalto = 'Lasku nro: ' + invoiceNumber + ' | Summa: ' + totalAmount
   const companyName = String(invoice?._companyName || appName)
 
-  console.log('[EmailJS] sisalto:', sisalto)
-  console.log('[EmailJS] companyName:', companyName)
+  console.log('[EmailJS] FINAL sisalto:', sisalto)
+  console.log('[EmailJS] FINAL companyName:', companyName)
 
-  // Use emailjs.send() with templateParams object (not sendForm)
+  // EmailJS template params - try multiple field names for compatibility
   const templateParams = {
     to_email: email,
     nimi: companyName,
     title: 'Varmuuskopio',
-    sisalto: sisalto
+    sisalto: sisalto,
+    // Also set common alternative field names
+    message: sisalto,
+    content: sisalto,
+    body: sisalto
   }
 
-  console.log('[EmailJS] Sending with params:', templateParams)
+  console.log('[EmailJS] Sending with params:', JSON.stringify(templateParams))
 
   return emailjs.send(SERVICE_ID, TEMPLATE_ID, templateParams, PUBLIC_KEY).then(
     (res) => {

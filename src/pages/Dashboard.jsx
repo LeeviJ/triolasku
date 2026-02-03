@@ -239,14 +239,19 @@ export default function Dashboard() {
                 // Get latest invoice data
                 const latest = invoices[invoices.length - 1]
 
-                // Build simple content string
-                const sisalto = 'Lasku nro: ' + String(latest.invoiceNumber || '') + ' | Summa: ' + String(latest.totalGross || '0') + ' EUR'
+                // Build simple content string - EXACT format
+                const sisalto = 'Lasku nro: ' + String(latest.invoiceNumber || '') + ' | Summa: ' + String(latest.totalGross || '0')
 
                 // Direct Gmail URL with hardcoded email
                 const gmailUrl = 'https://mail.google.com/mail/?view=cm&fs=1&to=leevi.latvatalo@gmail.com&su=' + encodeURIComponent('Varmuuskopio') + '&body=' + encodeURIComponent(sisalto)
 
                 console.log('[Dashboard] Gmail URL:', gmailUrl)
-                window.open(gmailUrl, '_blank')
+                // Open as popup window sized for tablet (600x700)
+                const popupWidth = 600
+                const popupHeight = 700
+                const left = (window.screen.width - popupWidth) / 2
+                const top = (window.screen.height - popupHeight) / 2
+                window.open(gmailUrl, 'GmailCompose', 'width=' + popupWidth + ',height=' + popupHeight + ',left=' + left + ',top=' + top + ',scrollbars=yes,resizable=yes')
                 setEmailMsg('Gmail avattu!')
                 setTimeout(() => setEmailMsg(null), 3000)
               }}
