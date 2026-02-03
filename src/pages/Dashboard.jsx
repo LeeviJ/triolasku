@@ -6,7 +6,7 @@ import { useData, STORAGE_KEYS } from '../context/DataContext'
 import Card, { CardBody } from '../components/ui/Card'
 import Button from '../components/ui/Button'
 import { formatPrice, formatDateFI } from '../utils/formatters'
-import { cacheEmailContent, openGmailCompose } from '../utils/emailBackup'
+import { buildEmailBody, openGmailCompose } from '../utils/emailBackup'
 
 export default function Dashboard() {
   const { t } = useLanguage()
@@ -207,52 +207,52 @@ export default function Dashboard() {
               onClick={async () => {
                 if (!settings.backupEmail) { setEmailMsg('Aseta ensin sähköpostiosoite.'); setTimeout(() => setEmailMsg(null), 5000); return }
                 if (invoices.length === 0) { setEmailMsg('Ei laskuja lähetettäväksi.'); setTimeout(() => setEmailMsg(null), 5000); return }
+
+                // BRUTE FORCE: Get latest invoice and build data IMMEDIATELY
                 const latest = invoices[invoices.length - 1]
                 const customer = customers.find((c) => c.id === latest?.customerId)
                 const company = companies.find((c) => c.id === latest?.companyId)
                 const invoiceWithName = { ...latest, _customerName: customer?.name, _companyName: company?.name }
 
-                // CRITICAL: Cache content FIRST before any other operation
-                const cached = cacheEmailContent(invoiceWithName, 'TrioLasku')
-                console.log('[Dashboard] Content cached before send:', cached.text)
+                // Build email body FIRST - before anything else
+                const emailBody = buildEmailBody(invoiceWithName)
+                console.log('[Dashboard] BRUTE FORCE emailBody:', emailBody)
 
-                const previewSize = (new TextEncoder().encode(JSON.stringify({ n: latest.invoiceNumber, d: latest.invoiceDate, s: latest.totalGross })).length / 1024).toFixed(1)
-                setEmailMsg(`Yritetään lähettää vain viimeisin lasku (Koko: ${previewSize} kt)...`)
-                setShowGmailFallback(false)
+                setEmailMsg('Lähetetään...')
                 try {
-                  const { sizeKb } = await sendEmail(settings.backupEmail, invoiceWithName, 'TrioLasku')
-                  setEmailMsg(`Varmuuskopio lähetetty! (Koko: ${sizeKb} kt)`)
-                  setShowGmailFallback(false)
+                  const result = await sendEmail(settings.backupEmail, invoiceWithName, 'TrioLasku')
+                  setEmailMsg('Varmuuskopio lähetetty!')
                   setTimeout(() => setEmailMsg(null), 5000)
                 } catch (err) {
-                  console.error('[Dashboard] Email send error:', err)
-                  setEmailMsg(`Automaattinen lähetys epäonnistui. Käytä "Jaa Gmaililla" -nappia.`)
-                  setShowGmailFallback(false)
+                  console.error('[Dashboard] Email error:', err)
+                  setEmailMsg('Lähetys epäonnistui. Käytä "Jaa Gmaililla" -nappia.')
                 }
               }}
             >
               <Mail className="w-4 h-4" />
-              Lähetä viimeisin lasku sähköpostiin
+              Lähetä sähköpostiin
             </Button>
-            {/* Direct Gmail button - always visible, bypasses Outlook completely */}
+            {/* DIRECT GMAIL BUTTON - Bypasses Outlook completely */}
             <Button
               variant="secondary"
               onClick={() => {
                 if (!settings.backupEmail) { setEmailMsg('Aseta ensin sähköpostiosoite.'); setTimeout(() => setEmailMsg(null), 5000); return }
-                if (invoices.length === 0) { setEmailMsg('Ei laskuja lähetettäväksi.'); setTimeout(() => setEmailMsg(null), 5000); return }
+                if (invoices.length === 0) { setEmailMsg('Ei laskuja.'); setTimeout(() => setEmailMsg(null), 5000); return }
+
+                // BRUTE FORCE: Build data immediately
                 const latest = invoices[invoices.length - 1]
                 const customer = customers.find((c) => c.id === latest?.customerId)
-                const company = companies.find((c) => c.id === latest?.companyId)
-                const invoiceWithName = { ...latest, _customerName: customer?.name, _companyName: company?.name }
+                const invoiceData = { ...latest, _customerName: customer?.name }
 
-                // Build content for Gmail
-                const cached = cacheEmailContent(invoiceWithName, 'TrioLasku')
-                const subject = `TrioLasku varmuuskopio - Lasku ${cached.invoiceNumber || ''}`
-                const body = cached.text
+                // Build body using simple string concatenation
+                const body = 'Lasku nro: ' + String(latest.invoiceNumber || '') + ' | Summa: ' + String(latest.totalGross || '0') + ' EUR | Pvm: ' + String(latest.invoiceDate || '') + ' | Asiakas: ' + String(customer?.name || '')
+                const subject = 'Varmuuskopio - Lasku ' + String(latest.invoiceNumber || '')
 
-                // Open Gmail directly in new tab - bypasses Windows Outlook forcing
+                console.log('[Dashboard] Gmail body:', body)
+
+                // Open Gmail directly - bypasses Windows Outlook
                 openGmailCompose(settings.backupEmail, subject, body)
-                setEmailMsg('Gmail avattu uuteen välilehteen.')
+                setEmailMsg('Gmail avattu!')
                 setTimeout(() => setEmailMsg(null), 3000)
               }}
               className="bg-red-50 border-red-300 text-red-700 hover:bg-red-100"

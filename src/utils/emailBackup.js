@@ -4,57 +4,50 @@ const SERVICE_ID = 'service_ntldw1a'
 const TEMPLATE_ID = 'template_57uxo1s'
 const PUBLIC_KEY = 'lg6qe5VWQC2tML2zo'
 
-// Cache for email content - ensures data is preserved even if PDF generation consumes memory
-let cachedEmailContent = null
-
 /**
- * Pre-cache email content BEFORE any heavy operations (PDF generation).
- * Call this first to ensure email data is safe in memory.
+ * BRUTE FORCE: Build email body as simple string IMMEDIATELY
+ * No caching, no complex logic - just build the string right here
  */
-export function cacheEmailContent(invoice, appName = 'TrioLasku') {
-  if (!invoice || !invoice.invoiceNumber) {
-    cachedEmailContent = {
-      text: 'Varmuuskopiodata puuttuu',
-      companyName: appName
-    }
-    return cachedEmailContent
-  }
+function buildEmailBody(invoice) {
+  // Hardcoded string concatenation - guaranteed to work
+  const num = String(invoice?.invoiceNumber || '???')
+  const total = String(invoice?.totalGross || invoice?.total || '0')
+  const date = String(invoice?.invoiceDate || '')
+  const customer = String(invoice?._customerName || 'Asiakas')
 
-  const num = invoice.invoiceNumber
-  const amount = Number(invoice.totalGross ?? invoice.total ?? 0).toFixed(2).replace('.', ',')
-  const customer = invoice._customerName || 'Tuntematon asiakas'
-  const date = invoice.invoiceDate || ''
+  // Simple concatenation - no template literals that could fail
+  const body = 'Lasku nro: ' + num + ' | Summa: ' + total + ' EUR | Pvm: ' + date + ' | Asiakas: ' + customer
 
-  cachedEmailContent = {
-    text: `Lasku nro: ${num}, Pvm: ${date}, Summa: ${amount} EUR, Asiakas: ${customer}`,
-    companyName: (invoice && invoice._companyName) || appName,
-    invoiceNumber: num,
-    amount: amount,
-    customer: customer,
-    date: date
-  }
-
-  console.log('[EmailBackup] Content cached:', cachedEmailContent.text)
-  return cachedEmailContent
-}
-
-/**
- * Get cached content or build from invoice
- */
-export function getCachedContent(invoice, appName = 'TrioLasku') {
-  if (cachedEmailContent) {
-    return cachedEmailContent
-  }
-  return cacheEmailContent(invoice, appName)
+  console.log('[EmailBackup] BRUTE FORCE body built:', body)
+  return body
 }
 
 /**
  * Open Gmail web compose with pre-filled data.
- * This bypasses Windows mailto: Outlook forcing.
+ * This bypasses Windows mailto: Outlook forcing completely.
+ * URL format: https://mail.google.com/mail/?view=cm&fs=1&to=EMAIL&su=SUBJECT&body=BODY
  */
 export function openGmailCompose(email, subject, body) {
-  const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(email)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
-  window.open(gmailUrl, '_blank')
+  const url = 'https://mail.google.com/mail/?view=cm&fs=1' +
+    '&to=' + encodeURIComponent(email) +
+    '&su=' + encodeURIComponent(subject) +
+    '&body=' + encodeURIComponent(body)
+
+  console.log('[Gmail] Opening URL:', url)
+  window.open(url, '_blank')
+}
+
+/**
+ * Build Gmail URL for direct sharing - returns the URL string
+ */
+export function buildGmailUrl(email, invoice) {
+  const body = buildEmailBody(invoice)
+  const subject = 'Varmuuskopio - Lasku ' + String(invoice?.invoiceNumber || '')
+
+  return 'https://mail.google.com/mail/?view=cm&fs=1' +
+    '&to=' + encodeURIComponent(email) +
+    '&su=' + encodeURIComponent(subject) +
+    '&body=' + encodeURIComponent(body)
 }
 
 export function sendEmailBackup(email, invoice, appName = 'TrioLasku') {
@@ -62,47 +55,48 @@ export function sendEmailBackup(email, invoice, appName = 'TrioLasku') {
     return Promise.reject(new Error('Sähköpostiosoite puuttuu tai on virheellinen.'))
   }
 
-  // CRITICAL: Cache content FIRST before any async operations
-  const content = getCachedContent(invoice, appName)
-  const text = content.text
-  const companyName = content.companyName
+  // BRUTE FORCE: Build content IMMEDIATELY as first operation
+  const emailBody = buildEmailBody(invoice)
+  const companyName = String(invoice?._companyName || appName)
 
-  // Use a hidden form with <textarea> elements for UTF-8 name support
+  console.log('[EmailJS] BRUTE FORCE - emailBody:', emailBody)
+  console.log('[EmailJS] BRUTE FORCE - companyName:', companyName)
+
+  // Create form with textarea elements
   const form = document.createElement('form')
   form.style.display = 'none'
 
   const addField = (name, value) => {
     const ta = document.createElement('textarea')
     ta.name = name
-    ta.textContent = value
+    ta.textContent = String(value) // Force string
     form.appendChild(ta)
   }
 
   addField('to_email', email)
   addField('nimi', companyName)
   addField('title', 'Varmuuskopio')
-  // Use 'sisalto' without ä - special characters may cause encoding issues with EmailJS
-  // NOTE: User must also update EmailJS template to use {{sisalto}} instead of {{sisältö}}
-  addField('sisalto', text)
+  addField('sisalto', emailBody) // NO special characters in field name
 
   document.body.appendChild(form)
 
-  console.log('[EmailJS] Sending:', { nimi: companyName, title: 'Varmuuskopio', sisalto: text })
+  console.log('[EmailJS] Form fields set, sending...')
 
   return emailjs.sendForm(SERVICE_ID, TEMPLATE_ID, form, PUBLIC_KEY).then(
     (res) => {
       document.body.removeChild(form)
-      console.log('[EmailJS] OK', res.status)
-      // Clear cache after successful send
-      cachedEmailContent = null
-      return { response: res, sizeKb: '0.1' }
+      console.log('[EmailJS] SUCCESS:', res.status)
+      return { response: res, sizeKb: '0.1', emailBody: emailBody }
     },
     (err) => {
       document.body.removeChild(form)
-      console.error('[EmailJS] FAILED', err?.status, err?.text || err)
-      // Return error with cached content for Gmail fallback
-      err.cachedContent = content
+      console.error('[EmailJS] FAILED:', err?.status, err?.text || err)
+      // Attach body for fallback
+      err.emailBody = emailBody
       throw err
     }
   )
 }
+
+// Export for direct use
+export { buildEmailBody }
