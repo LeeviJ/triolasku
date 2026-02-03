@@ -207,42 +207,53 @@ export default function InvoiceForm({ invoice, onClose, onPreview }) {
     e.preventDefault()
     if (!validate()) return
 
-    // PRIORITY 1: Find customer and company data FIRST
+    // STEP 1: Get customer and company snapshots
     const customer = customers.find((c) => c.id === formData.customerId)
     const company = companies.find((c) => c.id === formData.companyId)
 
-    // PRIORITY 2: Build invoice with status 'ready' and embedded data
-    // Embed customer/company data directly to prevent "ghost invoices"
+    // STEP 2: Build invoice with FORCED status 'ready' + full customer/company snapshot
     const invoiceData = {
       ...formData,
       invoiceNumber: parseInt(formData.invoiceNumber, 10) || formData.invoiceNumber,
-      status: 'ready', // IMMEDIATELY set to ready - don't wait for anything
+      // FORCED STATUS - this MUST happen regardless of PDF/Email
+      status: 'ready',
       ...totals,
-      // Embedded customer data (survives customer deletion)
+      // FULL CUSTOMER SNAPSHOT (survives deletion)
       _customerName: customer?.name || '',
       _customerBusinessId: customer?.businessId || '',
+      _customerVatNumber: customer?.vatNumber || '',
       _customerAddress: customer?.streetAddress || '',
       _customerPostalCode: customer?.postalCode || '',
       _customerCity: customer?.city || '',
+      _customerCountry: customer?.country || '',
+      _customerPhone: customer?.phone || '',
+      _customerEmail: customer?.email || '',
       _customerContactPerson: customer?.contactPerson || '',
-      // Embedded company data (survives company deletion)
+      // FULL COMPANY SNAPSHOT (survives deletion)
       _companyName: company?.name || '',
       _companyBusinessId: company?.businessId || '',
       _companyVatNumber: company?.vatNumber || '',
       _companyAddress: company?.streetAddress || '',
       _companyPostalCode: company?.postalCode || '',
       _companyCity: company?.city || '',
+      _companyCountry: company?.country || '',
       _companyPhone: company?.phone || '',
       _companyEmail: company?.email || '',
+      _companyWebsite: company?.website || '',
+      _companyBankAccounts: company?.bankAccounts || [],
+      _companyLogo: company?.logo || '',
     }
 
-    // PRIORITY 3: SAVE IMMEDIATELY - this is synchronous, no waiting
+    // STEP 3: SAVE NOW - synchronous, immediate, no waiting
+    console.log('[InvoiceForm] SAVING with status:', invoiceData.status)
     if (invoice) {
       updateInvoice(invoice.id, invoiceData)
     } else {
       addInvoice(invoiceData)
     }
-    // Invoice is NOW saved with status 'ready' - PDF/Email run in background via DataContext
+    console.log('[InvoiceForm] SAVED - status is now ready')
+
+    // PDF/Email run in background via DataContext useEffect - we don't wait
 
     setSaved(true)
     setTimeout(() => {

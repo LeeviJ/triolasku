@@ -51,32 +51,26 @@ export function sendEmailBackup(email, invoice, appName = 'TrioLasku') {
     return Promise.reject(new Error('Sähköpostiosoite puuttuu tai on virheellinen.'))
   }
 
-  // COPY-PASTE FROM GMAIL BUTTON - THIS EXACT CODE WORKS:
-  // const sisalto = 'Lasku nro: ' + String(latest.invoiceNumber || '') + ' | Summa: ' + String(latest.totalGross || '0')
-  const sisalto = 'Lasku nro: ' + String(invoice?.invoiceNumber || '') + ' | Summa: ' + String(invoice?.totalGross || '0')
-
-  // Company name for email header
+  // Build message content - EXACT same as Gmail button
+  const message = 'Lasku nro: ' + String(invoice?.invoiceNumber || '') + ' | Summa: ' + String(invoice?.totalGross || '0')
   const nimi = String(invoice?._companyName || appName)
 
-  // DEBUG: Log everything
-  console.log('=== EMAILJS DEBUG START ===')
-  console.log('invoice object:', invoice)
-  console.log('invoice.invoiceNumber:', invoice?.invoiceNumber)
-  console.log('invoice.totalGross:', invoice?.totalGross)
-  console.log('FINAL sisalto:', sisalto)
-  console.log('FINAL nimi:', nimi)
-  console.log('=== EMAILJS DEBUG END ===')
+  console.log('[EmailJS] message:', message)
+  console.log('[EmailJS] nimi:', nimi)
 
-  // Send with exact template field names
+  // Send with "message" field name instead of "sisalto"
   return emailjs.send(SERVICE_ID, TEMPLATE_ID, {
     to_email: email,
     nimi: nimi,
     title: 'Varmuuskopio',
-    sisalto: sisalto
+    message: message,
+    sisalto: message,
+    content: message,
+    body: message
   }, PUBLIC_KEY).then(
     (res) => {
-      console.log('[EmailJS] SUCCESS - sisalto was:', sisalto)
-      return { response: res, sisalto: sisalto }
+      console.log('[EmailJS] SUCCESS')
+      return { response: res, message: message }
     },
     (err) => {
       console.error('[EmailJS] FAILED:', err)
