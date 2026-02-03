@@ -192,6 +192,28 @@ export default function Invoices() {
         </div>
       )}
 
+      {/* Status legend */}
+      {invoices.length > 0 && (
+        <div className="flex flex-wrap items-center gap-4 mb-4 text-xs text-gray-600">
+          <div className="flex items-center gap-1.5">
+            <span className="w-3 h-3 rounded-full bg-gray-400"></span>
+            <span>{t('invoices.statusDraft')}</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-3 h-3 rounded-full bg-purple-500"></span>
+            <span>{t('invoices.statusReady')}</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-3 h-3 rounded-full bg-blue-500"></span>
+            <span>{t('invoices.statusSent')}</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-3 h-3 rounded-full bg-green-500"></span>
+            <span>{t('invoices.statusPaid')}</span>
+          </div>
+        </div>
+      )}
+
       {/* Invoice list */}
       {invoices.length === 0 ? (
         <Card>

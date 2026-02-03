@@ -279,9 +279,16 @@ export default function Dashboard() {
       {invoices.length > 0 && (
         <Card>
           <CardBody>
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
-              {t('dashboard.recentInvoices')}
-            </h2>
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+              <h2 className="text-lg font-semibold text-gray-900">
+                {t('dashboard.recentInvoices')}
+              </h2>
+              <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500">
+                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-gray-400"></span> {t('invoices.statusDraft')}</span>
+                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-purple-500"></span> {t('invoices.statusReady')}</span>
+                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-blue-500"></span> {t('invoices.statusSent')}</span>
+              </div>
+            </div>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-gray-50 border-b border-gray-200">

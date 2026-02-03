@@ -190,32 +190,18 @@ export default function Products() {
     }
   }
 
-  const handleDownloadBackup = async () => {
+  const handleDownloadBackup = () => {
+    // Direct file download - no navigator.share to avoid "Share too large" error
     const backup = {}
     Object.entries(STORAGE_KEYS).forEach(([key, storageKey]) => {
       const data = localStorage.getItem(storageKey)
       if (data) backup[storageKey] = JSON.parse(data)
     })
     const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' })
-    const d = new Date()
-    const dd = String(d.getDate()).padStart(2, '0')
-    const mm = String(d.getMonth() + 1).padStart(2, '0')
-    const yy = String(d.getFullYear()).slice(-2)
-    const fileName = `triolasku_backup_${dd}${mm}${yy}.json`
-    const file = new File([blob], fileName, { type: 'application/json' })
-
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      try {
-        await navigator.share({ title: 'TrioLasku backup', files: [file] })
-        return
-      } catch (err) {
-        if (err.name === 'AbortError') return
-      }
-    }
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = fileName
+    a.download = 'triolasku_backup.json'
     a.click()
     URL.revokeObjectURL(url)
   }
