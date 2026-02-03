@@ -115,11 +115,13 @@ export default function InvoicePreview({ invoice, onClose }) {
   // Fix for Tailwind CSS v4 which generates oklch() colors that html2canvas cannot parse.
   // Order matters: read computed styles FIRST (browser resolves oklch->rgb), inline them,
   // THEN remove all stylesheets so html2canvas only sees inline rgb values.
+  // TABLET OPTIMIZATION: Extended property list for hybrid device compatibility.
   const fixColorsForHtml2Canvas = (clonedDoc, clonedElement) => {
     const colorProps = [
       'color', 'background-color', 'border-color',
       'border-top-color', 'border-bottom-color', 'border-left-color', 'border-right-color',
       'box-shadow', 'outline-color', 'text-decoration-color',
+      'fill', 'stroke', 'stop-color', 'flood-color', 'lighting-color', // SVG colors for barcode
     ]
     const win = clonedDoc.defaultView
 

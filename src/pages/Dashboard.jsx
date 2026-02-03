@@ -1,17 +1,20 @@
 import { useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Building2, Users, Package, FileText, ArrowRight, Download, Upload, Share2, Mail } from 'lucide-react'
+import { Building2, Users, Package, FileText, ArrowRight, Download, Upload, Share2, Mail, ExternalLink } from 'lucide-react'
 import { useLanguage } from '../context/LanguageContext'
 import { useData, STORAGE_KEYS } from '../context/DataContext'
 import Card, { CardBody } from '../components/ui/Card'
 import Button from '../components/ui/Button'
 import { formatPrice, formatDateFI } from '../utils/formatters'
+import { cacheEmailContent, openGmailCompose } from '../utils/emailBackup'
 
 export default function Dashboard() {
   const { t } = useLanguage()
   const { companies, customers, products, invoices, settings, setSettings, sendEmailBackup: sendEmail } = useData()
   const backupFileInputRef = useRef(null)
   const [emailMsg, setEmailMsg] = useState(null)
+  const [showGmailFallback, setShowGmailFallback] = useState(false)
+  const [gmailFallbackData, setGmailFallbackData] = useState(null)
 
   const getBackupFileName = () => {
     const d = new Date()
@@ -210,23 +213,52 @@ export default function Dashboard() {
                 const customer = customers.find((c) => c.id === latest?.customerId)
                 const company = companies.find((c) => c.id === latest?.companyId)
                 const invoiceWithName = { ...latest, _customerName: customer?.name, _companyName: company?.name }
+
+                // CRITICAL: Cache content FIRST before any other operation
+                const cached = cacheEmailContent(invoiceWithName, 'TrioLasku')
+                console.log('[Dashboard] Content cached before send:', cached.text)
+
                 const previewSize = (new TextEncoder().encode(JSON.stringify({ n: latest.invoiceNumber, d: latest.invoiceDate, s: latest.totalGross })).length / 1024).toFixed(1)
                 setEmailMsg(`Yritetään lähettää vain viimeisin lasku (Koko: ${previewSize} kt)...`)
+                setShowGmailFallback(false)
                 try {
                   const { sizeKb } = await sendEmail(settings.backupEmail, invoiceWithName, 'TrioLasku')
                   setEmailMsg(`Varmuuskopio lähetetty! (Koko: ${sizeKb} kt)`)
+                  setShowGmailFallback(false)
+                  setTimeout(() => setEmailMsg(null), 5000)
                 } catch (err) {
                   console.error('[Dashboard] Email send error:', err)
-                  setEmailMsg(`Lähetys epäonnistui: ${err?.text || err?.message || 'tuntematon virhe'}`)
+                  setEmailMsg(`Automaattinen lähetys epäonnistui. Käytä alla olevaa Gmail-linkkiä.`)
+                  // Store data for Gmail fallback
+                  setGmailFallbackData({
+                    email: settings.backupEmail,
+                    subject: `TrioLasku varmuuskopio - Lasku ${cached.invoiceNumber || ''}`,
+                    body: cached.text
+                  })
+                  setShowGmailFallback(true)
                 }
-                setTimeout(() => setEmailMsg(null), 5000)
               }}
             >
               <Mail className="w-4 h-4" />
               Lähetä viimeisin lasku sähköpostiin
             </Button>
           </div>
-          {emailMsg && <p className="text-sm text-green-600 mb-3">{emailMsg}</p>}
+          {emailMsg && <p className={`text-sm mb-3 ${showGmailFallback ? 'text-orange-600' : 'text-green-600'}`}>{emailMsg}</p>}
+          {showGmailFallback && gmailFallbackData && (
+            <Button
+              variant="secondary"
+              onClick={() => {
+                openGmailCompose(gmailFallbackData.email, gmailFallbackData.subject, gmailFallbackData.body)
+                setEmailMsg('Gmail avattu uuteen välilehteen.')
+                setShowGmailFallback(false)
+                setTimeout(() => setEmailMsg(null), 3000)
+              }}
+              className="mb-3 bg-red-50 border-red-200 text-red-700 hover:bg-red-100"
+            >
+              <ExternalLink className="w-4 h-4" />
+              Avaa Gmail-verkkosivu (ohittaa Outlookin)
+            </Button>
+          )}
 
           {/* Email backup settings */}
           <div className="border-t border-gray-200 pt-4 mt-4 space-y-3">
