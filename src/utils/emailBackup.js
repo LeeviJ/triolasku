@@ -5,21 +5,17 @@ const TEMPLATE_ID = 'template_57uxo1s'
 const PUBLIC_KEY = 'lg6qe5VWQC2tML2zo'
 
 /**
- * BRUTE FORCE: Build email body as simple string IMMEDIATELY
- * No caching, no complex logic - just build the string right here
+ * Build email body as simple string - "Lasku nro: X | Summa: Y"
  */
 function buildEmailBody(invoice) {
-  // Hardcoded string concatenation - guaranteed to work
-  const num = String(invoice?.invoiceNumber || '???')
-  const total = String(invoice?.totalGross || invoice?.total || '0')
-  const date = String(invoice?.invoiceDate || '')
-  const customer = String(invoice?._customerName || 'Asiakas')
+  const invoiceNumber = String(invoice?.invoiceNumber || '???')
+  const totalAmount = String(invoice?.totalGross || invoice?.total || '0')
 
-  // Simple concatenation - no template literals that could fail
-  const body = 'Lasku nro: ' + num + ' | Summa: ' + total + ' EUR | Pvm: ' + date + ' | Asiakas: ' + customer
+  // Simple format: "Lasku nro: X | Summa: Y"
+  const sisalto = 'Lasku nro: ' + invoiceNumber + ' | Summa: ' + totalAmount
 
-  console.log('[EmailBackup] BRUTE FORCE body built:', body)
-  return body
+  console.log('[EmailBackup] sisalto:', sisalto)
+  return sisalto
 }
 
 /**
@@ -55,12 +51,14 @@ export function sendEmailBackup(email, invoice, appName = 'TrioLasku') {
     return Promise.reject(new Error('Sähköpostiosoite puuttuu tai on virheellinen.'))
   }
 
-  // BRUTE FORCE: Build content IMMEDIATELY as first operation
-  const emailBody = buildEmailBody(invoice)
+  // Build simple content: "Lasku nro: X | Summa: Y"
+  const invoiceNumber = String(invoice?.invoiceNumber || '')
+  const totalAmount = String(invoice?.totalGross || '0')
+  const sisalto = 'Lasku nro: ' + invoiceNumber + ' | Summa: ' + totalAmount
   const companyName = String(invoice?._companyName || appName)
 
-  console.log('[EmailJS] BRUTE FORCE - emailBody:', emailBody)
-  console.log('[EmailJS] BRUTE FORCE - companyName:', companyName)
+  console.log('[EmailJS] sisalto:', sisalto)
+  console.log('[EmailJS] companyName:', companyName)
 
   // Create form with textarea elements
   const form = document.createElement('form')
@@ -76,7 +74,7 @@ export function sendEmailBackup(email, invoice, appName = 'TrioLasku') {
   addField('to_email', email)
   addField('nimi', companyName)
   addField('title', 'Varmuuskopio')
-  addField('sisalto', emailBody) // NO special characters in field name
+  addField('sisalto', sisalto) // Simple string: "Lasku nro: X | Summa: Y"
 
   document.body.appendChild(form)
 
@@ -86,13 +84,12 @@ export function sendEmailBackup(email, invoice, appName = 'TrioLasku') {
     (res) => {
       document.body.removeChild(form)
       console.log('[EmailJS] SUCCESS:', res.status)
-      return { response: res, sizeKb: '0.1', emailBody: emailBody }
+      return { response: res, sizeKb: '0.1', sisalto: sisalto }
     },
     (err) => {
       document.body.removeChild(form)
       console.error('[EmailJS] FAILED:', err?.status, err?.text || err)
-      // Attach body for fallback
-      err.emailBody = emailBody
+      err.sisalto = sisalto
       throw err
     }
   )

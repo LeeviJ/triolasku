@@ -6,7 +6,7 @@ import { useData, STORAGE_KEYS } from '../context/DataContext'
 import Card, { CardBody } from '../components/ui/Card'
 import Button from '../components/ui/Button'
 import { formatPrice, formatDateFI } from '../utils/formatters'
-import { buildEmailBody, openGmailCompose } from '../utils/emailBackup'
+// emailBackup not needed for Gmail button - uses direct URL
 
 export default function Dashboard() {
   const { t } = useLanguage()
@@ -208,24 +208,22 @@ export default function Dashboard() {
                 if (!settings.backupEmail) { setEmailMsg('Aseta ensin sähköpostiosoite.'); setTimeout(() => setEmailMsg(null), 5000); return }
                 if (invoices.length === 0) { setEmailMsg('Ei laskuja lähetettäväksi.'); setTimeout(() => setEmailMsg(null), 5000); return }
 
-                // BRUTE FORCE: Get latest invoice and build data IMMEDIATELY
+                // Get latest invoice
                 const latest = invoices[invoices.length - 1]
-                const customer = customers.find((c) => c.id === latest?.customerId)
                 const company = companies.find((c) => c.id === latest?.companyId)
-                const invoiceWithName = { ...latest, _customerName: customer?.name, _companyName: company?.name }
+                const invoiceWithName = { ...latest, _companyName: company?.name }
 
-                // Build email body FIRST - before anything else
-                const emailBody = buildEmailBody(invoiceWithName)
-                console.log('[Dashboard] BRUTE FORCE emailBody:', emailBody)
+                // sisalto is built inside sendEmail: "Lasku nro: X | Summa: Y"
+                console.log('[Dashboard] Sending email for invoice:', latest.invoiceNumber)
 
                 setEmailMsg('Lähetetään...')
                 try {
-                  const result = await sendEmail(settings.backupEmail, invoiceWithName, 'TrioLasku')
+                  await sendEmail(settings.backupEmail, invoiceWithName, 'TrioLasku')
                   setEmailMsg('Varmuuskopio lähetetty!')
                   setTimeout(() => setEmailMsg(null), 5000)
                 } catch (err) {
                   console.error('[Dashboard] Email error:', err)
-                  setEmailMsg('Lähetys epäonnistui. Käytä "Jaa Gmaililla" -nappia.')
+                  setEmailMsg('Lähetys epäonnistui. Käytä "Lähetä Gmaililla" -nappia.')
                 }
               }}
             >
@@ -236,29 +234,26 @@ export default function Dashboard() {
             <Button
               variant="secondary"
               onClick={() => {
-                if (!settings.backupEmail) { setEmailMsg('Aseta ensin sähköpostiosoite.'); setTimeout(() => setEmailMsg(null), 5000); return }
                 if (invoices.length === 0) { setEmailMsg('Ei laskuja.'); setTimeout(() => setEmailMsg(null), 5000); return }
 
-                // BRUTE FORCE: Build data immediately
+                // Get latest invoice data
                 const latest = invoices[invoices.length - 1]
-                const customer = customers.find((c) => c.id === latest?.customerId)
-                const invoiceData = { ...latest, _customerName: customer?.name }
 
-                // Build body using simple string concatenation
-                const body = 'Lasku nro: ' + String(latest.invoiceNumber || '') + ' | Summa: ' + String(latest.totalGross || '0') + ' EUR | Pvm: ' + String(latest.invoiceDate || '') + ' | Asiakas: ' + String(customer?.name || '')
-                const subject = 'Varmuuskopio - Lasku ' + String(latest.invoiceNumber || '')
+                // Build simple content string
+                const sisalto = 'Lasku nro: ' + String(latest.invoiceNumber || '') + ' | Summa: ' + String(latest.totalGross || '0') + ' EUR'
 
-                console.log('[Dashboard] Gmail body:', body)
+                // Direct Gmail URL with hardcoded email
+                const gmailUrl = 'https://mail.google.com/mail/?view=cm&fs=1&to=leevi.latvatalo@gmail.com&su=' + encodeURIComponent('Varmuuskopio') + '&body=' + encodeURIComponent(sisalto)
 
-                // Open Gmail directly - bypasses Windows Outlook
-                openGmailCompose(settings.backupEmail, subject, body)
+                console.log('[Dashboard] Gmail URL:', gmailUrl)
+                window.open(gmailUrl, '_blank')
                 setEmailMsg('Gmail avattu!')
                 setTimeout(() => setEmailMsg(null), 3000)
               }}
               className="bg-red-50 border-red-300 text-red-700 hover:bg-red-100"
             >
               <ExternalLink className="w-4 h-4" />
-              Jaa Gmaililla
+              Lähetä Gmaililla
             </Button>
           </div>
           {emailMsg && <p className={`text-sm mb-3 ${emailMsg.includes('epäonnistui') ? 'text-orange-600' : 'text-green-600'}`}>{emailMsg}</p>}
