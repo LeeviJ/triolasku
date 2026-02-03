@@ -241,8 +241,17 @@ export default function Invoices() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {filteredInvoices.map((invoice) => (
-                  <tr key={invoice.id} className="hover:bg-gray-50">
+                {filteredInvoices.map((invoice) => {
+                  const status = invoice.status || 'draft'
+                  const borderColors = {
+                    draft: 'border-l-gray-400',
+                    ready: 'border-l-purple-500',
+                    sent: 'border-l-blue-500',
+                    paid: 'border-l-green-500',
+                    overdue: 'border-l-red-500',
+                  }
+                  return (
+                  <tr key={invoice.id} className={`hover:bg-gray-50 border-l-4 ${borderColors[status]}`}>
                     <td className="px-4 py-3 text-sm font-medium text-gray-900">
                       {invoice.invoiceNumber}
                     </td>
@@ -306,7 +315,8 @@ export default function Invoices() {
                       </div>
                     </td>
                   </tr>
-                ))}
+                  )
+                })}
               </tbody>
             </table>
           </div>

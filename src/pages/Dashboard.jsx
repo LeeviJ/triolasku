@@ -15,7 +15,7 @@ export default function Dashboard() {
   const [emailMsg, setEmailMsg] = useState(null)
 
   const getBackupFileName = () => {
-    return 'triolasku_varmuuskopio.json'
+    return 'triolasku_backup.json'
   }
 
   const createBackupBlob = () => {
@@ -290,7 +290,6 @@ export default function Dashboard() {
                     <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">{t('invoices.invoiceDate')}</th>
                     <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase hidden sm:table-cell">{t('invoices.recipient')}</th>
                     <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">{t('invoices.total')}</th>
-                    <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">{t('invoices.status')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
@@ -303,32 +302,20 @@ export default function Dashboard() {
                     .slice(0, 5)
                     .map((invoice) => {
                       const customer = customers.find((c) => c.id === invoice.customerId)
-                      const statusStyles = {
-                        draft: 'bg-gray-100 text-gray-700',
-                        ready: 'bg-purple-100 text-purple-700',
-                        sent: 'bg-blue-100 text-blue-700',
-                        paid: 'bg-green-100 text-green-700',
-                        overdue: 'bg-red-100 text-red-700',
-                      }
-                      const statusLabels = {
-                        draft: t('invoices.statusDraft'),
-                        ready: t('invoices.statusReady'),
-                        sent: t('invoices.statusSent'),
-                        paid: t('invoices.statusPaid'),
-                        overdue: t('invoices.statusOverdue'),
-                      }
                       const status = invoice.status || 'draft'
+                      const borderColors = {
+                        draft: 'border-l-gray-400',
+                        ready: 'border-l-purple-500',
+                        sent: 'border-l-blue-500',
+                        paid: 'border-l-green-500',
+                        overdue: 'border-l-red-500',
+                      }
                       return (
-                        <tr key={invoice.id} className="hover:bg-gray-50">
+                        <tr key={invoice.id} className={`hover:bg-gray-50 border-l-4 ${borderColors[status] || borderColors.draft}`}>
                           <td className="px-4 py-2 text-sm font-medium text-gray-900">{invoice.invoiceNumber}</td>
                           <td className="px-4 py-2 text-sm text-gray-500">{formatDateFI(invoice.invoiceDate)}</td>
                           <td className="px-4 py-2 text-sm text-gray-900 hidden sm:table-cell">{customer?.name || invoice._customerName || '-'}</td>
                           <td className="px-4 py-2 text-sm font-medium text-gray-900 text-right">{formatPrice(invoice.totalGross)} EUR</td>
-                          <td className="px-4 py-2 text-center">
-                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${statusStyles[status] || statusStyles.draft}`}>
-                              {statusLabels[status] || statusLabels.draft}
-                            </span>
-                          </td>
                         </tr>
                       )
                     })}
