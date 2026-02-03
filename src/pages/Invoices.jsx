@@ -72,30 +72,6 @@ export default function Invoices() {
     setEditingInvoice(null)
   }
 
-  const getStatusBadge = (status) => {
-    const styles = {
-      draft: 'bg-gray-100 text-gray-700',
-      ready: 'bg-purple-100 text-purple-700',
-      sent: 'bg-blue-100 text-blue-700',
-      paid: 'bg-green-100 text-green-700',
-      overdue: 'bg-red-100 text-red-700',
-    }
-    const labels = {
-      draft: t('invoices.statusDraft'),
-      ready: t('invoices.statusReady'),
-      sent: t('invoices.statusSent'),
-      paid: t('invoices.statusPaid'),
-      overdue: t('invoices.statusOverdue'),
-    }
-    return (
-      <span
-        className={`px-2 py-1 text-xs font-medium rounded-full ${styles[status] || styles.draft}`}
-      >
-        {labels[status] || labels.draft}
-      </span>
-    )
-  }
-
   // Get company name - use snapshot if company was deleted
   const getCompanyName = (invoice) => {
     const company = companies.find((c) => c.id === invoice.companyId)
@@ -254,9 +230,6 @@ export default function Invoices() {
                   <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">
                     {t('invoices.total')}
                   </th>
-                  <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">
-                    {t('invoices.status')}
-                  </th>
                   <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     {t('common.actions')}
                   </th>
@@ -288,9 +261,6 @@ export default function Invoices() {
                     </td>
                     <td className="px-4 py-3 text-sm font-medium text-gray-900 text-right hidden sm:table-cell">
                       {formatPrice(invoice.totalGross)} {t('invoices.currency')}
-                    </td>
-                    <td className="px-4 py-3 text-center hidden lg:table-cell">
-                      {getStatusBadge(invoice.status)}
                     </td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end gap-1">
