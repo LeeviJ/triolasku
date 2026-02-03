@@ -24,8 +24,8 @@ export function sendEmailBackup(email, invoice, appName = 'TrioLasku') {
     return Promise.reject(new Error('Invalid email'))
   }
 
-  // Build message: "Lasku nro: X | Summa: Y"
-  const message = 'Lasku nro: ' + String(invoice?.invoiceNumber || '') + ' | Summa: ' + String(invoice?.totalGross || '0')
+  // Build message: "Lasku nro: X | Summa: Y EUR"
+  const message = 'Lasku nro: ' + String(invoice?.invoiceNumber || '') + ' | Summa: ' + String(invoice?.totalGross || '0') + ' EUR'
   const nimi = String(invoice?._companyName || appName)
 
   console.log('[EmailJS] message:', message)
