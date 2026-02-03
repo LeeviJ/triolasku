@@ -51,37 +51,35 @@ export function sendEmailBackup(email, invoice, appName = 'TrioLasku') {
     return Promise.reject(new Error('Sähköpostiosoite puuttuu tai on virheellinen.'))
   }
 
-  // EXACT same logic as Gmail button - build content string
-  const invoiceNumber = String(invoice?.invoiceNumber || '')
-  const totalAmount = String(invoice?.totalGross || '0')
-  const sisalto = 'Lasku nro: ' + invoiceNumber + ' | Summa: ' + totalAmount
-  const companyName = String(invoice?._companyName || appName)
+  // COPY-PASTE FROM GMAIL BUTTON - THIS EXACT CODE WORKS:
+  // const sisalto = 'Lasku nro: ' + String(latest.invoiceNumber || '') + ' | Summa: ' + String(latest.totalGross || '0')
+  const sisalto = 'Lasku nro: ' + String(invoice?.invoiceNumber || '') + ' | Summa: ' + String(invoice?.totalGross || '0')
 
-  console.log('[EmailJS] FINAL sisalto:', sisalto)
-  console.log('[EmailJS] FINAL companyName:', companyName)
+  // Company name for email header
+  const nimi = String(invoice?._companyName || appName)
 
-  // EmailJS template params - try multiple field names for compatibility
-  const templateParams = {
+  // DEBUG: Log everything
+  console.log('=== EMAILJS DEBUG START ===')
+  console.log('invoice object:', invoice)
+  console.log('invoice.invoiceNumber:', invoice?.invoiceNumber)
+  console.log('invoice.totalGross:', invoice?.totalGross)
+  console.log('FINAL sisalto:', sisalto)
+  console.log('FINAL nimi:', nimi)
+  console.log('=== EMAILJS DEBUG END ===')
+
+  // Send with exact template field names
+  return emailjs.send(SERVICE_ID, TEMPLATE_ID, {
     to_email: email,
-    nimi: companyName,
+    nimi: nimi,
     title: 'Varmuuskopio',
-    sisalto: sisalto,
-    // Also set common alternative field names
-    message: sisalto,
-    content: sisalto,
-    body: sisalto
-  }
-
-  console.log('[EmailJS] Sending with params:', JSON.stringify(templateParams))
-
-  return emailjs.send(SERVICE_ID, TEMPLATE_ID, templateParams, PUBLIC_KEY).then(
+    sisalto: sisalto
+  }, PUBLIC_KEY).then(
     (res) => {
-      console.log('[EmailJS] SUCCESS:', res.status)
-      return { response: res, sizeKb: '0.1', sisalto: sisalto }
+      console.log('[EmailJS] SUCCESS - sisalto was:', sisalto)
+      return { response: res, sisalto: sisalto }
     },
     (err) => {
-      console.error('[EmailJS] FAILED:', err?.status, err?.text || err)
-      err.sisalto = sisalto
+      console.error('[EmailJS] FAILED:', err)
       throw err
     }
   )

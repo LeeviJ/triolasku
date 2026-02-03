@@ -207,17 +207,16 @@ export default function InvoiceForm({ invoice, onClose, onPreview }) {
     e.preventDefault()
     if (!validate()) return
 
-    // Find customer and company data
+    // PRIORITY 1: Find customer and company data FIRST
     const customer = customers.find((c) => c.id === formData.customerId)
     const company = companies.find((c) => c.id === formData.companyId)
 
-    // Set status to 'ready' immediately on save
-    // IMPORTANT: Embed customer/company data directly into invoice to prevent "ghost invoices"
-    // This ensures invoice data persists even if customer/company is later deleted
+    // PRIORITY 2: Build invoice with status 'ready' and embedded data
+    // Embed customer/company data directly to prevent "ghost invoices"
     const invoiceData = {
       ...formData,
       invoiceNumber: parseInt(formData.invoiceNumber, 10) || formData.invoiceNumber,
-      status: 'ready',
+      status: 'ready', // IMMEDIATELY set to ready - don't wait for anything
       ...totals,
       // Embedded customer data (survives customer deletion)
       _customerName: customer?.name || '',
@@ -237,11 +236,13 @@ export default function InvoiceForm({ invoice, onClose, onPreview }) {
       _companyEmail: company?.email || '',
     }
 
+    // PRIORITY 3: SAVE IMMEDIATELY - this is synchronous, no waiting
     if (invoice) {
       updateInvoice(invoice.id, invoiceData)
     } else {
       addInvoice(invoiceData)
     }
+    // Invoice is NOW saved with status 'ready' - PDF/Email run in background via DataContext
 
     setSaved(true)
     setTimeout(() => {
