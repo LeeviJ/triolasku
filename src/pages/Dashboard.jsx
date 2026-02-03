@@ -213,7 +213,7 @@ export default function Dashboard() {
                 const company = companies.find((c) => c.id === latest?.companyId)
                 const invoiceWithName = { ...latest, _companyName: company?.name }
 
-                // sisalto is built inside sendEmail: "Lasku nro: X | Summa: Y"
+                // message is built inside sendEmail: "Lasku nro: X | Summa: Y EUR"
                 console.log('[Dashboard] Sending email for invoice:', latest.invoiceNumber)
 
                 setEmailMsg('Lähetetään...')
@@ -239,11 +239,11 @@ export default function Dashboard() {
                 // Get latest invoice data
                 const latest = invoices[invoices.length - 1]
 
-                // Build simple content string - EXACT format
-                const sisalto = 'Lasku nro: ' + String(latest.invoiceNumber || '') + ' | Summa: ' + String(latest.totalGross || '0')
+                // Build message: "Lasku nro: X | Summa: Y EUR"
+                const message = 'Lasku nro: ' + String(latest.invoiceNumber || '') + ' | Summa: ' + String(latest.totalGross || '0') + ' EUR'
 
                 // Direct Gmail URL with hardcoded email
-                const gmailUrl = 'https://mail.google.com/mail/?view=cm&fs=1&to=leevi.latvatalo@gmail.com&su=' + encodeURIComponent('Varmuuskopio') + '&body=' + encodeURIComponent(sisalto)
+                const gmailUrl = 'https://mail.google.com/mail/?view=cm&fs=1&to=leevi.latvatalo@gmail.com&su=' + encodeURIComponent('Varmuuskopio') + '&body=' + encodeURIComponent(message)
 
                 console.log('[Dashboard] Gmail URL:', gmailUrl)
                 // Open as popup window sized for tablet (600x700)
