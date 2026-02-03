@@ -70,8 +70,9 @@ export default function InvoiceForm({ invoice, onClose, onPreview }) {
     reminderDays: invoice?.reminderDays || 14,
     ourReference: invoice?.ourReference || '',
     yourReference: invoice?.yourReference || '',
-    additionalInfoStart: invoice?.additionalInfoStart || '',
-    additionalInfoEnd: invoice?.additionalInfoEnd || '',
+    // Combined additional info field with position selector
+    additionalInfo: invoice?.additionalInfo || invoice?.additionalInfoStart || invoice?.additionalInfoEnd || '',
+    additionalInfoPosition: invoice?.additionalInfoPosition || (invoice?.additionalInfoEnd ? 'end' : 'start'),
     status: invoice?.status || 'draft',
     paymentMethod: invoice?.paymentMethod || 'invoice',
     rows: invoice?.rows?.length > 0 ? invoice.rows : [{ ...EMPTY_ROW }],
@@ -211,13 +212,15 @@ export default function InvoiceForm({ invoice, onClose, onPreview }) {
     const customer = customers.find((c) => c.id === formData.customerId)
     const company = companies.find((c) => c.id === formData.companyId)
 
-    // STEP 2: Build invoice with FORCED status 'ready' + full customer/company snapshot
+    // Build invoice with status 'ready' + full customer/company snapshot
     const invoiceData = {
       ...formData,
       invoiceNumber: parseInt(formData.invoiceNumber, 10) || formData.invoiceNumber,
-      // FORCED STATUS - this MUST happen regardless of PDF/Email
       status: 'ready',
       ...totals,
+      // Convert combined additionalInfo to start/end format for preview
+      additionalInfoStart: formData.additionalInfoPosition === 'start' ? formData.additionalInfo : '',
+      additionalInfoEnd: formData.additionalInfoPosition === 'end' ? formData.additionalInfo : '',
       // FULL CUSTOMER SNAPSHOT (survives deletion)
       _customerName: customer?.name || '',
       _customerBusinessId: customer?.businessId || '',
@@ -503,17 +506,26 @@ export default function InvoiceForm({ invoice, onClose, onPreview }) {
           </CardBody>
         </Card>
 
-        {/* Additional info start */}
+        {/* Additional info - combined with position selector */}
         <Card className="mb-6">
-          <CardHeader>
+          <CardHeader className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-gray-900">
-              {t('invoices.additionalInfoStart')}
+              {t('invoices.additionalInfo')}
             </h2>
+            <select
+              name="additionalInfoPosition"
+              value={formData.additionalInfoPosition}
+              onChange={handleChange}
+              className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="start">{language === 'fi' ? 'Ennen rivejä' : 'Before rows'}</option>
+              <option value="end">{language === 'fi' ? 'Rivien jälkeen' : 'After rows'}</option>
+            </select>
           </CardHeader>
           <CardBody>
             <textarea
-              name="additionalInfoStart"
-              value={formData.additionalInfoStart}
+              name="additionalInfo"
+              value={formData.additionalInfo}
               onChange={handleChange}
               rows={2}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
@@ -686,25 +698,6 @@ export default function InvoiceForm({ invoice, onClose, onPreview }) {
                 </div>
               </div>
             ))}
-          </CardBody>
-        </Card>
-
-        {/* Additional info end */}
-        <Card className="mb-6">
-          <CardHeader>
-            <h2 className="text-lg font-semibold text-gray-900">
-              {t('invoices.additionalInfoEnd')}
-            </h2>
-          </CardHeader>
-          <CardBody>
-            <textarea
-              name="additionalInfoEnd"
-              value={formData.additionalInfoEnd}
-              onChange={handleChange}
-              rows={2}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-              placeholder={t('invoices.additionalInfo')}
-            />
           </CardBody>
         </Card>
 

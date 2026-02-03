@@ -226,22 +226,27 @@ export default function Dashboard() {
               <Mail className="w-4 h-4" />
               Lähetä sähköpostiin
             </Button>
-            {/* DIRECT GMAIL BUTTON - Bypasses Outlook completely */}
+            {/* DIRECT GMAIL BUTTON */}
             <Button
               variant="secondary"
               onClick={() => {
                 if (invoices.length === 0) { setEmailMsg('Ei laskuja.'); setTimeout(() => setEmailMsg(null), 5000); return }
 
-                // Get latest invoice data
                 const latest = invoices[invoices.length - 1]
 
-                // Build message: "Lasku nro: X | Summa: Y EUR"
-                const message = 'Lasku nro: ' + String(latest.invoiceNumber || '') + ' | Summa: ' + String(latest.totalGross || '0') + ' EUR'
+                // Build rich message with products
+                const products = (latest.rows || [])
+                  .filter(row => row.description)
+                  .map(row => row.description + ' ' + row.quantity + ' kpl ' + row.priceNet + '€')
+                  .join(', ')
 
-                // Gmail URL
+                let message = 'Lasku ' + String(latest.invoiceNumber || '')
+                if (latest._customerName) message += ' | Asiakas: ' + latest._customerName
+                if (products) message += ' | Tuotteet: ' + products
+                message += ' | Yhteensä: ' + String(latest.totalGross || '0') + ' EUR'
+
                 const gmailUrl = 'https://mail.google.com/mail/?view=cm&fs=1&to=leevi.latvatalo@gmail.com&su=' + encodeURIComponent('Varmuuskopio') + '&body=' + encodeURIComponent(message)
 
-                // Open popup sized for tablet
                 const popupWidth = 600
                 const popupHeight = 700
                 const left = (window.screen.width - popupWidth) / 2
