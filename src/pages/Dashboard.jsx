@@ -40,31 +40,9 @@ export default function Dashboard() {
     URL.revokeObjectURL(url)
   }
 
-  const handleDownloadBackup = async () => {
+  const handleDownloadBackup = () => {
+    // Direct file download - no navigator.share or window.open to avoid tablet freezing
     const blob = createBackupBlob()
-    const backupText = await blob.text()
-
-    // Try native text sharing first (works with Gmail, WhatsApp, etc.)
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: 'TrioLasku varmuuskopio',
-          text: backupText,
-        })
-        return
-      } catch (err) {
-        if (err.name === 'AbortError') return
-      }
-    }
-
-    // Fallback: open mailto: link so Gmail/Outlook opens with content
-    if (settings.backupEmail) {
-      const subject = encodeURIComponent('TrioLasku varmuuskopio')
-      const body = encodeURIComponent(backupText.slice(0, 5000))
-      window.open(`mailto:${settings.backupEmail}?subject=${subject}&body=${body}`, '_blank')
-      return
-    }
-
     downloadBlob(blob)
   }
 
