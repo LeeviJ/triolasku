@@ -294,6 +294,23 @@ export function DataProvider({ children }) {
     return { success: true }
   }
 
+  const duplicateInvoice = (invoice) => {
+    const today = new Date().toISOString().split('T')[0]
+    const invoiceNumber = getNextInvoiceNumberForCompany(invoice.companyId)
+    const newInvoice = {
+      ...invoice,
+      id: crypto.randomUUID(),
+      invoiceNumber,
+      invoiceDate: today,
+      dueDate: '',
+      status: 'draft',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    }
+    setInvoices((prev) => [...prev, newInvoice])
+    return { success: true, invoice: newInvoice }
+  }
+
   const deleteInvoice = (id) => {
     setInvoices((prev) => prev.filter((invoice) => invoice.id !== id))
     return { success: true }
@@ -334,6 +351,7 @@ export function DataProvider({ children }) {
     addInvoice,
     updateInvoice,
     deleteInvoice,
+    duplicateInvoice,
     getNextInvoiceNumberForCompany,
     // Settings & email backup
     settings,

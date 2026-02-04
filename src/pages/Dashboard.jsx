@@ -302,6 +302,8 @@ export default function Dashboard() {
                 <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-gray-400"></span> {t('invoices.statusDraft')}</span>
                 <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-purple-500"></span> {t('invoices.statusReady')}</span>
                 <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-blue-500"></span> {t('invoices.statusSent')}</span>
+                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-500"></span> {t('invoices.statusPaid')}</span>
+                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-500"></span> {t('invoices.statusOverdue')}</span>
               </div>
             </div>
             <div className="overflow-x-auto">

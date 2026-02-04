@@ -8,6 +8,7 @@ import {
   Search,
   Building2,
   User,
+  Copy,
 } from 'lucide-react'
 import { useLanguage } from '../context/LanguageContext'
 import { useData } from '../context/DataContext'
@@ -19,7 +20,7 @@ import InvoicePreview from '../components/invoices/InvoicePreview'
 
 export default function Invoices() {
   const { t } = useLanguage()
-  const { invoices, companies, customers, deleteInvoice } = useData()
+  const { invoices, companies, customers, deleteInvoice, duplicateInvoice } = useData()
 
   const [showForm, setShowForm] = useState(false)
   const [showPreview, setShowPreview] = useState(false)
@@ -70,6 +71,10 @@ export default function Invoices() {
   const handleFormClose = () => {
     setShowForm(false)
     setEditingInvoice(null)
+  }
+
+  const handleDuplicate = (invoice) => {
+    duplicateInvoice(invoice)
   }
 
   // Get company name - use snapshot if company was deleted
@@ -187,6 +192,10 @@ export default function Invoices() {
             <span className="w-3 h-3 rounded-full bg-green-500"></span>
             <span>{t('invoices.statusPaid')}</span>
           </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-3 h-3 rounded-full bg-red-500"></span>
+            <span>{t('invoices.statusOverdue')}</span>
+          </div>
         </div>
       )}
 
@@ -270,6 +279,14 @@ export default function Invoices() {
                           onClick={() => handlePreview(invoice)}
                         >
                           <Eye className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDuplicate(invoice)}
+                          title={t('invoices.duplicate')}
+                        >
+                          <Copy className="w-4 h-4" />
                         </Button>
                         <Button
                           variant="ghost"

@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect } from 'react'
-import { ArrowLeft, Printer, Download, Check } from 'lucide-react'
+import { ArrowLeft, Printer, Download, Check, Camera, CheckCircle } from 'lucide-react'
 import html2canvas from 'html2canvas'
 import { jsPDF } from 'jspdf'
 import JsBarcode from 'jsbarcode'
@@ -15,6 +15,8 @@ export default function InvoicePreview({ invoice, onClose }) {
   const barcodeRef = useRef(null)
   const [generating, setGenerating] = useState(false)
   const [statusNotice, setStatusNotice] = useState(false)
+  const [paidNotice, setPaidNotice] = useState(false)
+  const [screenshotMode, setScreenshotMode] = useState(false)
 
   // Use live data if available, fallback to embedded data (survives deletion)
   const liveCompany = companies.find((c) => c.id === invoice.companyId)
@@ -239,6 +241,14 @@ export default function InvoicePreview({ invoice, onClose }) {
     }
   }
 
+  const handleMarkAsPaid = () => {
+    if (invoice.id && invoice.status !== 'paid') {
+      updateInvoice(invoice.id, { status: 'paid' })
+      setPaidNotice(true)
+      setTimeout(() => setPaidNotice(false), 3000)
+    }
+  }
+
   const handleDownloadPdf = async () => {
     setGenerating(true)
     try {
@@ -258,29 +268,58 @@ export default function InvoicePreview({ invoice, onClose }) {
 
   return (
     <div className="max-w-5xl mx-auto">
-      {/* Controls (hidden when printing) */}
-      <div className="flex items-center justify-between mb-6 print:hidden">
-        <Button variant="ghost" onClick={onClose}>
-          <ArrowLeft className="w-4 h-4" />
-          {t('common.back')}
-        </Button>
-        <div className="flex gap-2">
-          <Button variant="secondary" onClick={handlePrint}>
-            <Printer className="w-4 h-4" />
-            {t('invoices.print')}
+      {/* Controls (hidden when printing and in screenshot mode) */}
+      {!screenshotMode && (
+        <div className="flex items-center justify-between mb-6 print:hidden">
+          <Button variant="ghost" onClick={onClose}>
+            <ArrowLeft className="w-4 h-4" />
+            {t('common.back')}
           </Button>
-          <Button onClick={handleDownloadPdf} disabled={generating}>
-            <Download className="w-4 h-4" />
-            {generating ? t('common.loading') : t('invoices.download')}
+          <div className="flex flex-wrap gap-2">
+            {invoice.status !== 'paid' && (
+              <Button variant="secondary" onClick={handleMarkAsPaid}>
+                <CheckCircle className="w-4 h-4" />
+                {t('invoices.markAsPaid')}
+              </Button>
+            )}
+            <Button variant="secondary" onClick={() => setScreenshotMode(true)}>
+              <Camera className="w-4 h-4" />
+              {t('invoices.screenshotMode')}
+            </Button>
+            <Button variant="secondary" onClick={handlePrint}>
+              <Printer className="w-4 h-4" />
+              {t('invoices.print')}
+            </Button>
+            <Button onClick={handleDownloadPdf} disabled={generating}>
+              <Download className="w-4 h-4" />
+              {generating ? t('common.loading') : t('invoices.download')}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Screenshot mode exit button */}
+      {screenshotMode && (
+        <div className="fixed top-4 right-4 z-50 print:hidden">
+          <Button variant="danger" size="sm" onClick={() => setScreenshotMode(false)}>
+            {t('invoices.screenshotModeExit')}
           </Button>
         </div>
-      </div>
+      )}
 
       {/* Status notification */}
-      {statusNotice && (
+      {statusNotice && !screenshotMode && (
         <div className="mb-4 px-4 py-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2 text-green-800 text-sm print:hidden">
           <Check className="w-4 h-4" />
           {t('invoices.markedAsSent')}
+        </div>
+      )}
+
+      {/* Paid notification */}
+      {paidNotice && !screenshotMode && (
+        <div className="mb-4 px-4 py-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2 text-green-800 text-sm print:hidden">
+          <CheckCircle className="w-4 h-4" />
+          {t('invoices.markedAsPaid')}
         </div>
       )}
 

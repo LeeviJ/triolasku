@@ -206,6 +206,11 @@ export const translations = {
       paidWith: 'Maksettu',
       invoiceNumberEdit: 'Voit muokata numeroa',
       markedAsSent: 'Lasku tallennettu ja merkitty lähetetyksi',
+      markedAsPaid: 'Lasku merkitty maksetuksi',
+      markAsPaid: 'Merkitse maksetuksi',
+      duplicate: 'Kopioi',
+      screenshotMode: 'Kuvakaappaus-tila',
+      screenshotModeExit: 'Poistu kuvakaappaustilasta',
     },
     // Language
     language: {
@@ -422,6 +427,11 @@ export const translations = {
       paidWith: 'Paid with',
       invoiceNumberEdit: 'You can edit the number',
       markedAsSent: 'Invoice saved and marked as sent',
+      markedAsPaid: 'Invoice marked as paid',
+      markAsPaid: 'Mark as paid',
+      duplicate: 'Duplicate',
+      screenshotMode: 'Screenshot mode',
+      screenshotModeExit: 'Exit screenshot mode',
     },
     // Language
     language: {
@@ -638,6 +648,11 @@ export const translations = {
       paidWith: 'Betald med',
       invoiceNumberEdit: 'Du kan redigera numret',
       markedAsSent: 'Faktura sparad och markerad som skickad',
+      markedAsPaid: 'Faktura markerad som betald',
+      markAsPaid: 'Markera som betald',
+      duplicate: 'Kopiera',
+      screenshotMode: 'Skärmdumpsläge',
+      screenshotModeExit: 'Avsluta skärmdumpsläge',
     },
     // Language
     language: {
