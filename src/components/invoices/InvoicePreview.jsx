@@ -17,6 +17,19 @@ export default function InvoicePreview({ invoice, onClose, onDuplicate }) {
   const [statusNotice, setStatusNotice] = useState(false)
   const [paidNotice, setPaidNotice] = useState(false)
   const [screenshotMode, setScreenshotMode] = useState(false)
+  const [screenshotScale, setScreenshotScale] = useState(1)
+
+  // Scale invoice to fit viewport in screenshot mode
+  useEffect(() => {
+    if (!screenshotMode) return
+    const update = () => {
+      const invoicePx = 793 // 210mm ≈ 793px
+      setScreenshotScale(window.innerWidth < invoicePx ? window.innerWidth / invoicePx : 1)
+    }
+    update()
+    window.addEventListener('resize', update)
+    return () => window.removeEventListener('resize', update)
+  }, [screenshotMode])
 
   // Use live data if available, fallback to embedded data (survives deletion)
   const liveCompany = companies.find((c) => c.id === invoice.companyId)
@@ -267,7 +280,11 @@ export default function InvoicePreview({ invoice, onClose, onDuplicate }) {
   // Share removed - just use download to avoid "Share too large" errors
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <div
+      className={screenshotMode ? '' : 'max-w-5xl mx-auto'}
+      style={screenshotMode ? { background: '#ffffff', minHeight: '100vh', overflow: 'hidden' } : {}}
+      onClick={screenshotMode ? () => setScreenshotMode(false) : undefined}
+    >
       {/* Controls (hidden when printing and in screenshot mode) */}
       {!screenshotMode && (
         <div className="flex items-center justify-between mb-6 print:hidden">
@@ -304,14 +321,7 @@ export default function InvoicePreview({ invoice, onClose, onDuplicate }) {
         </div>
       )}
 
-      {/* Screenshot mode exit button */}
-      {screenshotMode && (
-        <div className="fixed top-4 right-4 z-50 print:hidden">
-          <Button variant="danger" size="sm" onClick={() => setScreenshotMode(false)}>
-            {t('invoices.screenshotModeExit')}
-          </Button>
-        </div>
-      )}
+      {/* Screenshot mode: no buttons, tap anywhere to exit */}
 
       {/* Status notification */}
       {statusNotice && !screenshotMode && (
@@ -330,7 +340,7 @@ export default function InvoicePreview({ invoice, onClose, onDuplicate }) {
       )}
 
       {/* A4 Invoice — 100% inline styles, zero Tailwind classes for html2canvas compatibility */}
-      <div ref={invoiceRef} className="invoice-sheet" style={{ width: '210mm', minHeight: '297mm', padding: '15mm', backgroundColor: '#ffffff', color: '#111827', margin: '0 auto', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1)', fontFamily: 'system-ui, -apple-system, sans-serif', fontSize: '14px', lineHeight: '1.5' }}>
+      <div ref={invoiceRef} className="invoice-sheet" style={{ width: '210mm', minHeight: '297mm', padding: '15mm', backgroundColor: '#ffffff', color: '#111827', margin: screenshotMode ? '0' : '0 auto', boxShadow: screenshotMode ? 'none' : '0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1)', fontFamily: 'system-ui, -apple-system, sans-serif', fontSize: '14px', lineHeight: '1.5', ...(screenshotMode ? { transform: `scale(${screenshotScale})`, transformOrigin: 'top left' } : {}) }}>
         {/* Header with logo */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2rem' }}>
           {/* Company logo and info */}

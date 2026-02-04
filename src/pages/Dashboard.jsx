@@ -16,7 +16,11 @@ export default function Dashboard() {
 
   // TrioLoki – simple todo list persisted in localStorage
   const TRIOLOKI_KEY = 'triolasku_trioloki'
-  const defaultItems = [{ id: '1', text: 'Paperitulostus (käyttäjä testaa itse)', done: false }]
+  const defaultItems = [
+    { id: '1', text: 'Paperitulostus (käyttäjä testaa itse)', done: false },
+    { id: '2', text: 'Kopiointi', done: true },
+    { id: '3', text: 'Tiivistetty tuoterivinäkymä toteutettu', done: true },
+  ]
   const [triolokiItems, setTriolokiItems] = useState(() => {
     try {
       const saved = localStorage.getItem(TRIOLOKI_KEY)

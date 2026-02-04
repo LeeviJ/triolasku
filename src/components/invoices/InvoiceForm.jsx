@@ -534,171 +534,84 @@ export default function InvoiceForm({ invoice, onClose, onPreview }) {
           </CardBody>
         </Card>
 
-        {/* Invoice rows */}
+        {/* Invoice rows – compact table */}
         <Card className="mb-6">
-          <CardHeader className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-900">
+          <CardHeader className="flex items-center justify-between py-2">
+            <h2 className="text-base font-semibold text-gray-900">
               {t('invoices.invoiceRows')}
             </h2>
             <Button type="button" variant="secondary" size="sm" onClick={addRow}>
-              <Plus className="w-4 h-4" />
+              <Plus className="w-3.5 h-3.5" />
               {t('invoices.addRow')}
             </Button>
           </CardHeader>
-          <CardBody className="space-y-4">
+          <div>
             {errors.rows && (
-              <p className="text-sm text-red-600">{errors.rows}</p>
+              <p className="text-xs text-red-600 px-4 pb-2">{errors.rows}</p>
             )}
-            {formData.rows.map((row, index) => (
-              <div
-                key={index}
-                className="p-4 bg-gray-50 rounded-lg border border-gray-200"
-              >
-                <div className="flex justify-between items-start mb-3">
-                  <span className="text-sm font-medium text-gray-600">
-                    {t('invoices.invoiceRows')} #{index + 1}
-                  </span>
-                  {formData.rows.length > 1 && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeRow(index)}
-                    >
-                      <Trash2 className="w-4 h-4 text-red-500" />
-                    </Button>
-                  )}
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-6 gap-3">
-                  {/* Product selector */}
-                  <div className="md:col-span-2">
-                    <label className="block text-xs font-medium text-gray-500 mb-1">
-                      {t('invoices.product')}
-                    </label>
-                    <select
-                      value={row.productId}
-                      onChange={(e) =>
-                        handleRowChange(index, 'productId', e.target.value)
-                      }
-                      className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-                    >
-                      <option value="">{t('invoices.selectProduct')}</option>
-                      {products.map((product) => (
-                        <option key={product.id} value={product.id}>
-                          {product.name} - {formatPrice(product.priceNet)} EUR
-                        </option>
-                      ))}
+            {/* Desktop: table header */}
+            <div className="hidden md:grid md:grid-cols-[minmax(0,1.2fr)_minmax(0,2fr)_4rem_4rem_5rem_4.5rem_5.5rem_1.5rem] gap-1.5 px-3 py-1.5 bg-gray-100 border-y border-gray-200 text-[10px] font-semibold text-gray-500 uppercase tracking-wide">
+              <span>{t('invoices.product')}</span>
+              <span>{t('invoices.description')}</span>
+              <span>{t('invoices.quantity')}</span>
+              <span>{t('invoices.unit')}</span>
+              <span>{t('invoices.unitPrice')}</span>
+              <span>{t('invoices.vatRate')}</span>
+              <span className="text-right">{t('invoices.total')}</span>
+              <span></span>
+            </div>
+            {/* Rows */}
+            <div className="divide-y divide-gray-100">
+              {formData.rows.map((row, index) => (
+                <div key={index} className="px-3 py-1.5">
+                  {/* Desktop: single compact row */}
+                  <div className="hidden md:grid md:grid-cols-[minmax(0,1.2fr)_minmax(0,2fr)_4rem_4rem_5rem_4.5rem_5.5rem_1.5rem] gap-1.5 items-center">
+                    <select value={row.productId} onChange={(e) => handleRowChange(index, 'productId', e.target.value)} className="w-full px-1 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white truncate">
+                      <option value="">—</option>
+                      {products.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
                     </select>
-                  </div>
-
-                  {/* Description */}
-                  <div className="md:col-span-2">
-                    <label className="block text-xs font-medium text-gray-500 mb-1">
-                      {t('invoices.description')}
-                    </label>
-                    <input
-                      type="text"
-                      value={row.description}
-                      onChange={(e) =>
-                        handleRowChange(index, 'description', e.target.value)
-                      }
-                      className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-                    />
-                  </div>
-
-                  {/* Quantity */}
-                  <div>
-                    <label className="block text-xs font-medium text-gray-500 mb-1">
-                      {t('invoices.quantity')}
-                    </label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={row.quantity}
-                      onChange={(e) =>
-                        handleRowChange(index, 'quantity', e.target.value)
-                      }
-                      className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-                    />
-                  </div>
-
-                  {/* Unit */}
-                  <div>
-                    <label className="block text-xs font-medium text-gray-500 mb-1">
-                      {t('invoices.unit')}
-                    </label>
-                    <select
-                      value={row.unit}
-                      onChange={(e) =>
-                        handleRowChange(index, 'unit', e.target.value)
-                      }
-                      className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-                    >
-                      {units.map((unit) => (
-                        <option key={unit.id} value={unit.id}>
-                          {getUnitName(unit.id)}
-                        </option>
-                      ))}
+                    <input type="text" value={row.description} onChange={(e) => handleRowChange(index, 'description', e.target.value)} className="w-full px-1.5 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                    <input type="number" step="0.01" min="0" value={row.quantity} onChange={(e) => handleRowChange(index, 'quantity', e.target.value)} className="w-full px-1 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 text-center" />
+                    <select value={row.unit} onChange={(e) => handleRowChange(index, 'unit', e.target.value)} className="w-full px-0.5 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white">
+                      {units.map((u) => <option key={u.id} value={u.id}>{getUnitName(u.id)}</option>)}
                     </select>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3">
-                  {/* Unit price */}
-                  <div>
-                    <label className="block text-xs font-medium text-gray-500 mb-1">
-                      {t('invoices.unitPrice')} (EUR)
-                    </label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={row.priceNet}
-                      onChange={(e) =>
-                        handleRowChange(index, 'priceNet', e.target.value)
-                      }
-                      className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-                    />
-                  </div>
-
-                  {/* VAT rate */}
-                  <div>
-                    <label className="block text-xs font-medium text-gray-500 mb-1">
-                      {t('invoices.vatRate')}
-                    </label>
-                    <select
-                      value={row.vatRate}
-                      onChange={(e) =>
-                        handleRowChange(index, 'vatRate', e.target.value)
-                      }
-                      className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-                    >
-                      {vatRates.map((rate) => (
-                        <option key={rate} value={rate}>
-                          {formatVatRate(rate)} %
-                        </option>
-                      ))}
+                    <input type="number" step="0.01" min="0" value={row.priceNet} onChange={(e) => handleRowChange(index, 'priceNet', e.target.value)} className="w-full px-1 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 text-right" />
+                    <select value={row.vatRate} onChange={(e) => handleRowChange(index, 'vatRate', e.target.value)} className="w-full px-0.5 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white">
+                      {vatRates.map((rate) => <option key={rate} value={rate}>{formatVatRate(rate)}%</option>)}
                     </select>
+                    <span className="text-xs font-semibold text-gray-900 text-right whitespace-nowrap">{formatPrice(calculateRowGross(row))}</span>
+                    {formData.rows.length > 1 ? (
+                      <button type="button" onClick={() => removeRow(index)} className="p-0.5 text-red-400 hover:text-red-600 flex justify-center"><Trash2 className="w-3.5 h-3.5" /></button>
+                    ) : <span />}
                   </div>
-
-                  {/* Row total */}
-                  <div className="col-span-2 text-right">
-                    <label className="block text-xs font-medium text-gray-500 mb-1">
-                      {t('invoices.rowTotal')}
-                    </label>
-                    <div className="text-lg font-semibold text-gray-900">
-                      {formatPrice(calculateRowGross(row))} EUR
+                  {/* Mobile: compact two-line layout */}
+                  <div className="md:hidden space-y-1">
+                    <div className="flex items-center gap-1.5">
+                      <select value={row.productId} onChange={(e) => handleRowChange(index, 'productId', e.target.value)} className="flex-1 min-w-0 px-1.5 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white">
+                        <option value="">{t('invoices.selectProduct')}</option>
+                        {products.map((p) => <option key={p.id} value={p.id}>{p.name} – {formatPrice(p.priceNet)}</option>)}
+                      </select>
+                      <input type="text" value={row.description} onChange={(e) => handleRowChange(index, 'description', e.target.value)} placeholder={t('invoices.description')} className="flex-[2] min-w-0 px-1.5 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                      {formData.rows.length > 1 && (
+                        <button type="button" onClick={() => removeRow(index)} className="p-0.5 text-red-400 hover:text-red-600 flex-shrink-0"><Trash2 className="w-3.5 h-3.5" /></button>
+                      )}
                     </div>
-                    <div className="text-xs text-gray-500">
-                      ({formatPrice(calculateRowTotal(row))} + ALV)
+                    <div className="flex items-center gap-1.5">
+                      <input type="number" step="0.01" min="0" value={row.quantity} onChange={(e) => handleRowChange(index, 'quantity', e.target.value)} className="w-14 px-1.5 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 text-center" />
+                      <select value={row.unit} onChange={(e) => handleRowChange(index, 'unit', e.target.value)} className="w-14 px-0.5 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white">
+                        {units.map((u) => <option key={u.id} value={u.id}>{getUnitName(u.id)}</option>)}
+                      </select>
+                      <input type="number" step="0.01" min="0" value={row.priceNet} onChange={(e) => handleRowChange(index, 'priceNet', e.target.value)} className="w-20 px-1.5 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 text-right" />
+                      <select value={row.vatRate} onChange={(e) => handleRowChange(index, 'vatRate', e.target.value)} className="w-16 px-0.5 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white">
+                        {vatRates.map((rate) => <option key={rate} value={rate}>{formatVatRate(rate)}%</option>)}
+                      </select>
+                      <span className="flex-1 text-right text-xs font-semibold text-gray-900 whitespace-nowrap">{formatPrice(calculateRowGross(row))}</span>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </CardBody>
+              ))}
+            </div>
+          </div>
         </Card>
 
         {/* Totals */}
