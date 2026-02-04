@@ -8,7 +8,6 @@ import {
   Search,
   Building2,
   User,
-  Copy,
 } from 'lucide-react'
 import { useLanguage } from '../context/LanguageContext'
 import { useData } from '../context/DataContext'
@@ -73,8 +72,14 @@ export default function Invoices() {
     setEditingInvoice(null)
   }
 
-  const handleDuplicate = (invoice) => {
-    duplicateInvoice(invoice)
+  const handleDuplicateAndEdit = (invoice) => {
+    const result = duplicateInvoice(invoice)
+    if (result.success) {
+      setShowPreview(false)
+      setPreviewInvoice(null)
+      setEditingInvoice(result.invoice)
+      setShowForm(true)
+    }
   }
 
   // Get company name - use snapshot if company was deleted
@@ -117,6 +122,7 @@ export default function Invoices() {
           setShowPreview(false)
           setPreviewInvoice(null)
         }}
+        onDuplicate={handleDuplicateAndEdit}
       />
     )
   }
@@ -279,14 +285,6 @@ export default function Invoices() {
                           onClick={() => handlePreview(invoice)}
                         >
                           <Eye className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDuplicate(invoice)}
-                          title={t('invoices.duplicate')}
-                        >
-                          <Copy className="w-4 h-4" />
                         </Button>
                         <Button
                           variant="ghost"

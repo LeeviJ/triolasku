@@ -209,8 +209,15 @@ export const translations = {
       markedAsPaid: 'Lasku merkitty maksetuksi',
       markAsPaid: 'Merkitse maksetuksi',
       duplicate: 'Kopioi',
+      duplicateToNew: 'Kopioi tiedot uudelle laskulle',
       screenshotMode: 'Kuvakaappaus-tila',
       screenshotModeExit: 'Poistu kuvakaappaustilasta',
+    },
+    // TrioLoki
+    trioloki: {
+      title: 'TrioLoki',
+      placeholder: 'Lisää huomio...',
+      add: 'Lisää',
     },
     // Language
     language: {
@@ -430,8 +437,15 @@ export const translations = {
       markedAsPaid: 'Invoice marked as paid',
       markAsPaid: 'Mark as paid',
       duplicate: 'Duplicate',
+      duplicateToNew: 'Copy to new invoice',
       screenshotMode: 'Screenshot mode',
       screenshotModeExit: 'Exit screenshot mode',
+    },
+    // TrioLoki
+    trioloki: {
+      title: 'TrioLoki',
+      placeholder: 'Add a note...',
+      add: 'Add',
     },
     // Language
     language: {
@@ -651,8 +665,15 @@ export const translations = {
       markedAsPaid: 'Faktura markerad som betald',
       markAsPaid: 'Markera som betald',
       duplicate: 'Kopiera',
+      duplicateToNew: 'Kopiera till ny faktura',
       screenshotMode: 'Skärmdumpsläge',
       screenshotModeExit: 'Avsluta skärmdumpsläge',
+    },
+    // TrioLoki
+    trioloki: {
+      title: 'TrioLoki',
+      placeholder: 'Lägg till anteckning...',
+      add: 'Lägg till',
     },
     // Language
     language: {

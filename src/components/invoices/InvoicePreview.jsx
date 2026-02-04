@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect } from 'react'
-import { ArrowLeft, Printer, Download, Check, Camera, CheckCircle } from 'lucide-react'
+import { ArrowLeft, Printer, Download, Check, Camera, CheckCircle, Copy } from 'lucide-react'
 import html2canvas from 'html2canvas'
 import { jsPDF } from 'jspdf'
 import JsBarcode from 'jsbarcode'
@@ -8,7 +8,7 @@ import { useData } from '../../context/DataContext'
 import Button from '../ui/Button'
 import { formatPrice, formatVatRate, calculateGrossPrice, formatDateFI } from '../../utils/formatters'
 
-export default function InvoicePreview({ invoice, onClose }) {
+export default function InvoicePreview({ invoice, onClose, onDuplicate }) {
   const { t, language } = useLanguage()
   const { companies, customers, units, updateInvoice } = useData()
   const invoiceRef = useRef(null)
@@ -280,6 +280,12 @@ export default function InvoicePreview({ invoice, onClose }) {
               <Button variant="secondary" onClick={handleMarkAsPaid}>
                 <CheckCircle className="w-4 h-4" />
                 {t('invoices.markAsPaid')}
+              </Button>
+            )}
+            {onDuplicate && (
+              <Button variant="secondary" onClick={() => onDuplicate(invoice)}>
+                <Copy className="w-4 h-4" />
+                {t('invoices.duplicateToNew')}
               </Button>
             )}
             <Button variant="secondary" onClick={() => setScreenshotMode(true)}>
