@@ -98,6 +98,17 @@ export default function InvoicePreview({ invoice, onClose, onDuplicate }) {
     vatSummary[rate].vat += rowNet * (rate / 100)
   })
 
+  // Dynamic density: compact rows/totals for many-row invoices (header/logo stay full size)
+  const rowCount = invoice.rows?.length || 0
+  const density = rowCount > 20 ? 'ultra' : rowCount > 10 ? 'compact' : 'normal'
+  const rowFont = density === 'ultra' ? '0.7rem' : density === 'compact' ? '0.8rem' : '0.875rem'
+  const rowPad = density === 'ultra' ? '0.15rem 0' : density === 'compact' ? '0.3rem 0' : '0.5rem 0'
+  const sectionGap = density === 'ultra' ? '0.75rem' : density === 'compact' ? '1rem' : '1.5rem'
+  const headerGap = density === 'ultra' ? '1rem' : density === 'compact' ? '1.5rem' : '2rem'
+  const totalsFont = density === 'ultra' ? '0.75rem' : density === 'compact' ? '0.8rem' : '0.875rem'
+  const grandTotalFont = density === 'ultra' ? '0.95rem' : density === 'compact' ? '1rem' : '1.125rem'
+  const paymentFont = density === 'ultra' ? '1rem' : density === 'compact' ? '1.1rem' : '1.25rem'
+
   const handlePrint = () => {
     window.print()
   }
@@ -368,7 +379,7 @@ export default function InvoicePreview({ invoice, onClose, onDuplicate }) {
       <div ref={wrapperRef} style={{ maxWidth: '100%', overflowX: 'hidden' }}>
       <div ref={invoiceRef} className="invoice-sheet" style={{ width: '210mm', minHeight: '297mm', padding: '15mm', backgroundColor: '#ffffff', color: '#111827', margin: screenshotMode ? '0' : '0 auto', boxShadow: screenshotMode ? 'none' : '0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1)', fontFamily: 'system-ui, -apple-system, sans-serif', fontSize: '14px', lineHeight: '1.5', boxSizing: 'border-box', ...(previewScale < 1 ? { transform: `scale(${previewScale})`, transformOrigin: 'top left' } : {}) }}>
         {/* Header with logo */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: headerGap }}>
           {/* Company logo and info */}
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
             {company?.logo ? (
@@ -413,7 +424,7 @@ export default function InvoicePreview({ invoice, onClose, onDuplicate }) {
         </div>
 
         {/* Invoice details and recipient */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '2rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: headerGap, marginBottom: headerGap }}>
           {/* Recipient */}
           <div>
             <h3 style={{ fontSize: '0.75rem', fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', marginBottom: '0.5rem' }}>
@@ -479,31 +490,31 @@ export default function InvoicePreview({ invoice, onClose, onDuplicate }) {
 
         {/* Additional info start */}
         {invoice.additionalInfoStart && (
-          <div style={{ marginBottom: '1.5rem', padding: '0.75rem', backgroundColor: '#f9fafb', color: '#374151', borderRadius: '4px', fontSize: '0.875rem' }}>
+          <div style={{ marginBottom: sectionGap, padding: '0.75rem', backgroundColor: '#f9fafb', color: '#374151', borderRadius: '4px', fontSize: rowFont }}>
             {invoice.additionalInfoStart}
           </div>
         )}
 
         {/* Invoice rows */}
-        <table style={{ width: '100%', fontSize: '0.875rem', marginBottom: '1.5rem', borderCollapse: 'collapse' }}>
+        <table style={{ width: '100%', fontSize: rowFont, marginBottom: sectionGap, borderCollapse: 'collapse' }}>
           <thead>
             <tr style={{ borderBottom: '2px solid #d1d5db' }}>
-              <th style={{ padding: '0.5rem 0', textAlign: 'left', fontWeight: 600, color: '#374151' }}>
+              <th style={{ padding: rowPad, textAlign: 'left', fontWeight: 600, color: '#374151' }}>
                 {t('invoices.description')}
               </th>
-              <th style={{ padding: '0.5rem 0', textAlign: 'right', fontWeight: 600, color: '#374151', width: '5rem' }}>
+              <th style={{ padding: rowPad, textAlign: 'right', fontWeight: 600, color: '#374151', width: '5rem' }}>
                 {t('invoices.quantity')}
               </th>
-              <th style={{ padding: '0.5rem 0', textAlign: 'center', fontWeight: 600, color: '#374151', width: '4rem' }}>
+              <th style={{ padding: rowPad, textAlign: 'center', fontWeight: 600, color: '#374151', width: '4rem' }}>
                 {t('invoices.unit')}
               </th>
-              <th style={{ padding: '0.5rem 0', textAlign: 'right', fontWeight: 600, color: '#374151', width: '6rem' }}>
+              <th style={{ padding: rowPad, textAlign: 'right', fontWeight: 600, color: '#374151', width: '6rem' }}>
                 {t('invoices.unitPrice')}
               </th>
-              <th style={{ padding: '0.5rem 0', textAlign: 'right', fontWeight: 600, color: '#374151', width: '4rem' }}>
+              <th style={{ padding: rowPad, textAlign: 'right', fontWeight: 600, color: '#374151', width: '4rem' }}>
                 {t('invoices.vatRate')}
               </th>
-              <th style={{ padding: '0.5rem 0', textAlign: 'right', fontWeight: 600, color: '#374151', width: '7rem' }}>
+              <th style={{ padding: rowPad, textAlign: 'right', fontWeight: 600, color: '#374151', width: '7rem' }}>
                 {t('invoices.total')}
               </th>
             </tr>
@@ -511,20 +522,20 @@ export default function InvoicePreview({ invoice, onClose, onDuplicate }) {
           <tbody>
             {invoice.rows?.map((row, index) => (
               <tr key={index} style={{ borderBottom: '1px solid #e5e7eb' }}>
-                <td style={{ padding: '0.5rem 0', color: '#111827' }}>{row.description}</td>
-                <td style={{ padding: '0.5rem 0', textAlign: 'right', color: '#4b5563' }}>
+                <td style={{ padding: rowPad, color: '#111827' }}>{row.description}</td>
+                <td style={{ padding: rowPad, textAlign: 'right', color: '#4b5563' }}>
                   {formatPrice(row.quantity)}
                 </td>
-                <td style={{ padding: '0.5rem 0', textAlign: 'center', color: '#4b5563' }}>
+                <td style={{ padding: rowPad, textAlign: 'center', color: '#4b5563' }}>
                   {getUnitName(row.unit)}
                 </td>
-                <td style={{ padding: '0.5rem 0', textAlign: 'right', color: '#4b5563' }}>
+                <td style={{ padding: rowPad, textAlign: 'right', color: '#4b5563' }}>
                   {formatPrice(row.priceNet)}
                 </td>
-                <td style={{ padding: '0.5rem 0', textAlign: 'right', color: '#4b5563' }}>
+                <td style={{ padding: rowPad, textAlign: 'right', color: '#4b5563' }}>
                   {formatVatRate(row.vatRate)} %
                 </td>
-                <td style={{ padding: '0.5rem 0', textAlign: 'right', fontWeight: 500, color: '#111827' }}>
+                <td style={{ padding: rowPad, textAlign: 'right', fontWeight: 500, color: '#111827' }}>
                   {formatPrice(calculateRowTotal(row))}
                 </td>
               </tr>
@@ -534,32 +545,32 @@ export default function InvoicePreview({ invoice, onClose, onDuplicate }) {
 
         {/* Additional info end */}
         {invoice.additionalInfoEnd && (
-          <div style={{ marginBottom: '1.5rem', padding: '0.75rem', backgroundColor: '#f9fafb', color: '#374151', borderRadius: '4px', fontSize: '0.875rem' }}>
+          <div style={{ marginBottom: sectionGap, padding: '0.75rem', backgroundColor: '#f9fafb', color: '#374151', borderRadius: '4px', fontSize: rowFont }}>
             {invoice.additionalInfoEnd}
           </div>
         )}
 
         {/* Totals */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '2rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: headerGap }}>
           <div style={{ width: '18rem' }}>
             {/* VAT breakdown */}
             {Object.entries(vatSummary).map(([rate, values]) => (
-              <div key={rate} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem', padding: '0.25rem 0' }}>
+              <div key={rate} style={{ display: 'flex', justifyContent: 'space-between', fontSize: totalsFont, padding: '0.25rem 0' }}>
                 <span style={{ color: '#4b5563' }}>
                   ALV {formatVatRate(rate)} % ({formatPrice(values.net)} EUR):
                 </span>
                 <span>{formatPrice(values.vat)} EUR</span>
               </div>
             ))}
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem', padding: '0.25rem 0', borderTop: '1px solid #e5e7eb', marginTop: '0.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: totalsFont, padding: '0.25rem 0', borderTop: '1px solid #e5e7eb', marginTop: '0.5rem' }}>
               <span style={{ color: '#4b5563' }}>{t('invoices.subtotal')}:</span>
               <span>{formatPrice(invoice.totalNet)} EUR</span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem', padding: '0.25rem 0' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: totalsFont, padding: '0.25rem 0' }}>
               <span style={{ color: '#4b5563' }}>{t('invoices.vatTotal')}:</span>
               <span>{formatPrice(invoice.totalVat)} EUR</span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.125rem', fontWeight: 700, padding: '0.5rem 0', borderTop: '2px solid #111827', marginTop: '0.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: grandTotalFont, fontWeight: 700, padding: '0.5rem 0', borderTop: '2px solid #111827', marginTop: '0.5rem' }}>
               <span>{t('invoices.grandTotal')}:</span>
               <span>{formatPrice(invoice.totalGross)} EUR</span>
             </div>
@@ -567,39 +578,39 @@ export default function InvoicePreview({ invoice, onClose, onDuplicate }) {
         </div>
 
         {/* Maksutiedot */}
-        <div style={{ borderTop: '2px solid #d1d5db', paddingTop: '1.5rem' }}>
-          <h3 style={{ fontSize: '0.875rem', fontWeight: 600, color: '#374151', marginBottom: '0.75rem' }}>
+        <div style={{ borderTop: '2px solid #d1d5db', paddingTop: sectionGap }}>
+          <h3 style={{ fontSize: totalsFont, fontWeight: 600, color: '#374151', marginBottom: '0.75rem' }}>
             {language === 'fi' ? 'Maksutiedot' : language === 'sv' ? 'Betalningsuppgifter' : 'Payment Details'}
           </h3>
           <div>
             {company?.bankAccounts?.map((account, index) => (
               <div key={index} style={{ marginBottom: '0.75rem' }}>
                 {account.bankName && (
-                  <p style={{ fontSize: '0.875rem', color: '#4b5563', margin: 0 }}>{account.bankName}</p>
+                  <p style={{ fontSize: totalsFont, color: '#4b5563', margin: 0 }}>{account.bankName}</p>
                 )}
-                <p style={{ color: '#111827', fontWeight: 700, fontSize: '1.25rem', letterSpacing: '0.05em', margin: '0.25rem 0' }}>IBAN: {account.iban}</p>
-                {account.bic && <p style={{ fontSize: '0.875rem', color: '#4b5563', margin: 0 }}>BIC: {account.bic}</p>}
+                <p style={{ color: '#111827', fontWeight: 700, fontSize: paymentFont, letterSpacing: '0.05em', margin: '0.25rem 0' }}>IBAN: {account.iban}</p>
+                {account.bic && <p style={{ fontSize: totalsFont, color: '#4b5563', margin: 0 }}>BIC: {account.bic}</p>}
               </div>
             ))}
-            <div style={{ display: 'flex', gap: '2rem', marginTop: '0.75rem' }}>
+            <div style={{ display: 'flex', gap: headerGap, marginTop: '0.75rem' }}>
               <div>
-                <p style={{ fontSize: '0.875rem', color: '#4b5563', margin: 0 }}>{t('invoices.referenceNumber')}:</p>
-                <p style={{ fontWeight: 700, fontSize: '1.25rem', color: '#111827', margin: 0 }}>{referenceNumber}</p>
+                <p style={{ fontSize: totalsFont, color: '#4b5563', margin: 0 }}>{t('invoices.referenceNumber')}:</p>
+                <p style={{ fontWeight: 700, fontSize: paymentFont, color: '#111827', margin: 0 }}>{referenceNumber}</p>
               </div>
               <div>
-                <p style={{ fontSize: '0.875rem', color: '#4b5563', margin: 0 }}>{t('invoices.grandTotal')}:</p>
-                <p style={{ fontWeight: 700, fontSize: '1.25rem', color: '#111827', margin: 0 }}>{formatPrice(invoice.totalGross)} EUR</p>
+                <p style={{ fontSize: totalsFont, color: '#4b5563', margin: 0 }}>{t('invoices.grandTotal')}:</p>
+                <p style={{ fontWeight: 700, fontSize: paymentFont, color: '#111827', margin: 0 }}>{formatPrice(invoice.totalGross)} EUR</p>
               </div>
               <div>
-                <p style={{ fontSize: '0.875rem', color: '#4b5563', margin: 0 }}>{t('invoices.dueDate')}:</p>
-                <p style={{ fontWeight: 700, fontSize: '1.25rem', color: '#111827', margin: 0 }}>{formatDateFI(invoice.dueDate)}</p>
+                <p style={{ fontSize: totalsFont, color: '#4b5563', margin: 0 }}>{t('invoices.dueDate')}:</p>
+                <p style={{ fontWeight: 700, fontSize: paymentFont, color: '#111827', margin: 0 }}>{formatDateFI(invoice.dueDate)}</p>
               </div>
             </div>
           </div>
         </div>
 
         {/* Barcode area */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', marginTop: '1.5rem', minHeight: '30mm' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', marginTop: sectionGap, minHeight: '30mm' }}>
           <svg ref={barcodeRef}></svg>
           <p style={{ fontFamily: 'monospace', fontSize: '0.75rem', color: '#374151', letterSpacing: '0.05em', marginTop: '0.5rem', marginBottom: '0.25rem', userSelect: 'all' }}>
             {virtualBarcode}
