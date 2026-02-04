@@ -82,18 +82,22 @@ export default function InvoiceForm({ invoice, onClose, onPreview }) {
   const [saved, setSaved] = useState(false)
   const [productSearch, setProductSearch] = useState({})
   const [activeProductRow, setActiveProductRow] = useState(null)
+  const [activeVatRow, setActiveVatRow] = useState(null)
 
-  // Close product dropdown on outside click
+  // Close dropdowns on outside click
   useEffect(() => {
-    if (activeProductRow === null) return
+    if (activeProductRow === null && activeVatRow === null) return
     const handle = (e) => {
-      if (!e.target.closest('[data-product-dropdown]')) {
+      if (activeProductRow !== null && !e.target.closest('[data-product-dropdown]')) {
         setActiveProductRow(null)
+      }
+      if (activeVatRow !== null && !e.target.closest('[data-vat-dropdown]')) {
+        setActiveVatRow(null)
       }
     }
     document.addEventListener('mousedown', handle)
     return () => document.removeEventListener('mousedown', handle)
-  }, [activeProductRow])
+  }, [activeProductRow, activeVatRow])
 
   const getFilteredProducts = (query) => {
     if (!query) return products
@@ -624,9 +628,18 @@ export default function InvoiceForm({ invoice, onClose, onPreview }) {
                       {units.map((u) => <option key={u.id} value={u.id}>{getUnitName(u.id)}</option>)}
                     </select>
                     <input type="number" step="0.01" min="0" value={row.priceNet} onChange={(e) => handleRowChange(index, 'priceNet', e.target.value)} className="w-full px-1 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 text-right" />
-                    <select value={row.vatRate} onChange={(e) => handleRowChange(index, 'vatRate', e.target.value)} className="w-full px-0.5 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white">
-                      {vatRates.map((rate) => <option key={rate} value={rate}>{formatVatRate(rate)}%</option>)}
-                    </select>
+                    <div className="relative" data-vat-dropdown>
+                      <input type="number" step="0.1" min="0" max="100" value={row.vatRate} onChange={(e) => handleRowChange(index, 'vatRate', e.target.value)} onFocus={() => setActiveVatRow(index)} className="w-full px-0.5 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 text-right" />
+                      {activeVatRow === index && (
+                        <div className="absolute z-50 right-0 top-full mt-0.5 bg-white border border-gray-200 rounded shadow-lg p-1 flex flex-wrap gap-1 min-w-[8rem]">
+                          {vatRates.map((rate) => (
+                            <button key={rate} type="button" onClick={() => { handleRowChange(index, 'vatRate', rate); setActiveVatRow(null) }} className={`px-2 py-1 text-xs rounded transition-colors ${parseFloat(row.vatRate) === rate ? 'bg-blue-100 text-blue-700 font-semibold' : 'bg-gray-50 text-gray-600 hover:bg-gray-100'}`}>
+                              {formatVatRate(rate)}%
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                     <span className="text-xs font-semibold text-gray-900 text-right whitespace-nowrap">{formatPrice(calculateRowGross(row))}</span>
                     {formData.rows.length > 1 ? (
                       <button type="button" onClick={() => removeRow(index)} className="p-0.5 text-red-400 hover:text-red-600 flex justify-center"><Trash2 className="w-3.5 h-3.5" /></button>
@@ -669,9 +682,18 @@ export default function InvoiceForm({ invoice, onClose, onPreview }) {
                         {units.map((u) => <option key={u.id} value={u.id}>{getUnitName(u.id)}</option>)}
                       </select>
                       <input type="number" step="0.01" min="0" value={row.priceNet} onChange={(e) => handleRowChange(index, 'priceNet', e.target.value)} className="w-20 px-1.5 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 text-right" />
-                      <select value={row.vatRate} onChange={(e) => handleRowChange(index, 'vatRate', e.target.value)} className="w-16 px-0.5 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white">
-                        {vatRates.map((rate) => <option key={rate} value={rate}>{formatVatRate(rate)}%</option>)}
-                      </select>
+                      <div className="w-16 relative" data-vat-dropdown>
+                        <input type="number" step="0.1" min="0" max="100" value={row.vatRate} onChange={(e) => handleRowChange(index, 'vatRate', e.target.value)} onFocus={() => setActiveVatRow(index)} className="w-full px-0.5 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 text-right" />
+                        {activeVatRow === index && (
+                          <div className="absolute z-50 right-0 top-full mt-0.5 bg-white border border-gray-200 rounded shadow-lg p-1 flex flex-wrap gap-1 min-w-[8rem]">
+                            {vatRates.map((rate) => (
+                              <button key={rate} type="button" onClick={() => { handleRowChange(index, 'vatRate', rate); setActiveVatRow(null) }} className={`px-2 py-1 text-xs rounded transition-colors ${parseFloat(row.vatRate) === rate ? 'bg-blue-100 text-blue-700 font-semibold' : 'bg-gray-50 text-gray-600 hover:bg-gray-100'}`}>
+                                {formatVatRate(rate)}%
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                       <span className="flex-1 text-right text-xs font-semibold text-gray-900 whitespace-nowrap">{formatPrice(calculateRowGross(row))}</span>
                     </div>
                   </div>

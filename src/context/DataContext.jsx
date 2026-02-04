@@ -24,7 +24,7 @@ const DEFAULT_SETTINGS = {
 const MAX_COMPANIES = 3
 
 // Default VAT rates for Finland (supports two decimals)
-const DEFAULT_VAT_RATES = [25.5, 14, 10, 0]
+const DEFAULT_VAT_RATES = [25.5, 14, 13.5, 10, 0]
 
 // Default units
 const DEFAULT_UNITS = [
