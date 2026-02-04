@@ -7,6 +7,7 @@ export const translations = {
       customers: 'Asiakkaat',
       products: 'Tuotteet',
       invoices: 'Laskut',
+      triolog: 'TrioLog',
     },
     // Common
     common: {
@@ -214,6 +215,19 @@ export const translations = {
       screenshotModeExit: 'Poistu kuvakaappaustilasta',
       customerDeletedCannotDuplicate: 'Asiakas on poistettu rekisteristä. Luo asiakas uudelleen tai päivitä laskun tiedot käsin.',
     },
+    // TrioLog
+    triolog: {
+      title: 'TrioLog',
+      subtitle: 'Ajonseuranta',
+      time: 'Aika',
+      distance: 'Matka',
+      speed: 'Nopeus',
+      trackingActive: 'Seuranta aktiivinen – näyttö pidetään päällä',
+      history: 'Ajohistoria',
+      noTrips: 'Ei tallennettuja ajoja',
+      gpsNotSupported: 'GPS-paikannusta ei tueta tässä laitteessa',
+      gpsPermissionDenied: 'GPS-paikannuksen käyttöoikeus evätty',
+    },
     // TrioLoki
     trioloki: {
       title: 'TrioLoki',
@@ -236,6 +250,7 @@ export const translations = {
       customers: 'Customers',
       products: 'Products',
       invoices: 'Invoices',
+      triolog: 'TrioLog',
     },
     // Common
     common: {
@@ -443,6 +458,19 @@ export const translations = {
       screenshotModeExit: 'Exit screenshot mode',
       customerDeletedCannotDuplicate: 'Customer has been deleted from the registry. Create the customer again or update the invoice details manually.',
     },
+    // TrioLog
+    triolog: {
+      title: 'TrioLog',
+      subtitle: 'Trip tracking',
+      time: 'Time',
+      distance: 'Distance',
+      speed: 'Speed',
+      trackingActive: 'Tracking active – screen kept on',
+      history: 'Trip history',
+      noTrips: 'No saved trips',
+      gpsNotSupported: 'GPS is not supported on this device',
+      gpsPermissionDenied: 'GPS permission denied',
+    },
     // TrioLoki
     trioloki: {
       title: 'TrioLoki',
@@ -465,6 +493,7 @@ export const translations = {
       customers: 'Kunder',
       products: 'Produkter',
       invoices: 'Fakturor',
+      triolog: 'TrioLog',
     },
     // Common
     common: {
@@ -671,6 +700,19 @@ export const translations = {
       screenshotMode: 'Skärmdumpsläge',
       screenshotModeExit: 'Avsluta skärmdumpsläge',
       customerDeletedCannotDuplicate: 'Kunden har raderats från registret. Skapa kunden igen eller uppdatera fakturainformationen manuellt.',
+    },
+    // TrioLog
+    triolog: {
+      title: 'TrioLog',
+      subtitle: 'Körspårning',
+      time: 'Tid',
+      distance: 'Sträcka',
+      speed: 'Hastighet',
+      trackingActive: 'Spårning aktiv – skärmen hålls på',
+      history: 'Körhistorik',
+      noTrips: 'Inga sparade körningar',
+      gpsNotSupported: 'GPS stöds inte på denna enhet',
+      gpsPermissionDenied: 'GPS-behörighet nekad',
     },
     // TrioLoki
     trioloki: {
