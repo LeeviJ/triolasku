@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import {
   ArrowLeft,
   Plus,
@@ -82,18 +82,18 @@ export default function InvoiceForm({ invoice, onClose, onPreview }) {
   const [saved, setSaved] = useState(false)
   const [productSearch, setProductSearch] = useState({})
   const [activeProductRow, setActiveProductRow] = useState(null)
-  const productDropdownRef = useRef(null)
 
   // Close product dropdown on outside click
   useEffect(() => {
+    if (activeProductRow === null) return
     const handle = (e) => {
-      if (productDropdownRef.current && !productDropdownRef.current.contains(e.target)) {
+      if (!e.target.closest('[data-product-dropdown]')) {
         setActiveProductRow(null)
       }
     }
     document.addEventListener('mousedown', handle)
     return () => document.removeEventListener('mousedown', handle)
-  }, [])
+  }, [activeProductRow])
 
   const getFilteredProducts = (query) => {
     if (!query) return products
@@ -153,6 +153,17 @@ export default function InvoiceForm({ invoice, onClose, onPreview }) {
         return updated
       }),
     }))
+  }
+
+  const selectProduct = (index, productId) => {
+    handleRowChange(index, 'productId', productId)
+    setActiveProductRow(null)
+    setProductSearch((prev) => ({ ...prev, [index]: '' }))
+    if (productId) {
+      setTimeout(() => {
+        document.querySelectorAll(`[data-qty-row="${index}"]`).forEach((el) => el.focus())
+      }, 0)
+    }
   }
 
   const addRow = () => {
@@ -584,7 +595,7 @@ export default function InvoiceForm({ invoice, onClose, onPreview }) {
                 <div key={index} className="px-3 py-1.5">
                   {/* Desktop: single compact row */}
                   <div className="hidden md:grid md:grid-cols-[minmax(0,1.2fr)_minmax(0,2fr)_4rem_4rem_5rem_4.5rem_5.5rem_1.5rem] gap-1.5 items-center">
-                    <div className="relative" ref={activeProductRow === index ? productDropdownRef : null}>
+                    <div className="relative" data-product-dropdown>
                       <input
                         type="text"
                         value={activeProductRow === index ? (productSearch[index] ?? '') : (products.find(p => p.id === row.productId)?.name || '')}
@@ -595,9 +606,9 @@ export default function InvoiceForm({ invoice, onClose, onPreview }) {
                       />
                       {activeProductRow === index && (
                         <div className="absolute z-50 left-0 right-0 top-full mt-0.5 bg-white border border-gray-200 rounded shadow-lg max-h-40 overflow-y-auto">
-                          <button type="button" onClick={() => { handleRowChange(index, 'productId', ''); setActiveProductRow(null); setProductSearch(prev => ({ ...prev, [index]: '' })) }} className="w-full text-left px-2 py-1.5 text-xs text-gray-400 hover:bg-gray-50">—</button>
+                          <button type="button" onClick={() => selectProduct(index, '')} className="w-full text-left px-2 py-1.5 text-xs text-gray-400 hover:bg-gray-50">—</button>
                           {getFilteredProducts(productSearch[index] || '').map(p => (
-                            <button type="button" key={p.id} onClick={() => { handleRowChange(index, 'productId', p.id); setActiveProductRow(null); setProductSearch(prev => ({ ...prev, [index]: '' })) }} className="w-full text-left px-2 py-1.5 text-xs hover:bg-blue-50 truncate">
+                            <button type="button" key={p.id} onClick={() => selectProduct(index, p.id)} className="w-full text-left px-2 py-1.5 text-xs hover:bg-blue-50 truncate">
                               {p.productNumber ? `${p.productNumber} – ` : ''}{p.name}
                             </button>
                           ))}
@@ -608,7 +619,7 @@ export default function InvoiceForm({ invoice, onClose, onPreview }) {
                       )}
                     </div>
                     <input type="text" value={row.description} onChange={(e) => handleRowChange(index, 'description', e.target.value)} className="w-full px-1.5 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500" />
-                    <input type="number" step="0.01" min="0" value={row.quantity} onChange={(e) => handleRowChange(index, 'quantity', e.target.value)} className="w-full px-1 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 text-center" />
+                    <input type="number" step="0.01" min="0" value={row.quantity} onChange={(e) => handleRowChange(index, 'quantity', e.target.value)} data-qty-row={index} className="w-full px-1 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 text-center" />
                     <select value={row.unit} onChange={(e) => handleRowChange(index, 'unit', e.target.value)} className="w-full px-0.5 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white">
                       {units.map((u) => <option key={u.id} value={u.id}>{getUnitName(u.id)}</option>)}
                     </select>
@@ -624,7 +635,7 @@ export default function InvoiceForm({ invoice, onClose, onPreview }) {
                   {/* Mobile: compact two-line layout */}
                   <div className="md:hidden space-y-1">
                     <div className="flex items-center gap-1.5">
-                      <div className="flex-1 min-w-0 relative" ref={activeProductRow === index ? productDropdownRef : null}>
+                      <div className="flex-1 min-w-0 relative" data-product-dropdown>
                         <input
                           type="text"
                           value={activeProductRow === index ? (productSearch[index] ?? '') : (products.find(p => p.id === row.productId)?.name || '')}
@@ -635,9 +646,9 @@ export default function InvoiceForm({ invoice, onClose, onPreview }) {
                         />
                         {activeProductRow === index && (
                           <div className="absolute z-50 left-0 right-0 top-full mt-0.5 bg-white border border-gray-200 rounded shadow-lg max-h-40 overflow-y-auto">
-                            <button type="button" onClick={() => { handleRowChange(index, 'productId', ''); setActiveProductRow(null); setProductSearch(prev => ({ ...prev, [index]: '' })) }} className="w-full text-left px-2 py-1.5 text-xs text-gray-400 hover:bg-gray-50">—</button>
+                            <button type="button" onClick={() => selectProduct(index, '')} className="w-full text-left px-2 py-1.5 text-xs text-gray-400 hover:bg-gray-50">—</button>
                             {getFilteredProducts(productSearch[index] || '').map(p => (
-                              <button type="button" key={p.id} onClick={() => { handleRowChange(index, 'productId', p.id); setActiveProductRow(null); setProductSearch(prev => ({ ...prev, [index]: '' })) }} className="w-full text-left px-2 py-1.5 text-xs hover:bg-blue-50 truncate">
+                              <button type="button" key={p.id} onClick={() => selectProduct(index, p.id)} className="w-full text-left px-2 py-1.5 text-xs hover:bg-blue-50 truncate">
                                 {p.name} – {formatPrice(p.priceNet)}
                               </button>
                             ))}
@@ -653,7 +664,7 @@ export default function InvoiceForm({ invoice, onClose, onPreview }) {
                       )}
                     </div>
                     <div className="flex items-center gap-1.5">
-                      <input type="number" step="0.01" min="0" value={row.quantity} onChange={(e) => handleRowChange(index, 'quantity', e.target.value)} className="w-14 px-1.5 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 text-center" />
+                      <input type="number" step="0.01" min="0" value={row.quantity} onChange={(e) => handleRowChange(index, 'quantity', e.target.value)} data-qty-row={index} className="w-14 px-1.5 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 text-center" />
                       <select value={row.unit} onChange={(e) => handleRowChange(index, 'unit', e.target.value)} className="w-14 px-0.5 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white">
                         {units.map((u) => <option key={u.id} value={u.id}>{getUnitName(u.id)}</option>)}
                       </select>
