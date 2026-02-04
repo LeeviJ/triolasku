@@ -85,7 +85,7 @@ export default function InvoiceForm({ invoice, onClose, onPreview }) {
 
   // Update invoice number when company changes (new invoices only)
   useEffect(() => {
-    if (!invoice && formData.companyId) {
+    if (!invoice?.id && formData.companyId) {
       setFormData((prev) => ({
         ...prev,
         invoiceNumber: getNextInvoiceNumberForCompany(formData.companyId),
@@ -248,7 +248,7 @@ export default function InvoiceForm({ invoice, onClose, onPreview }) {
     }
 
     // SAVE NOW - synchronous, immediate
-    if (invoice) {
+    if (invoice?.id) {
       updateInvoice(invoice.id, invoiceData)
     } else {
       addInvoice(invoiceData)
@@ -284,7 +284,7 @@ export default function InvoiceForm({ invoice, onClose, onPreview }) {
         </Button>
         <div className="flex-1">
           <h1 className="text-2xl font-bold text-gray-900">
-            {invoice ? t('invoices.editInvoice') : isReceipt ? t('invoices.createReceipt') : t('invoices.createInvoice')}
+            {invoice?.id ? t('invoices.editInvoice') : isReceipt ? t('invoices.createReceipt') : t('invoices.createInvoice')}
           </h1>
           <div className="flex items-center gap-2 mt-1">
             <span className="text-sm text-gray-500">{t('invoices.invoiceNumber')}:</span>

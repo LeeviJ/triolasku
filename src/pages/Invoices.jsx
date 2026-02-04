@@ -19,7 +19,7 @@ import InvoicePreview from '../components/invoices/InvoicePreview'
 
 export default function Invoices() {
   const { t } = useLanguage()
-  const { invoices, companies, customers, deleteInvoice, duplicateInvoice } = useData()
+  const { invoices, companies, customers, deleteInvoice } = useData()
 
   const [showForm, setShowForm] = useState(false)
   const [showPreview, setShowPreview] = useState(false)
@@ -72,14 +72,21 @@ export default function Invoices() {
     setEditingInvoice(null)
   }
 
-  const handleDuplicateAndEdit = (invoice) => {
-    const result = duplicateInvoice(invoice)
-    if (result.success) {
-      setShowPreview(false)
-      setPreviewInvoice(null)
-      setEditingInvoice(result.invoice)
-      setShowForm(true)
+  const handleDuplicateAndEdit = (sourceInvoice) => {
+    const today = new Date().toISOString().split('T')[0]
+    // Deep copy: strip identity fields, deep-clone rows
+    const { id, invoiceNumber, createdAt, updatedAt, ...data } = sourceInvoice
+    const template = {
+      ...data,
+      invoiceDate: today,
+      dueDate: '',
+      status: 'draft',
+      rows: (sourceInvoice.rows || []).map(row => ({ ...row })),
     }
+    setShowPreview(false)
+    setPreviewInvoice(null)
+    setEditingInvoice(template)
+    setShowForm(true)
   }
 
   // Get company name - use snapshot if company was deleted

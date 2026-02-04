@@ -304,6 +304,7 @@ export function DataProvider({ children }) {
       invoiceDate: today,
       dueDate: '',
       status: 'draft',
+      rows: (invoice.rows || []).map(row => ({ ...row })),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     }
