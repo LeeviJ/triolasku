@@ -277,13 +277,13 @@ export default function InvoiceForm({ invoice, onClose, onPreview }) {
   return (
     <div className="max-w-4xl mx-auto">
       {/* Header */}
-      <div className="flex items-center gap-4 mb-6">
+      <div className="flex flex-wrap items-center gap-4 mb-6">
         <Button variant="ghost" size="sm" onClick={onClose}>
           <ArrowLeft className="w-4 h-4" />
           {t('common.back')}
         </Button>
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold text-gray-900">
+        <div className="flex-1 min-w-0">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
             {invoice?.id ? t('invoices.editInvoice') : isReceipt ? t('invoices.createReceipt') : t('invoices.createInvoice')}
           </h1>
           <div className="flex items-center gap-2 mt-1">
@@ -446,7 +446,7 @@ export default function InvoiceForm({ invoice, onClose, onPreview }) {
             </h2>
           </CardHeader>
           <CardBody className="space-y-4">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
               <Input
                 label={t('invoices.invoiceDate')}
                 name="invoiceDate"

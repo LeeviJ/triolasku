@@ -17,14 +17,19 @@ export default function InvoicePreview({ invoice, onClose, onDuplicate }) {
   const [statusNotice, setStatusNotice] = useState(false)
   const [paidNotice, setPaidNotice] = useState(false)
   const [screenshotMode, setScreenshotMode] = useState(false)
-  const [screenshotScale, setScreenshotScale] = useState(1)
+  const [previewScale, setPreviewScale] = useState(1)
+  const wrapperRef = useRef(null)
 
-  // Scale invoice to fit viewport in screenshot mode
+  // Scale invoice to fit available width (both normal and screenshot modes)
   useEffect(() => {
-    if (!screenshotMode) return
     const update = () => {
       const invoicePx = 793 // 210mm ≈ 793px
-      setScreenshotScale(window.innerWidth < invoicePx ? window.innerWidth / invoicePx : 1)
+      if (screenshotMode) {
+        setPreviewScale(window.innerWidth < invoicePx ? window.innerWidth / invoicePx : 1)
+      } else if (wrapperRef.current) {
+        const available = wrapperRef.current.clientWidth
+        setPreviewScale(available < invoicePx ? available / invoicePx : 1)
+      }
     }
     update()
     window.addEventListener('resize', update)
@@ -193,6 +198,7 @@ export default function InvoicePreview({ invoice, onClose, onDuplicate }) {
     clonedElement.style.display = 'block'
     clonedElement.style.backgroundColor = '#ffffff'
     clonedElement.style.boxShadow = 'none'
+    clonedElement.style.transform = 'none'
   }
 
   const generatePdf = async () => {
@@ -287,7 +293,7 @@ export default function InvoicePreview({ invoice, onClose, onDuplicate }) {
     >
       {/* Controls (hidden when printing and in screenshot mode) */}
       {!screenshotMode && (
-        <div className="flex items-center justify-between mb-6 print:hidden">
+        <div className="flex flex-wrap items-center justify-between gap-4 mb-6 print:hidden">
           <Button variant="ghost" onClick={onClose}>
             <ArrowLeft className="w-4 h-4" />
             {t('common.back')}
@@ -340,7 +346,8 @@ export default function InvoicePreview({ invoice, onClose, onDuplicate }) {
       )}
 
       {/* A4 Invoice — 100% inline styles, zero Tailwind classes for html2canvas compatibility */}
-      <div ref={invoiceRef} className="invoice-sheet" style={{ width: '210mm', minHeight: '297mm', padding: '15mm', backgroundColor: '#ffffff', color: '#111827', margin: screenshotMode ? '0' : '0 auto', boxShadow: screenshotMode ? 'none' : '0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1)', fontFamily: 'system-ui, -apple-system, sans-serif', fontSize: '14px', lineHeight: '1.5', ...(screenshotMode ? { transform: `scale(${screenshotScale})`, transformOrigin: 'top left' } : {}) }}>
+      <div ref={wrapperRef} style={{ maxWidth: '100%', overflowX: 'hidden' }}>
+      <div ref={invoiceRef} className="invoice-sheet" style={{ width: '210mm', minHeight: '297mm', padding: '15mm', backgroundColor: '#ffffff', color: '#111827', margin: screenshotMode ? '0' : '0 auto', boxShadow: screenshotMode ? 'none' : '0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1)', fontFamily: 'system-ui, -apple-system, sans-serif', fontSize: '14px', lineHeight: '1.5', boxSizing: 'border-box', ...(previewScale < 1 ? { transform: `scale(${previewScale})`, transformOrigin: 'top left' } : {}) }}>
         {/* Header with logo */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2rem' }}>
           {/* Company logo and info */}
@@ -589,6 +596,7 @@ export default function InvoicePreview({ invoice, onClose, onDuplicate }) {
           {company?.vatNumber && ` | ${company.vatNumber}`}
         </div>
       </div>
+      </div>
 
       {/* Print styles */}
       <style>{`
@@ -609,6 +617,7 @@ export default function InvoicePreview({ invoice, onClose, onDuplicate }) {
             margin: 0;
             padding: 15mm;
             box-shadow: none !important;
+            transform: none !important;
           }
         }
       `}</style>
