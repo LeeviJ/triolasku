@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
   ArrowLeft,
   Plus,
@@ -80,6 +80,28 @@ export default function InvoiceForm({ invoice, onClose, onPreview }) {
 
   const [errors, setErrors] = useState({})
   const [saved, setSaved] = useState(false)
+  const [productSearch, setProductSearch] = useState({})
+  const [activeProductRow, setActiveProductRow] = useState(null)
+  const productDropdownRef = useRef(null)
+
+  // Close product dropdown on outside click
+  useEffect(() => {
+    const handle = (e) => {
+      if (productDropdownRef.current && !productDropdownRef.current.contains(e.target)) {
+        setActiveProductRow(null)
+      }
+    }
+    document.addEventListener('mousedown', handle)
+    return () => document.removeEventListener('mousedown', handle)
+  }, [])
+
+  const getFilteredProducts = (query) => {
+    if (!query) return products
+    const q = query.toLowerCase()
+    return products.filter((p) =>
+      p.name.toLowerCase().includes(q) || p.productNumber?.toString().includes(q)
+    )
+  }
 
   const isReceipt = formData.paymentMethod !== 'invoice'
 
@@ -306,11 +328,11 @@ export default function InvoiceForm({ invoice, onClose, onPreview }) {
 
       <form onSubmit={handleSubmit}>
         {/* Document type: Invoice vs Receipt */}
-        <div className="flex gap-4 mb-6">
+        <div className="flex gap-3 mb-4">
           <button
             type="button"
             onClick={() => setFormData((prev) => ({ ...prev, paymentMethod: 'invoice' }))}
-            className={`flex-1 py-4 px-6 rounded-xl border-2 text-lg font-bold transition-colors ${
+            className={`flex-1 py-3 px-4 rounded-xl border-2 text-base font-bold transition-colors ${
               !isReceipt
                 ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-sm'
                 : 'border-gray-300 bg-white text-gray-500 hover:border-gray-400'
@@ -321,7 +343,7 @@ export default function InvoiceForm({ invoice, onClose, onPreview }) {
           <button
             type="button"
             onClick={() => setFormData((prev) => ({ ...prev, paymentMethod: 'cash' }))}
-            className={`flex-1 py-4 px-6 rounded-xl border-2 text-lg font-bold transition-colors ${
+            className={`flex-1 py-3 px-4 rounded-xl border-2 text-base font-bold transition-colors ${
               isReceipt
                 ? 'border-green-500 bg-green-50 text-green-700 shadow-sm'
                 : 'border-gray-300 bg-white text-gray-500 hover:border-gray-400'
@@ -333,7 +355,7 @@ export default function InvoiceForm({ invoice, onClose, onPreview }) {
 
         {/* Payment method (shown only for receipts) */}
         {isReceipt && (
-          <Card className="mb-6">
+          <Card className="mb-4">
             <CardBody>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 {t('invoices.paymentMethod')}
@@ -354,7 +376,7 @@ export default function InvoiceForm({ invoice, onClose, onPreview }) {
         )}
 
         {/* Sender & Recipient */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           {/* Sender */}
           <Card>
             <CardHeader className="flex items-center gap-2">
@@ -439,7 +461,7 @@ export default function InvoiceForm({ invoice, onClose, onPreview }) {
         </div>
 
         {/* Invoice details */}
-        <Card className="mb-6">
+        <Card className="mb-4">
           <CardHeader>
             <h2 className="text-lg font-semibold text-gray-900">
               {t('invoices.invoiceDate')} & {t('invoices.paymentTerms')}
@@ -507,7 +529,7 @@ export default function InvoiceForm({ invoice, onClose, onPreview }) {
         </Card>
 
         {/* Additional info - combined with position selector */}
-        <Card className="mb-6">
+        <Card className="mb-4">
           <CardHeader className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-gray-900">
               {t('invoices.additionalInfo')}
@@ -535,15 +557,11 @@ export default function InvoiceForm({ invoice, onClose, onPreview }) {
         </Card>
 
         {/* Invoice rows – compact table */}
-        <Card className="mb-6">
-          <CardHeader className="flex items-center justify-between py-2">
+        <Card className="mb-4">
+          <CardHeader className="py-2">
             <h2 className="text-base font-semibold text-gray-900">
               {t('invoices.invoiceRows')}
             </h2>
-            <Button type="button" variant="secondary" size="sm" onClick={addRow}>
-              <Plus className="w-3.5 h-3.5" />
-              {t('invoices.addRow')}
-            </Button>
           </CardHeader>
           <div>
             {errors.rows && (
@@ -566,10 +584,29 @@ export default function InvoiceForm({ invoice, onClose, onPreview }) {
                 <div key={index} className="px-3 py-1.5">
                   {/* Desktop: single compact row */}
                   <div className="hidden md:grid md:grid-cols-[minmax(0,1.2fr)_minmax(0,2fr)_4rem_4rem_5rem_4.5rem_5.5rem_1.5rem] gap-1.5 items-center">
-                    <select value={row.productId} onChange={(e) => handleRowChange(index, 'productId', e.target.value)} className="w-full px-1 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white truncate">
-                      <option value="">—</option>
-                      {products.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-                    </select>
+                    <div className="relative" ref={activeProductRow === index ? productDropdownRef : null}>
+                      <input
+                        type="text"
+                        value={activeProductRow === index ? (productSearch[index] ?? '') : (products.find(p => p.id === row.productId)?.name || '')}
+                        onChange={(e) => { setProductSearch(prev => ({ ...prev, [index]: e.target.value })); setActiveProductRow(index) }}
+                        onFocus={() => setActiveProductRow(index)}
+                        placeholder="—"
+                        className="w-full px-1 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white truncate"
+                      />
+                      {activeProductRow === index && (
+                        <div className="absolute z-50 left-0 right-0 top-full mt-0.5 bg-white border border-gray-200 rounded shadow-lg max-h-40 overflow-y-auto">
+                          <button type="button" onClick={() => { handleRowChange(index, 'productId', ''); setActiveProductRow(null); setProductSearch(prev => ({ ...prev, [index]: '' })) }} className="w-full text-left px-2 py-1.5 text-xs text-gray-400 hover:bg-gray-50">—</button>
+                          {getFilteredProducts(productSearch[index] || '').map(p => (
+                            <button type="button" key={p.id} onClick={() => { handleRowChange(index, 'productId', p.id); setActiveProductRow(null); setProductSearch(prev => ({ ...prev, [index]: '' })) }} className="w-full text-left px-2 py-1.5 text-xs hover:bg-blue-50 truncate">
+                              {p.productNumber ? `${p.productNumber} – ` : ''}{p.name}
+                            </button>
+                          ))}
+                          {getFilteredProducts(productSearch[index] || '').length === 0 && (
+                            <div className="px-2 py-1.5 text-xs text-gray-400">{t('common.noResults') || 'Ei tuloksia'}</div>
+                          )}
+                        </div>
+                      )}
+                    </div>
                     <input type="text" value={row.description} onChange={(e) => handleRowChange(index, 'description', e.target.value)} className="w-full px-1.5 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500" />
                     <input type="number" step="0.01" min="0" value={row.quantity} onChange={(e) => handleRowChange(index, 'quantity', e.target.value)} className="w-full px-1 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 text-center" />
                     <select value={row.unit} onChange={(e) => handleRowChange(index, 'unit', e.target.value)} className="w-full px-0.5 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white">
@@ -587,10 +624,29 @@ export default function InvoiceForm({ invoice, onClose, onPreview }) {
                   {/* Mobile: compact two-line layout */}
                   <div className="md:hidden space-y-1">
                     <div className="flex items-center gap-1.5">
-                      <select value={row.productId} onChange={(e) => handleRowChange(index, 'productId', e.target.value)} className="flex-1 min-w-0 px-1.5 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white">
-                        <option value="">{t('invoices.selectProduct')}</option>
-                        {products.map((p) => <option key={p.id} value={p.id}>{p.name} – {formatPrice(p.priceNet)}</option>)}
-                      </select>
+                      <div className="flex-1 min-w-0 relative" ref={activeProductRow === index ? productDropdownRef : null}>
+                        <input
+                          type="text"
+                          value={activeProductRow === index ? (productSearch[index] ?? '') : (products.find(p => p.id === row.productId)?.name || '')}
+                          onChange={(e) => { setProductSearch(prev => ({ ...prev, [index]: e.target.value })); setActiveProductRow(index) }}
+                          onFocus={() => setActiveProductRow(index)}
+                          placeholder={t('invoices.selectProduct')}
+                          className="w-full px-1.5 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
+                        />
+                        {activeProductRow === index && (
+                          <div className="absolute z-50 left-0 right-0 top-full mt-0.5 bg-white border border-gray-200 rounded shadow-lg max-h-40 overflow-y-auto">
+                            <button type="button" onClick={() => { handleRowChange(index, 'productId', ''); setActiveProductRow(null); setProductSearch(prev => ({ ...prev, [index]: '' })) }} className="w-full text-left px-2 py-1.5 text-xs text-gray-400 hover:bg-gray-50">—</button>
+                            {getFilteredProducts(productSearch[index] || '').map(p => (
+                              <button type="button" key={p.id} onClick={() => { handleRowChange(index, 'productId', p.id); setActiveProductRow(null); setProductSearch(prev => ({ ...prev, [index]: '' })) }} className="w-full text-left px-2 py-1.5 text-xs hover:bg-blue-50 truncate">
+                                {p.name} – {formatPrice(p.priceNet)}
+                              </button>
+                            ))}
+                            {getFilteredProducts(productSearch[index] || '').length === 0 && (
+                              <div className="px-2 py-1.5 text-xs text-gray-400">{t('common.noResults') || 'Ei tuloksia'}</div>
+                            )}
+                          </div>
+                        )}
+                      </div>
                       <input type="text" value={row.description} onChange={(e) => handleRowChange(index, 'description', e.target.value)} placeholder={t('invoices.description')} className="flex-[2] min-w-0 px-1.5 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500" />
                       {formData.rows.length > 1 && (
                         <button type="button" onClick={() => removeRow(index)} className="p-0.5 text-red-400 hover:text-red-600 flex-shrink-0"><Trash2 className="w-3.5 h-3.5" /></button>
@@ -612,10 +668,16 @@ export default function InvoiceForm({ invoice, onClose, onPreview }) {
               ))}
             </div>
           </div>
+          <div className="px-3 py-2 border-t border-gray-100">
+            <Button type="button" variant="ghost" size="sm" onClick={addRow} className="w-full text-blue-600 hover:bg-blue-50">
+              <Plus className="w-3.5 h-3.5" />
+              {t('invoices.addRow')}
+            </Button>
+          </div>
         </Card>
 
         {/* Totals */}
-        <Card className="mb-6">
+        <Card className="mb-4">
           <CardBody>
             <div className="flex flex-col items-end gap-2">
               <div className="flex justify-between w-full max-w-xs text-sm">
