@@ -212,6 +212,7 @@ export const translations = {
       duplicateToNew: 'Kopioi tiedot uudelle laskulle',
       screenshotMode: 'Kuvakaappaus-tila',
       screenshotModeExit: 'Poistu kuvakaappaustilasta',
+      customerDeletedCannotDuplicate: 'Asiakas on poistettu rekisteristä. Luo asiakas uudelleen tai päivitä laskun tiedot käsin.',
     },
     // TrioLoki
     trioloki: {
@@ -440,6 +441,7 @@ export const translations = {
       duplicateToNew: 'Copy to new invoice',
       screenshotMode: 'Screenshot mode',
       screenshotModeExit: 'Exit screenshot mode',
+      customerDeletedCannotDuplicate: 'Customer has been deleted from the registry. Create the customer again or update the invoice details manually.',
     },
     // TrioLoki
     trioloki: {
@@ -668,6 +670,7 @@ export const translations = {
       duplicateToNew: 'Kopiera till ny faktura',
       screenshotMode: 'Skärmdumpsläge',
       screenshotModeExit: 'Avsluta skärmdumpsläge',
+      customerDeletedCannotDuplicate: 'Kunden har raderats från registret. Skapa kunden igen eller uppdatera fakturainformationen manuellt.',
     },
     // TrioLoki
     trioloki: {

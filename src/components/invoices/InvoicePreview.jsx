@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect } from 'react'
-import { ArrowLeft, Printer, Download, Check, Camera, CheckCircle, Copy } from 'lucide-react'
+import { ArrowLeft, Printer, Download, Check, Camera, CheckCircle, Copy, AlertTriangle } from 'lucide-react'
 import html2canvas from 'html2canvas'
 import { jsPDF } from 'jspdf'
 import JsBarcode from 'jsbarcode'
@@ -16,6 +16,7 @@ export default function InvoicePreview({ invoice, onClose, onDuplicate }) {
   const [generating, setGenerating] = useState(false)
   const [statusNotice, setStatusNotice] = useState(false)
   const [paidNotice, setPaidNotice] = useState(false)
+  const [duplicateError, setDuplicateError] = useState(false)
   const [screenshotMode, setScreenshotMode] = useState(false)
   const [previewScale, setPreviewScale] = useState(1)
   const wrapperRef = useRef(null)
@@ -268,6 +269,16 @@ export default function InvoicePreview({ invoice, onClose, onDuplicate }) {
     }
   }
 
+  const handleDuplicate = () => {
+    const customerExists = customers.find((c) => c.id === invoice.customerId)
+    if (!customerExists) {
+      setDuplicateError(true)
+      setTimeout(() => setDuplicateError(false), 6000)
+      return
+    }
+    onDuplicate(invoice)
+  }
+
   const handleDownloadPdf = async () => {
     setGenerating(true)
     try {
@@ -288,7 +299,7 @@ export default function InvoicePreview({ invoice, onClose, onDuplicate }) {
   return (
     <div
       className={screenshotMode ? '' : 'max-w-5xl mx-auto'}
-      style={screenshotMode ? { background: '#ffffff', minHeight: '100vh', overflow: 'hidden' } : {}}
+      style={screenshotMode ? { position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: '#ffffff', overflow: 'hidden', zIndex: 9999, margin: 0, padding: 0 } : {}}
       onClick={screenshotMode ? () => setScreenshotMode(false) : undefined}
     >
       {/* Controls (hidden when printing and in screenshot mode) */}
@@ -306,7 +317,7 @@ export default function InvoicePreview({ invoice, onClose, onDuplicate }) {
               </Button>
             )}
             {onDuplicate && (
-              <Button variant="secondary" onClick={() => onDuplicate(invoice)}>
+              <Button variant="secondary" onClick={handleDuplicate}>
                 <Copy className="w-4 h-4" />
                 {t('invoices.duplicateToNew')}
               </Button>
@@ -342,6 +353,14 @@ export default function InvoicePreview({ invoice, onClose, onDuplicate }) {
         <div className="mb-4 px-4 py-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2 text-green-800 text-sm print:hidden">
           <CheckCircle className="w-4 h-4" />
           {t('invoices.markedAsPaid')}
+        </div>
+      )}
+
+      {/* Duplicate error notification */}
+      {duplicateError && !screenshotMode && (
+        <div className="mb-4 px-4 py-3 bg-amber-50 border border-amber-200 rounded-lg flex items-center gap-2 text-amber-800 text-sm print:hidden">
+          <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+          {t('invoices.customerDeletedCannotDuplicate')}
         </div>
       )}
 
