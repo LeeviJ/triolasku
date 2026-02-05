@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Building2, Users, Package, FileText, ArrowRight, Download, Upload, Mail, ExternalLink, ClipboardList, Plus, Trash2, Check } from 'lucide-react'
+import { Building2, Users, Package, FileText, ArrowRight, Download, Upload, Mail, ExternalLink } from 'lucide-react'
 import { useLanguage } from '../context/LanguageContext'
 import { useData, STORAGE_KEYS } from '../context/DataContext'
 import Card, { CardBody } from '../components/ui/Card'
@@ -13,38 +13,6 @@ export default function Dashboard() {
   const { companies, customers, products, invoices, settings, setSettings, sendEmailBackup: sendEmail } = useData()
   const backupFileInputRef = useRef(null)
   const [emailMsg, setEmailMsg] = useState(null)
-
-  // TrioLoki – simple todo list persisted in localStorage
-  const TRIOLOKI_KEY = 'triolasku_trioloki'
-  const defaultItems = [
-    { id: '1', text: 'Paperitulostus (käyttäjä testaa itse)', done: false },
-    { id: '2', text: 'Kopiointi', done: true },
-    { id: '3', text: 'Tiivistetty tuoterivinäkymä toteutettu', done: true },
-  ]
-  const [triolokiItems, setTriolokiItems] = useState(() => {
-    try {
-      const saved = localStorage.getItem(TRIOLOKI_KEY)
-      return saved ? JSON.parse(saved) : defaultItems
-    } catch { return defaultItems }
-  })
-  const [triolokiInput, setTriolokiInput] = useState('')
-
-  const saveTrioloki = (items) => {
-    setTriolokiItems(items)
-    localStorage.setItem(TRIOLOKI_KEY, JSON.stringify(items))
-  }
-  const addTriolokiItem = () => {
-    const text = triolokiInput.trim()
-    if (!text) return
-    saveTrioloki([...triolokiItems, { id: crypto.randomUUID(), text, done: false }])
-    setTriolokiInput('')
-  }
-  const toggleTriolokiItem = (id) => {
-    saveTrioloki(triolokiItems.map(item => item.id === id ? { ...item, done: !item.done } : item))
-  }
-  const removeTriolokiItem = (id) => {
-    saveTrioloki(triolokiItems.filter(item => item.id !== id))
-  }
 
   const handleDownloadBackup = () => {
     // Direct file download - completely invisible, no share or popup
@@ -319,60 +287,6 @@ export default function Dashboard() {
           <p className="text-xs text-gray-500 mt-3">
             {t('dashboard.backupHint')}
           </p>
-        </CardBody>
-      </Card>
-
-      {/* TrioLoki – todo list */}
-      <Card className="mb-8">
-        <CardBody>
-          <div className="flex items-center gap-2 mb-4">
-            <ClipboardList className="w-5 h-5 text-indigo-500" />
-            <h2 className="text-lg font-semibold text-gray-900">{t('trioloki.title')}</h2>
-          </div>
-          <div className="flex gap-2 mb-4">
-            <input
-              type="text"
-              value={triolokiInput}
-              onChange={(e) => setTriolokiInput(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && addTriolokiItem()}
-              placeholder={t('trioloki.placeholder')}
-              className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-            />
-            <button
-              onClick={addTriolokiItem}
-              className="px-3 py-2 bg-indigo-500 text-white rounded-lg text-sm font-medium hover:bg-indigo-600 transition-colors flex items-center gap-1"
-            >
-              <Plus className="w-4 h-4" />
-              {t('trioloki.add')}
-            </button>
-          </div>
-          {triolokiItems.length === 0 ? (
-            <p className="text-sm text-gray-400 text-center py-4">{t('common.noData')}</p>
-          ) : (
-            <ul className="space-y-2">
-              {triolokiItems.map((item) => (
-                <li key={item.id} className="flex items-center gap-3 group">
-                  <button
-                    onClick={() => toggleTriolokiItem(item.id)}
-                    className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
-                      item.done ? 'bg-green-500 border-green-500 text-white' : 'border-gray-300 hover:border-indigo-400'
-                    }`}
-                  >
-                    {item.done && <Check className="w-3 h-3" />}
-                  </button>
-                  <span className={`flex-1 text-sm ${item.done ? 'line-through text-gray-400' : 'text-gray-700'}`}>
-                    {item.text}
-                  </span>
-                  <button
-                    onClick={() => removeTriolokiItem(item.id)}
-                    className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-600 transition-opacity"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
         </CardBody>
       </Card>
 
