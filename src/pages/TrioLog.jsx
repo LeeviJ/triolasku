@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { MapPin, Play, Square, Clock, Navigation, Signpost, Trash2, AlertTriangle, Plus, Briefcase, Car, X } from 'lucide-react'
+import { MapPin, Play, Square, Clock, Navigation, Signpost, Trash2, AlertTriangle, Plus, Briefcase, Car, X, Pencil, Camera, Check } from 'lucide-react'
 import { useLanguage } from '../context/LanguageContext'
 import Card, { CardBody } from '../components/ui/Card'
 import Button from '../components/ui/Button'
 
 const STORAGE_KEY = 'triolasku_triolog_trips'
+const RECEIPTS_STORAGE_KEY = 'triolasku_triolog_receipts'
 
 // Haversine formula: distance between two GPS coordinates in meters
 const haversineDistance = (lat1, lon1, lat2, lon2) => {
@@ -40,10 +41,43 @@ const formatDateFI = (iso) => {
   return d.toLocaleDateString('fi-FI') + ' ' + d.toLocaleTimeString('fi-FI', { hour: '2-digit', minute: '2-digit' })
 }
 
+const formatDateShort = (dateStr) => {
+  if (!dateStr) return ''
+  const d = new Date(dateStr)
+  return d.toLocaleDateString('fi-FI')
+}
+
 const formatDateForInput = (date) => {
   if (!date) return ''
   const d = new Date(date)
   return d.toISOString().split('T')[0]
+}
+
+// Compress image to max width and JPEG quality for localStorage
+const compressImage = (file) => {
+  return new Promise((resolve) => {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const img = new Image()
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        const maxW = 800
+        let w = img.width
+        let h = img.height
+        if (w > maxW) {
+          h = (h * maxW) / w
+          w = maxW
+        }
+        canvas.width = w
+        canvas.height = h
+        const ctx = canvas.getContext('2d')
+        ctx.drawImage(img, 0, 0, w, h)
+        resolve(canvas.toDataURL('image/jpeg', 0.6))
+      }
+      img.src = e.target.result
+    }
+    reader.readAsDataURL(file)
+  })
 }
 
 const PROFILES = [
@@ -78,6 +112,31 @@ export default function TrioLog() {
   })
   const [deleteConfirm, setDeleteConfirm] = useState(null)
 
+  // ── Trip editing state ───────────────────────────────────
+  const [editingTrip, setEditingTrip] = useState(null)
+  const [editForm, setEditForm] = useState({})
+
+  // ── Receipt state ────────────────────────────────────────
+  const [receipts, setReceipts] = useState(() => {
+    try {
+      const saved = localStorage.getItem(RECEIPTS_STORAGE_KEY)
+      return saved ? JSON.parse(saved) : []
+    } catch {
+      return []
+    }
+  })
+  const [showReceiptForm, setShowReceiptForm] = useState(false)
+  const [receiptImage, setReceiptImage] = useState(null)
+  const [receiptForm, setReceiptForm] = useState({
+    store: '',
+    date: formatDateForInput(new Date()),
+    amount: '',
+    vatBreakdown: [],
+  })
+  const [receiptDeleteConfirm, setReceiptDeleteConfirm] = useState(null)
+  const [expandedReceipt, setExpandedReceipt] = useState(null)
+  const receiptFileRef = useRef(null)
+
   const watchIdRef = useRef(null)
   const wakeLockRef = useRef(null)
   const timerRef = useRef(null)
@@ -89,6 +148,11 @@ export default function TrioLog() {
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(trips))
   }, [trips])
+
+  // Persist receipts
+  useEffect(() => {
+    localStorage.setItem(RECEIPTS_STORAGE_KEY, JSON.stringify(receipts))
+  }, [receipts])
 
   // ── Wake Lock ──────────────────────────────────────────────
   const requestWakeLock = useCallback(async () => {
@@ -252,6 +316,129 @@ export default function TrioLog() {
     setDeleteConfirm(null)
   }
 
+  // ── Trip editing ─────────────────────────────────────────
+  const startEditTrip = (trip) => {
+    setEditingTrip(trip.id)
+    setDeleteConfirm(null)
+    if (trip.manual) {
+      setEditForm({
+        date: formatDateForInput(trip.startTime),
+        startKm: trip.startKm?.toString() || '',
+        endKm: trip.endKm?.toString() || '',
+        description: trip.description || '',
+        profile: trip.profile || 'work',
+      })
+    } else {
+      setEditForm({
+        distanceKm: (trip.distance / 1000).toFixed(2),
+        description: trip.description || '',
+        profile: trip.profile || 'work',
+      })
+    }
+  }
+
+  const saveEditTrip = (trip) => {
+    if (trip.manual) {
+      const startKm = parseFloat(editForm.startKm)
+      const endKm = parseFloat(editForm.endKm)
+      if (!editForm.date || isNaN(startKm) || isNaN(endKm) || endKm <= startKm) return
+      setTrips((prev) =>
+        prev.map((t) =>
+          t.id === trip.id
+            ? {
+                ...t,
+                startTime: new Date(editForm.date + 'T00:00:00').toISOString(),
+                endTime: new Date(editForm.date + 'T00:00:00').toISOString(),
+                startKm,
+                endKm,
+                distance: (endKm - startKm) * 1000,
+                description: editForm.description,
+                profile: editForm.profile,
+              }
+            : t,
+        ),
+      )
+    } else {
+      const km = parseFloat(editForm.distanceKm)
+      if (isNaN(km) || km <= 0) return
+      setTrips((prev) =>
+        prev.map((t) =>
+          t.id === trip.id
+            ? {
+                ...t,
+                distance: km * 1000,
+                description: editForm.description,
+                profile: editForm.profile,
+                edited: true,
+              }
+            : t,
+        ),
+      )
+    }
+    setEditingTrip(null)
+  }
+
+  // ── Receipts ─────────────────────────────────────────────
+  const handleReceiptImageSelect = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    e.target.value = ''
+    const compressed = await compressImage(file)
+    setReceiptImage(compressed)
+    setReceiptForm({
+      store: '',
+      date: formatDateForInput(new Date()),
+      amount: '',
+      vatBreakdown: [],
+    })
+    setShowReceiptForm(true)
+  }
+
+  const addReceiptVatRow = () => {
+    setReceiptForm((prev) => ({
+      ...prev,
+      vatBreakdown: [...prev.vatBreakdown, { rate: '', amount: '' }],
+    }))
+  }
+
+  const updateReceiptVatRow = (index, field, value) => {
+    setReceiptForm((prev) => ({
+      ...prev,
+      vatBreakdown: prev.vatBreakdown.map((row, i) => (i === index ? { ...row, [field]: value } : row)),
+    }))
+  }
+
+  const removeReceiptVatRow = (index) => {
+    setReceiptForm((prev) => ({
+      ...prev,
+      vatBreakdown: prev.vatBreakdown.filter((_, i) => i !== index),
+    }))
+  }
+
+  const handleReceiptSubmit = () => {
+    if (!receiptForm.store.trim() && !receiptForm.amount) return
+    const receipt = {
+      id: crypto.randomUUID(),
+      image: receiptImage,
+      store: receiptForm.store,
+      date: receiptForm.date,
+      amount: parseFloat(receiptForm.amount) || 0,
+      vatBreakdown: receiptForm.vatBreakdown
+        .filter((r) => r.rate || r.amount)
+        .map((r) => ({ rate: parseFloat(r.rate) || 0, amount: parseFloat(r.amount) || 0 })),
+      createdAt: new Date().toISOString(),
+    }
+    setReceipts((prev) => [receipt, ...prev])
+    setShowReceiptForm(false)
+    setReceiptImage(null)
+    setReceiptForm({ store: '', date: formatDateForInput(new Date()), amount: '', vatBreakdown: [] })
+  }
+
+  const deleteReceipt = (id) => {
+    setReceipts((prev) => prev.filter((r) => r.id !== id))
+    setReceiptDeleteConfirm(null)
+  }
+
   const getProfileLabel = (profileId) => {
     if (profileId === 'work') return t('triolog.workTrip')
     return t('triolog.personalTrip')
@@ -262,6 +449,16 @@ export default function TrioLog() {
       return <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-100 text-blue-700"><Briefcase className="w-2.5 h-2.5" />{t('triolog.workTrip')}</span>
     }
     return <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-green-100 text-green-700"><Car className="w-2.5 h-2.5" />{t('triolog.personalTrip')}</span>
+  }
+
+  const getSourceBadge = (trip) => {
+    if (trip.manual) {
+      return <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-gray-100 text-gray-500">{t('triolog.manual')}</span>
+    }
+    if (trip.edited) {
+      return <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-yellow-100 text-yellow-700">{t('triolog.gpsEdited')}</span>
+    }
+    return <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-indigo-100 text-indigo-600">{t('triolog.gps')}</span>
   }
 
   // ── Totals by profile ──────────────────────────────────────
@@ -518,40 +715,161 @@ export default function TrioLog() {
 
         {/* Trip history (hidden while tracking) */}
         {!tracking && trips.length > 0 && (
-          <div>
+          <div className="mb-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-3">{t('triolog.history')}</h2>
             <div className="space-y-2">
               {trips.map((trip) => (
                 <Card key={trip.id}>
-                  <CardBody className="flex items-center justify-between py-3">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <p className="text-sm font-medium text-gray-900">{formatDateFI(trip.startTime)}</p>
-                        {getProfileBadge(trip.profile || 'personal')}
-                        {trip.manual && <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-gray-100 text-gray-500">{t('triolog.manual')}</span>}
-                      </div>
-                      <div className="flex gap-4 mt-0.5 text-xs text-gray-500">
-                        {trip.duration > 0 && <span>{formatTime(trip.duration)}</span>}
-                        <span>{formatDistance(trip.distance)}</span>
-                        {trip.manual && trip.startKm != null && (
-                          <span>{trip.startKm} → {trip.endKm} km</span>
+                  <CardBody className="py-3">
+                    {editingTrip === trip.id ? (
+                      /* ── Inline edit form ─────────────────────── */
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-sm font-semibold text-gray-900">{t('triolog.editTrip')}</h3>
+                          <button onClick={() => setEditingTrip(null)} className="p-1 text-gray-400 hover:text-gray-600">
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+
+                        {/* Profile selector */}
+                        <div className="flex gap-2">
+                          {PROFILES.map((p) => {
+                            const Icon = p.icon
+                            const active = editForm.profile === p.id
+                            return (
+                              <button
+                                key={p.id}
+                                onClick={() => setEditForm((prev) => ({ ...prev, profile: p.id }))}
+                                className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg border text-xs font-semibold transition-colors ${
+                                  active
+                                    ? p.colorClass === 'blue'
+                                      ? 'border-blue-500 bg-blue-50 text-blue-700'
+                                      : 'border-green-500 bg-green-50 text-green-700'
+                                    : 'border-gray-200 bg-white text-gray-500'
+                                }`}
+                              >
+                                <Icon className="w-3.5 h-3.5" />
+                                {getProfileLabel(p.id)}
+                              </button>
+                            )
+                          })}
+                        </div>
+
+                        {trip.manual ? (
+                          /* Manual trip edit fields */
+                          <>
+                            <div className="grid grid-cols-3 gap-2">
+                              <div>
+                                <label className="block text-[10px] font-medium text-gray-500 mb-0.5">{t('triolog.date')}</label>
+                                <input
+                                  type="date"
+                                  value={editForm.date}
+                                  onChange={(e) => setEditForm((prev) => ({ ...prev, date: e.target.value }))}
+                                  className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-[10px] font-medium text-gray-500 mb-0.5">{t('triolog.startReading')}</label>
+                                <input
+                                  type="number"
+                                  step="0.1"
+                                  min="0"
+                                  value={editForm.startKm}
+                                  onChange={(e) => setEditForm((prev) => ({ ...prev, startKm: e.target.value }))}
+                                  className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-[10px] font-medium text-gray-500 mb-0.5">{t('triolog.endReading')}</label>
+                                <input
+                                  type="number"
+                                  step="0.1"
+                                  min="0"
+                                  value={editForm.endKm}
+                                  onChange={(e) => setEditForm((prev) => ({ ...prev, endKm: e.target.value }))}
+                                  className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                />
+                              </div>
+                            </div>
+                            {editForm.startKm && editForm.endKm && parseFloat(editForm.endKm) > parseFloat(editForm.startKm) && (
+                              <p className="text-xs text-gray-500">
+                                = {(parseFloat(editForm.endKm) - parseFloat(editForm.startKm)).toFixed(1)} km
+                              </p>
+                            )}
+                          </>
+                        ) : (
+                          /* GPS trip edit: corrected distance */
+                          <div>
+                            <label className="block text-[10px] font-medium text-gray-500 mb-0.5">{t('triolog.correctedDistance')}</label>
+                            <input
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              value={editForm.distanceKm}
+                              onChange={(e) => setEditForm((prev) => ({ ...prev, distanceKm: e.target.value }))}
+                              className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            />
+                          </div>
                         )}
-                      </div>
-                      {trip.description && <p className="text-xs text-gray-400 mt-0.5">{trip.description}</p>}
-                    </div>
-                    {deleteConfirm === trip.id ? (
-                      <div className="flex items-center gap-1">
-                        <Button variant="danger" size="sm" onClick={() => deleteTrip(trip.id)}>
-                          {t('common.yes')}
-                        </Button>
-                        <Button variant="secondary" size="sm" onClick={() => setDeleteConfirm(null)}>
-                          {t('common.no')}
-                        </Button>
+
+                        <input
+                          type="text"
+                          value={editForm.description}
+                          onChange={(e) => setEditForm((prev) => ({ ...prev, description: e.target.value }))}
+                          placeholder={t('triolog.descriptionPlaceholder')}
+                          className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        />
+
+                        <div className="flex gap-2">
+                          <Button onClick={() => saveEditTrip(trip)} className="flex-1" size="sm">
+                            <Check className="w-3.5 h-3.5" />
+                            {t('common.save')}
+                          </Button>
+                          <Button variant="secondary" onClick={() => setEditingTrip(null)} size="sm">
+                            {t('common.cancel')}
+                          </Button>
+                        </div>
                       </div>
                     ) : (
-                      <button onClick={() => setDeleteConfirm(trip.id)} className="p-1.5 text-gray-400 hover:text-red-500 transition-colors">
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      /* ── Normal trip display ──────────────────── */
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="text-sm font-medium text-gray-900">{formatDateFI(trip.startTime)}</p>
+                            {getProfileBadge(trip.profile || 'personal')}
+                            {getSourceBadge(trip)}
+                          </div>
+                          <div className="flex gap-4 mt-0.5 text-xs text-gray-500">
+                            {trip.duration > 0 && <span>{formatTime(trip.duration)}</span>}
+                            <span>{formatDistance(trip.distance)}</span>
+                            {trip.manual && trip.startKm != null && (
+                              <span>{trip.startKm} &rarr; {trip.endKm} km</span>
+                            )}
+                          </div>
+                          {trip.description && <p className="text-xs text-gray-400 mt-0.5">{trip.description}</p>}
+                        </div>
+                        <div className="flex items-center gap-1">
+                          {deleteConfirm === trip.id ? (
+                            <>
+                              <Button variant="danger" size="sm" onClick={() => deleteTrip(trip.id)}>
+                                {t('common.yes')}
+                              </Button>
+                              <Button variant="secondary" size="sm" onClick={() => setDeleteConfirm(null)}>
+                                {t('common.no')}
+                              </Button>
+                            </>
+                          ) : (
+                            <>
+                              <button onClick={() => startEditTrip(trip)} className="p-1.5 text-gray-400 hover:text-blue-500 transition-colors">
+                                <Pencil className="w-4 h-4" />
+                              </button>
+                              <button onClick={() => setDeleteConfirm(trip.id)} className="p-1.5 text-gray-400 hover:text-red-500 transition-colors">
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </div>
                     )}
                   </CardBody>
                 </Card>
@@ -560,8 +878,192 @@ export default function TrioLog() {
           </div>
         )}
 
+        {/* ── Receipts section ──────────────────────────────────── */}
+        {!tracking && (
+          <div className="mb-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-3">{t('triolog.receipts')}</h2>
+
+            {/* Receipt form (shown after image selected) */}
+            {showReceiptForm && (
+              <Card className="mb-3">
+                <CardBody className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-semibold text-gray-900">{t('triolog.addReceipt')}</h3>
+                    <button onClick={() => { setShowReceiptForm(false); setReceiptImage(null) }} className="p-1 text-gray-400 hover:text-gray-600">
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  {/* Image preview */}
+                  {receiptImage && (
+                    <img src={receiptImage} alt="" className="w-full max-h-48 object-contain rounded-lg border border-gray-200" />
+                  )}
+
+                  {/* Store + Date */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-[10px] font-medium text-gray-500 mb-0.5">{t('triolog.receiptStore')}</label>
+                      <input
+                        type="text"
+                        value={receiptForm.store}
+                        onChange={(e) => setReceiptForm((prev) => ({ ...prev, store: e.target.value }))}
+                        className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-medium text-gray-500 mb-0.5">{t('triolog.date')}</label>
+                      <input
+                        type="date"
+                        value={receiptForm.date}
+                        onChange={(e) => setReceiptForm((prev) => ({ ...prev, date: e.target.value }))}
+                        className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Amount */}
+                  <div>
+                    <label className="block text-[10px] font-medium text-gray-500 mb-0.5">{t('triolog.receiptAmount')}</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={receiptForm.amount}
+                      onChange={(e) => setReceiptForm((prev) => ({ ...prev, amount: e.target.value }))}
+                      className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  {/* VAT breakdown */}
+                  <div>
+                    <label className="block text-[10px] font-medium text-gray-500 mb-1">{t('triolog.receiptVatBreakdown')}</label>
+                    {receiptForm.vatBreakdown.map((row, i) => (
+                      <div key={i} className="flex gap-2 mb-1.5">
+                        <input
+                          type="number"
+                          step="0.1"
+                          value={row.rate}
+                          onChange={(e) => updateReceiptVatRow(i, 'rate', e.target.value)}
+                          placeholder={t('triolog.receiptVatRate')}
+                          className="flex-1 px-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        />
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={row.amount}
+                          onChange={(e) => updateReceiptVatRow(i, 'amount', e.target.value)}
+                          placeholder={t('triolog.receiptVatAmount')}
+                          className="flex-1 px-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        />
+                        <button onClick={() => removeReceiptVatRow(i)} className="p-1 text-gray-400 hover:text-red-500">
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                    <button
+                      onClick={addReceiptVatRow}
+                      className="text-xs text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1"
+                    >
+                      <Plus className="w-3 h-3" />
+                      {t('triolog.receiptAddVatRow')}
+                    </button>
+                  </div>
+
+                  <Button onClick={handleReceiptSubmit} className="w-full" size="sm">
+                    {t('common.save')}
+                  </Button>
+                </CardBody>
+              </Card>
+            )}
+
+            {/* Add receipt button */}
+            {!showReceiptForm && (
+              <>
+                <input
+                  ref={receiptFileRef}
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  onChange={handleReceiptImageSelect}
+                  className="hidden"
+                />
+                <button
+                  onClick={() => receiptFileRef.current?.click()}
+                  className="w-full flex items-center justify-center gap-2 py-2.5 px-4 border-2 border-dashed border-gray-300 rounded-xl text-sm font-medium text-gray-500 hover:border-gray-400 hover:text-gray-700 transition-colors mb-3"
+                >
+                  <Camera className="w-4 h-4" />
+                  {t('triolog.addReceipt')}
+                </button>
+              </>
+            )}
+
+            {/* Receipt list */}
+            {receipts.length > 0 ? (
+              <div className="space-y-2">
+                {receipts.map((receipt) => (
+                  <Card key={receipt.id}>
+                    <CardBody className="py-3">
+                      <div className="flex items-start gap-3">
+                        {/* Thumbnail */}
+                        {receipt.image && (
+                          <button
+                            onClick={() => setExpandedReceipt(expandedReceipt === receipt.id ? null : receipt.id)}
+                            className="flex-shrink-0"
+                          >
+                            <img src={receipt.image} alt="" className="w-12 h-12 object-cover rounded-lg border border-gray-200" />
+                          </button>
+                        )}
+                        {/* Info */}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900">{receipt.store || '-'}</p>
+                          <div className="flex gap-4 mt-0.5 text-xs text-gray-500">
+                            <span>{formatDateShort(receipt.date)}</span>
+                            <span className="font-medium text-gray-700">{receipt.amount.toFixed(2)} &euro;</span>
+                          </div>
+                          {receipt.vatBreakdown?.length > 0 && (
+                            <div className="mt-1 text-[10px] text-gray-400">
+                              {receipt.vatBreakdown.map((v, i) => (
+                                <span key={i}>{i > 0 ? ' | ' : ''}{v.rate}%: {v.amount.toFixed(2)} &euro;</span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        {/* Delete */}
+                        {receiptDeleteConfirm === receipt.id ? (
+                          <div className="flex items-center gap-1">
+                            <Button variant="danger" size="sm" onClick={() => deleteReceipt(receipt.id)}>
+                              {t('common.yes')}
+                            </Button>
+                            <Button variant="secondary" size="sm" onClick={() => setReceiptDeleteConfirm(null)}>
+                              {t('common.no')}
+                            </Button>
+                          </div>
+                        ) : (
+                          <button onClick={() => setReceiptDeleteConfirm(receipt.id)} className="p-1.5 text-gray-400 hover:text-red-500 transition-colors">
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+                      {/* Expanded image */}
+                      {expandedReceipt === receipt.id && receipt.image && (
+                        <div className="mt-3">
+                          <img src={receipt.image} alt="" className="w-full rounded-lg border border-gray-200" />
+                        </div>
+                      )}
+                    </CardBody>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              !showReceiptForm && (
+                <p className="text-sm text-gray-400 text-center py-4">{t('triolog.noReceipts')}</p>
+              )
+            )}
+          </div>
+        )}
+
         {/* Empty state */}
-        {!tracking && trips.length === 0 && (
+        {!tracking && trips.length === 0 && receipts.length === 0 && (
           <div className="text-center py-8">
             <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <MapPin className="w-8 h-8 text-gray-400" />
