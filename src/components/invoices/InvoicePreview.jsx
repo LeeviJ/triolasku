@@ -651,8 +651,14 @@ export default function InvoicePreview({ invoice, onClose, onDuplicate }) {
 
         {/* Footer */}
         <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #e5e7eb', fontSize: '0.75rem', color: '#6b7280', textAlign: 'center' }}>
-          {company?.name} | {company?.businessId && `${language === 'fi' ? 'Y-tunnus' : language === 'sv' ? 'FO-nummer' : 'Business ID'}: ${company.businessId}`}
-          {company?.vatNumber && ` | ${company.vatNumber}`}
+          <div>
+            {company?.name} | {company?.businessId && `${language === 'fi' ? 'Y-tunnus' : language === 'sv' ? 'FO-nummer' : 'Business ID'}: ${company.businessId}`}
+            {company?.vatNumber && ` | ${company.vatNumber}`}
+            {company?.streetAddress && ` | ${company.streetAddress}`}
+          </div>
+          <div style={{ marginTop: '0.25rem', fontSize: '0.7rem' }}>
+            {language === 'fi' ? 'ALV-velvollisuus rekisteröity 1.2.2026 alkaen' : language === 'sv' ? 'Momsskyldighet registrerad fr.o.m. 1.2.2026' : 'VAT liability registered from 1 Feb 2026'}
+          </div>
         </div>
       </div>
       </div>

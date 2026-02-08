@@ -8,6 +8,7 @@ export const translations = {
       products: 'Tuotteet',
       invoices: 'Laskut',
       triolog: 'TrioLog',
+      triopromote: 'TrioPromote',
     },
     // Common
     common: {
@@ -275,6 +276,7 @@ export const translations = {
       products: 'Products',
       invoices: 'Invoices',
       triolog: 'TrioLog',
+      triopromote: 'TrioPromote',
     },
     // Common
     common: {
@@ -542,6 +544,7 @@ export const translations = {
       products: 'Produkter',
       invoices: 'Fakturor',
       triolog: 'TrioLog',
+      triopromote: 'TrioPromote',
     },
     // Common
     common: {

@@ -6,6 +6,7 @@ import Customers from './pages/Customers'
 import Products from './pages/Products'
 import Invoices from './pages/Invoices'
 import TrioLog from './pages/TrioLog'
+import TrioPromote from './pages/TrioPromote'
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
         <Route path="/products" element={<Products />} />
         <Route path="/invoices" element={<Invoices />} />
         <Route path="/triolog" element={<TrioLog />} />
+        <Route path="/triopromote" element={<TrioPromote />} />
       </Routes>
     </Layout>
   )

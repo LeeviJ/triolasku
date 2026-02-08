@@ -6,6 +6,7 @@ import {
   Package,
   FileText,
   MapPin,
+  Sparkles,
   Menu,
   X,
   Globe,
@@ -19,6 +20,7 @@ const navItems = [
   { path: '/products', icon: Package, labelKey: 'nav.products' },
   { path: '/invoices', icon: FileText, labelKey: 'nav.invoices' },
   { path: '/triolog', icon: MapPin, labelKey: 'nav.triolog' },
+  { path: '/triopromote', icon: Sparkles, labelKey: 'nav.triopromote' },
 ]
 
 export default function Sidebar({ isOpen, onToggle }) {

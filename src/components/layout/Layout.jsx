@@ -24,7 +24,8 @@ export default function Layout({ children }) {
 
         {/* Footer */}
         <footer className="border-t border-gray-200 bg-gray-50 px-4 py-3 text-center text-xs text-gray-500 print:hidden">
-          Kyyränkoski Tmi (Y-tunnus: 1437272-9) | Kylänpääntie 54
+          <div>Kyyränkoski Tmi | Y-tunnus: 1437272-9 | Kylänpääntie 54</div>
+          <div className="mt-0.5">ALV-velvollisuus rekisteröity 1.2.2026 alkaen</div>
         </footer>
       </div>
     </div>
