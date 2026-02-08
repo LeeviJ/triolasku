@@ -8,7 +8,7 @@ import { useData } from '../../context/DataContext'
 import Button from '../ui/Button'
 import { formatPrice, formatVatRate, calculateGrossPrice, formatDateFI } from '../../utils/formatters'
 
-export default function InvoicePreview({ invoice, onClose, onDuplicate }) {
+export default function InvoicePreview({ invoice, onClose, onDuplicate, onCreditNote }) {
   const { t, language } = useLanguage()
   const { companies, customers, units, updateInvoice } = useData()
   const invoiceRef = useRef(null)
@@ -334,6 +334,12 @@ export default function InvoicePreview({ invoice, onClose, onDuplicate }) {
               <Button variant="secondary" onClick={handleDuplicate}>
                 <Copy className="w-4 h-4" />
                 {t('invoices.duplicateToNew')}
+              </Button>
+            )}
+            {onCreditNote && !invoice.isCreditNote && (
+              <Button variant="secondary" onClick={() => onCreditNote(invoice)}>
+                <AlertTriangle className="w-4 h-4 text-orange-500" />
+                {language === 'fi' ? 'Hyvityslasku' : 'Credit Note'}
               </Button>
             )}
             <Button variant="secondary" onClick={() => setScreenshotMode(true)}>

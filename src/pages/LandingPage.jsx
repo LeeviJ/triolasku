@@ -341,7 +341,7 @@ function LandingFooter() {
         </div>
         <div className="border-t border-gray-100 pt-6 text-center text-xs text-gray-400">
           <div>© {new Date().getFullYear()} TrioTools — Kyyränkoski Tmi. Kaikki oikeudet pidätetään.</div>
-          <div className="mt-1 font-bold uppercase tracking-wide">VERSIO 11.0 - ROUTING FIXED</div>
+          <div className="mt-1 font-bold uppercase tracking-wide">VERSIO 13.0 - FINAL CREDIT NOTE FIX</div>
         </div>
       </div>
     </footer>

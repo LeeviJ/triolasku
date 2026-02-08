@@ -90,10 +90,13 @@ export default function Invoices() {
     setShowForm(true)
   }
 
+  // HYVITYSLASKU: Avaa lomake (EI luo valmista laskua, EI generoi PDF:ää)
+  // Käyttäjä voi muokata summia (osahyvitys) ja lisätä selitteen ennen tallennusta
   const handleCreditNote = (sourceInvoice) => {
     const today = new Date().toISOString().split('T')[0]
-    const { id, invoiceNumber, createdAt, updatedAt, ...data } = sourceInvoice
-    const template = {
+    // Poista alkuperäisen laskun ID ja numero — uusi lasku saa omat
+    const { id, invoiceNumber, createdAt, updatedAt, totalNet, totalVat, totalGross, ...data } = sourceInvoice
+    const creditNoteTemplate = {
       ...data,
       invoiceDate: today,
       dueDate: today,
@@ -101,12 +104,18 @@ export default function Invoices() {
       isCreditNote: true,
       creditedInvoiceNumber: sourceInvoice.invoiceNumber,
       ourReference: `Hyvitys laskuun ${sourceInvoice.invoiceNumber}`,
+      additionalInfo: '',
+      additionalInfoPosition: 'end',
+      // Käännä kaikki rivien hinnat negatiivisiksi
       rows: (sourceInvoice.rows || []).map(row => ({
         ...row,
         priceNet: -(Math.abs(parseFloat(row.priceNet) || 0)),
       })),
     }
-    setEditingInvoice(template)
+    // Sulje esikatselu jos auki, avaa lomake
+    setShowPreview(false)
+    setPreviewInvoice(null)
+    setEditingInvoice(creditNoteTemplate)
     setShowForm(true)
   }
 
@@ -151,6 +160,7 @@ export default function Invoices() {
           setPreviewInvoice(null)
         }}
         onDuplicate={handleDuplicateAndEdit}
+        onCreditNote={handleCreditNote}
       />
     )
   }

@@ -312,41 +312,6 @@ export function DataProvider({ children }) {
     return { success: true, invoice: newInvoice }
   }
 
-  const createCreditNote = (sourceInvoice) => {
-    const today = new Date().toISOString().split('T')[0]
-    const invoiceNumber = getNextInvoiceNumberForCompany(sourceInvoice.companyId)
-    const creditNote = {
-      ...sourceInvoice,
-      id: crypto.randomUUID(),
-      invoiceNumber,
-      invoiceDate: today,
-      dueDate: today,
-      status: 'ready',
-      isCreditNote: true,
-      creditedInvoiceNumber: sourceInvoice.invoiceNumber,
-      ourReference: `Hyvitys laskuun ${sourceInvoice.invoiceNumber}`,
-      rows: (sourceInvoice.rows || []).map(row => ({
-        ...row,
-        priceNet: -(Math.abs(parseFloat(row.priceNet) || 0)),
-      })),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    }
-    // Recalculate totals with negative values
-    let totalNet = 0
-    let totalVat = 0
-    creditNote.rows.forEach((row) => {
-      const rowNet = (parseFloat(row.quantity) || 0) * (parseFloat(row.priceNet) || 0)
-      totalNet += rowNet
-      totalVat += rowNet * (parseFloat(row.vatRate) || 0) / 100
-    })
-    creditNote.totalNet = Math.round(totalNet * 100) / 100
-    creditNote.totalVat = Math.round(totalVat * 100) / 100
-    creditNote.totalGross = Math.round((totalNet + totalVat) * 100) / 100
-
-    setInvoices((prev) => [...prev, creditNote])
-    return { success: true, invoice: creditNote }
-  }
 
   const deleteInvoice = (id) => {
     setInvoices((prev) => prev.filter((invoice) => invoice.id !== id))
@@ -389,7 +354,6 @@ export function DataProvider({ children }) {
     updateInvoice,
     deleteInvoice,
     duplicateInvoice,
-    createCreditNote,
     getNextInvoiceNumberForCompany,
     // Settings & email backup
     settings,
