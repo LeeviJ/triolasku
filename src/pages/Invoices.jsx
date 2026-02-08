@@ -8,6 +8,7 @@ import {
   Search,
   Building2,
   User,
+  RotateCcw,
 } from 'lucide-react'
 import { useLanguage } from '../context/LanguageContext'
 import { useData } from '../context/DataContext'
@@ -19,7 +20,7 @@ import InvoicePreview from '../components/invoices/InvoicePreview'
 
 export default function Invoices() {
   const { t } = useLanguage()
-  const { invoices, companies, customers, deleteInvoice } = useData()
+  const { invoices, companies, customers, deleteInvoice, createCreditNote } = useData()
 
   const [showForm, setShowForm] = useState(false)
   const [showPreview, setShowPreview] = useState(false)
@@ -299,6 +300,16 @@ export default function Invoices() {
                           onClick={() => handleEdit(invoice)}
                         >
                           <Pencil className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            createCreditNote(invoice)
+                          }}
+                          title="Luo hyvityslasku"
+                        >
+                          <RotateCcw className="w-4 h-4 text-orange-500" />
                         </Button>
                         {deleteConfirm === invoice.id ? (
                           <div className="flex items-center gap-1">

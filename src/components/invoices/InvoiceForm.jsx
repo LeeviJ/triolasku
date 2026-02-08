@@ -709,17 +709,36 @@ export default function InvoiceForm({ invoice, onClose, onPreview }) {
           </div>
         </Card>
 
-        {/* Totals */}
+        {/* Totals with VAT breakdown */}
         <Card className="mb-4">
           <CardBody>
             <div className="flex flex-col items-end gap-2">
               <div className="flex justify-between w-full max-w-xs text-sm">
-                <span className="text-gray-600">{t('invoices.subtotal')}:</span>
+                <span className="text-gray-600">{t('invoices.subtotal')} (veroton):</span>
                 <span className="font-medium">
                   {formatPrice(totals.totalNet)} EUR
                 </span>
               </div>
-              <div className="flex justify-between w-full max-w-xs text-sm">
+              {/* Per-rate VAT breakdown */}
+              {(() => {
+                const vatByRate = {}
+                formData.rows.forEach((row) => {
+                  const rate = parseFloat(row.vatRate) || 0
+                  const rowNet = (parseFloat(row.quantity) || 0) * (parseFloat(row.priceNet) || 0)
+                  const rowVat = calculateVatAmount(rowNet, rate)
+                  if (!vatByRate[rate]) vatByRate[rate] = 0
+                  vatByRate[rate] += rowVat
+                })
+                return Object.entries(vatByRate)
+                  .sort(([a], [b]) => parseFloat(b) - parseFloat(a))
+                  .map(([rate, amount]) => (
+                    <div key={rate} className="flex justify-between w-full max-w-xs text-sm">
+                      <span className="text-gray-500">ALV {formatVatRate(parseFloat(rate))} %:</span>
+                      <span className="text-gray-600">{formatPrice(Math.round(amount * 100) / 100)} EUR</span>
+                    </div>
+                  ))
+              })()}
+              <div className="flex justify-between w-full max-w-xs text-sm border-t pt-1">
                 <span className="text-gray-600">{t('invoices.vatTotal')}:</span>
                 <span className="font-medium">
                   {formatPrice(totals.totalVat)} EUR

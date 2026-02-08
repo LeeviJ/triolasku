@@ -65,9 +65,12 @@ export default function InvoicePreview({ invoice, onClose, onDuplicate }) {
   }
 
   const isReceipt = invoice.paymentMethod && invoice.paymentMethod !== 'invoice'
-  const docLabel = isReceipt
-    ? (language === 'fi' ? 'Kuitti' : language === 'sv' ? 'Kvitto' : 'Receipt')
-    : (language === 'fi' ? 'Lasku' : language === 'sv' ? 'Faktura' : 'Invoice')
+  const isCreditNote = invoice.isCreditNote === true
+  const docLabel = isCreditNote
+    ? (language === 'fi' ? 'Hyvityslasku' : 'Credit Note')
+    : isReceipt
+      ? (language === 'fi' ? 'Kuitti' : language === 'sv' ? 'Kvitto' : 'Receipt')
+      : (language === 'fi' ? 'Lasku' : language === 'sv' ? 'Faktura' : 'Invoice')
 
   const getFileName = () => {
     const companyName = (company?.name || invoice._companyName || 'Yritys').replace(/[^a-zA-Z0-9äöåÄÖÅ]/g, '_')
@@ -411,11 +414,18 @@ export default function InvoicePreview({ invoice, onClose, onDuplicate }) {
           {/* Invoice/Receipt title */}
           <div style={{ textAlign: 'right' }}>
             <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#111827', textTransform: 'uppercase', margin: 0 }}>
-              {invoice.paymentMethod && invoice.paymentMethod !== 'invoice'
-                ? (language === 'fi' ? 'KUITTI' : language === 'sv' ? 'KVITTO' : 'RECEIPT')
-                : (language === 'fi' ? 'LASKU' : language === 'sv' ? 'FAKTURA' : 'INVOICE')}
+              {isCreditNote
+                ? (language === 'fi' ? 'HYVITYSLASKU' : 'CREDIT NOTE')
+                : invoice.paymentMethod && invoice.paymentMethod !== 'invoice'
+                  ? (language === 'fi' ? 'KUITTI' : language === 'sv' ? 'KVITTO' : 'RECEIPT')
+                  : (language === 'fi' ? 'LASKU' : language === 'sv' ? 'FAKTURA' : 'INVOICE')}
             </h2>
-            {invoice.paymentMethod && invoice.paymentMethod !== 'invoice' && (
+            {isCreditNote && invoice.creditedInvoiceNumber && (
+              <p style={{ fontSize: '0.875rem', color: '#dc2626', marginTop: '0.25rem', fontWeight: 600 }}>
+                Hyvitys laskuun {invoice.creditedInvoiceNumber}
+              </p>
+            )}
+            {invoice.paymentMethod && invoice.paymentMethod !== 'invoice' && !isCreditNote && (
               <p style={{ fontSize: '0.875rem', color: '#4b5563', marginTop: '0.25rem' }}>
                 {t('invoices.paidWith')}: {t(`invoices.paymentMethod${invoice.paymentMethod === 'cash' ? 'Cash' : invoice.paymentMethod === 'card' ? 'Card' : invoice.paymentMethod === 'mobilepay' ? 'MobilePay' : 'BankTransfer'}`)}
               </p>
