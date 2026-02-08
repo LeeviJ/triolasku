@@ -8,7 +8,8 @@
   to = "/.netlify/functions/:splat"
   status = 200
 
+# SPA catch-all: all routes handled by React Router
 [[redirects]]
-  from = "/app/*"
+  from = "/*"
   to = "/index.html"
   status = 200

@@ -21,7 +21,7 @@ function Hero() {
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
           <Link
-            to="/app/invoices"
+            to="/invoices"
             className="bg-green-600 hover:bg-green-700 text-white font-semibold px-8 py-3.5 rounded-xl transition-colors text-base inline-flex items-center justify-center gap-2"
           >
             <FileText className="w-5 h-5" />
@@ -45,7 +45,7 @@ const tools = [
     title: 'TrioLasku',
     icon: FileText,
     color: 'blue',
-    link: '/app/invoices',
+    link: '/invoices',
     badge: 'Valmis',
     description: 'PDF-laskut viivakoodilla ja viitenumerolla. Asiakas- ja tuoterekisteri, ALV-erittely, hyvityslaskut.',
     features: ['PDF-laskut sekunneissa', 'Uusi 13,5 % ALV-tuki', 'Asiakas- ja tuoterekisteri', 'Hyvityslaskut', 'Varmuuskopiointi', 'Toimii kaikilla laitteilla'],
@@ -54,7 +54,7 @@ const tools = [
     title: 'TrioLog',
     icon: MapPin,
     color: 'green',
-    link: '/app/triolog',
+    link: '/triolog',
     badge: 'Beta',
     description: 'Ajopäiväkirja ja kuittien hallinta. GPS-seuranta, työ- ja yksityisajot, km-korvaukset.',
     features: ['GPS-ajopäiväkirja', 'Kuittien tallennus', 'Työ- ja yksityisajoprofiilit', 'ALV-erittely kuiteista'],
@@ -63,7 +63,7 @@ const tools = [
     title: 'TrioPromote',
     icon: Sparkles,
     color: 'purple',
-    link: '/app/triopromote',
+    link: '/triopromote',
     badge: 'AI',
     description: 'Tekoäly markkinoi puolestasi. Valmiit tekstit Facebookiin, Instagramiin, LinkedIniin ja sähköpostiin.',
     features: ['Some-postaukset sekunneissa', 'Myyvät sähköpostit', 'Suomalainen sävy', 'Google Gemini -pohjainen'],
@@ -334,14 +334,14 @@ function LandingFooter() {
           </div>
           <div className="space-y-2">
             <h4 className="font-semibold text-gray-900">Työkalut</h4>
-            <Link to="/app/invoices" className="block hover:text-gray-900 transition-colors">TrioLasku</Link>
-            <Link to="/app/triolog" className="block hover:text-gray-900 transition-colors">TrioLog</Link>
-            <Link to="/app/triopromote" className="block hover:text-gray-900 transition-colors">TrioPromote</Link>
+            <Link to="/invoices" className="block hover:text-gray-900 transition-colors">TrioLasku</Link>
+            <Link to="/triolog" className="block hover:text-gray-900 transition-colors">TrioLog</Link>
+            <Link to="/triopromote" className="block hover:text-gray-900 transition-colors">TrioPromote</Link>
           </div>
         </div>
         <div className="border-t border-gray-100 pt-6 text-center text-xs text-gray-400">
           <div>© {new Date().getFullYear()} TrioTools — Kyyränkoski Tmi. Kaikki oikeudet pidätetään.</div>
-          <div className="mt-1 font-bold uppercase tracking-wide">VERSIO 10.0 - FINAL STABLE</div>
+          <div className="mt-1 font-bold uppercase tracking-wide">VERSIO 11.0 - ROUTING FIXED</div>
         </div>
       </div>
     </footer>
@@ -364,7 +364,7 @@ export default function LandingPage() {
             <a href="#pricing" className="hover:text-gray-900 transition-colors">Hinnoittelu</a>
             <a href="#contact" className="hover:text-gray-900 transition-colors">Yhteyttä</a>
           </div>
-          <Link to="/app/invoices" className="bg-green-600 hover:bg-green-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
+          <Link to="/invoices" className="bg-green-600 hover:bg-green-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
             Avaa sovellus
           </Link>
         </div>

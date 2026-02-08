@@ -14,13 +14,13 @@ import {
 import { useLanguage } from '../../context/LanguageContext'
 
 const navItems = [
-  { path: '/app/dashboard', icon: LayoutDashboard, labelKey: 'nav.dashboard' },
-  { path: '/app/companies', icon: Building2, labelKey: 'nav.companies' },
-  { path: '/app/customers', icon: Users, labelKey: 'nav.customers' },
-  { path: '/app/products', icon: Package, labelKey: 'nav.products' },
-  { path: '/app/invoices', icon: FileText, labelKey: 'nav.invoices' },
-  { path: '/app/triolog', icon: MapPin, labelKey: 'nav.triolog' },
-  { path: '/app/triopromote', icon: Sparkles, labelKey: 'nav.triopromote' },
+  { path: '/dashboard', icon: LayoutDashboard, labelKey: 'nav.dashboard' },
+  { path: '/companies', icon: Building2, labelKey: 'nav.companies' },
+  { path: '/customers', icon: Users, labelKey: 'nav.customers' },
+  { path: '/products', icon: Package, labelKey: 'nav.products' },
+  { path: '/invoices', icon: FileText, labelKey: 'nav.invoices' },
+  { path: '/triolog', icon: MapPin, labelKey: 'nav.triolog' },
+  { path: '/triopromote', icon: Sparkles, labelKey: 'nav.triopromote' },
 ]
 
 export default function Sidebar({ isOpen, onToggle }) {

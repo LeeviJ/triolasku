@@ -9,27 +9,24 @@ import Invoices from './pages/Invoices'
 import TrioLog from './pages/TrioLog'
 import TrioPromote from './pages/TrioPromote'
 
-function AppLayout() {
-  return (
-    <Layout>
-      <Routes>
-        <Route path="dashboard" element={<Dashboard />} />
-        <Route path="companies" element={<Companies />} />
-        <Route path="customers" element={<Customers />} />
-        <Route path="products" element={<Products />} />
-        <Route path="invoices" element={<Invoices />} />
-        <Route path="triolog" element={<TrioLog />} />
-        <Route path="triopromote" element={<TrioPromote />} />
-      </Routes>
-    </Layout>
-  )
+function AppLayout({ children }) {
+  return <Layout>{children}</Layout>
 }
 
 function App() {
   return (
     <Routes>
+      {/* Landing page — only exact "/" */}
       <Route path="/" element={<LandingPage />} />
-      <Route path="/app/*" element={<AppLayout />} />
+
+      {/* App pages — each wrapped in Layout */}
+      <Route path="/dashboard" element={<AppLayout><Dashboard /></AppLayout>} />
+      <Route path="/companies" element={<AppLayout><Companies /></AppLayout>} />
+      <Route path="/customers" element={<AppLayout><Customers /></AppLayout>} />
+      <Route path="/products" element={<AppLayout><Products /></AppLayout>} />
+      <Route path="/invoices" element={<AppLayout><Invoices /></AppLayout>} />
+      <Route path="/triolog" element={<AppLayout><TrioLog /></AppLayout>} />
+      <Route path="/triopromote" element={<AppLayout><TrioPromote /></AppLayout>} />
     </Routes>
   )
 }
