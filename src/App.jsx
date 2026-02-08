@@ -1,5 +1,6 @@
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, useLocation } from 'react-router-dom'
 import Layout from './components/layout/Layout'
+import LandingPage from './pages/LandingPage'
 import Dashboard from './pages/Dashboard'
 import Companies from './pages/Companies'
 import Customers from './pages/Customers'
@@ -8,11 +9,18 @@ import Invoices from './pages/Invoices'
 import TrioLog from './pages/TrioLog'
 import TrioPromote from './pages/TrioPromote'
 
-function App() {
+function AppContent() {
+  const location = useLocation()
+  const isLanding = location.pathname === '/'
+
+  if (isLanding) {
+    return <LandingPage />
+  }
+
   return (
     <Layout>
       <Routes>
-        <Route path="/" element={<Dashboard />} />
+        <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/companies" element={<Companies />} />
         <Route path="/customers" element={<Customers />} />
         <Route path="/products" element={<Products />} />
@@ -22,6 +30,10 @@ function App() {
       </Routes>
     </Layout>
   )
+}
+
+function App() {
+  return <AppContent />
 }
 
 export default App

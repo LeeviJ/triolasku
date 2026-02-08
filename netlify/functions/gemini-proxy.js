@@ -1,9 +1,11 @@
 // Netlify Function: Gemini AI proxy
 // Uses server-side GEMINI_API_KEY environment variable set in Netlify dashboard
 // Client calls: POST /.netlify/functions/gemini-proxy (or /api/gemini-proxy via redirect)
+// Supports two formats:
+//   1. { prompt } — returns { result: text }
+//   2. { product, audience } — returns { results: { facebook, instagram, linkedin, email } }
 
 export async function handler(event) {
-  // Only allow POST
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: JSON.stringify({ error: 'Method not allowed' }) }
   }
@@ -17,10 +19,27 @@ export async function handler(event) {
   }
 
   try {
-    const { prompt, model } = JSON.parse(event.body || '{}')
+    const body = JSON.parse(event.body || '{}')
+    const { prompt, product, audience, model } = body
 
-    if (!prompt) {
-      return { statusCode: 400, body: JSON.stringify({ error: 'Missing prompt' }) }
+    let finalPrompt
+    let isMarketingMode = false
+
+    if (product && audience) {
+      isMarketingMode = true
+      finalPrompt = `Olet markkinointiasiantuntija. Luo markkinointisisältöä tuotteelle/palvelulle: "${product}" kohdeyleisölle: "${audience}".
+
+Vastaa TÄSMÄLLEEN tässä JSON-muodossa (ei muuta tekstiä, vain JSON):
+{
+  "facebook": "Facebook-postaus tähän (2-3 lausetta, emoji ok)",
+  "instagram": "Instagram-caption tähän (lyhyt, hashtagit mukaan)",
+  "linkedin": "LinkedIn-postaus tähän (ammattimainen sävy, 2-3 lausetta)",
+  "email": "Sähköpostin aihe: [aihe]\\n\\n[sähköpostin sisältö, 3-4 lausetta]"
+}`
+    } else if (prompt) {
+      finalPrompt = prompt
+    } else {
+      return { statusCode: 400, body: JSON.stringify({ error: 'Missing prompt or product/audience' }) }
     }
 
     const geminiModel = model || 'gemini-2.0-flash'
@@ -30,7 +49,7 @@ export async function handler(event) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
+        contents: [{ parts: [{ text: finalPrompt }] }],
       }),
     })
 
@@ -44,6 +63,31 @@ export async function handler(event) {
 
     const data = await response.json()
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text || ''
+
+    if (isMarketingMode) {
+      try {
+        const cleaned = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
+        const parsed = JSON.parse(cleaned)
+        return {
+          statusCode: 200,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ results: parsed }),
+        }
+      } catch {
+        return {
+          statusCode: 200,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            results: {
+              facebook: text,
+              instagram: text,
+              linkedin: text,
+              email: text,
+            },
+          }),
+        }
+      }
+    }
 
     return {
       statusCode: 200,

@@ -14,7 +14,7 @@ import {
 import { useLanguage } from '../../context/LanguageContext'
 
 const navItems = [
-  { path: '/', icon: LayoutDashboard, labelKey: 'nav.dashboard' },
+  { path: '/dashboard', icon: LayoutDashboard, labelKey: 'nav.dashboard' },
   { path: '/companies', icon: Building2, labelKey: 'nav.companies' },
   { path: '/customers', icon: Users, labelKey: 'nav.customers' },
   { path: '/products', icon: Package, labelKey: 'nav.products' },
