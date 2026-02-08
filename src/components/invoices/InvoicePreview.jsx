@@ -512,44 +512,61 @@ export default function InvoicePreview({ invoice, onClose, onDuplicate }) {
               <th style={{ padding: rowPad, textAlign: 'left', fontWeight: 600, color: '#374151' }}>
                 {t('invoices.description')}
               </th>
-              <th style={{ padding: rowPad, textAlign: 'right', fontWeight: 600, color: '#374151', width: '5rem' }}>
+              <th style={{ padding: rowPad, textAlign: 'right', fontWeight: 600, color: '#374151', width: '4rem' }}>
                 {t('invoices.quantity')}
               </th>
-              <th style={{ padding: rowPad, textAlign: 'center', fontWeight: 600, color: '#374151', width: '4rem' }}>
+              <th style={{ padding: rowPad, textAlign: 'center', fontWeight: 600, color: '#374151', width: '3rem' }}>
                 {t('invoices.unit')}
               </th>
-              <th style={{ padding: rowPad, textAlign: 'right', fontWeight: 600, color: '#374151', width: '6rem' }}>
-                {t('invoices.unitPrice')}
+              <th style={{ padding: rowPad, textAlign: 'right', fontWeight: 600, color: '#374151', width: '5rem' }}>
+                {language === 'fi' ? 'á netto' : 'Unit net'}
               </th>
-              <th style={{ padding: rowPad, textAlign: 'right', fontWeight: 600, color: '#374151', width: '4rem' }}>
-                {t('invoices.vatRate')}
+              <th style={{ padding: rowPad, textAlign: 'right', fontWeight: 600, color: '#374151', width: '5rem' }}>
+                {language === 'fi' ? 'Netto' : 'Net'}
               </th>
-              <th style={{ padding: rowPad, textAlign: 'right', fontWeight: 600, color: '#374151', width: '7rem' }}>
-                {t('invoices.total')}
+              <th style={{ padding: rowPad, textAlign: 'right', fontWeight: 600, color: '#374151', width: '3.5rem' }}>
+                {language === 'fi' ? 'ALV %' : 'VAT %'}
+              </th>
+              <th style={{ padding: rowPad, textAlign: 'right', fontWeight: 600, color: '#374151', width: '5rem' }}>
+                {language === 'fi' ? 'ALV €' : 'VAT €'}
+              </th>
+              <th style={{ padding: rowPad, textAlign: 'right', fontWeight: 600, color: '#374151', width: '5.5rem' }}>
+                {language === 'fi' ? 'Yhteensä' : 'Total'}
               </th>
             </tr>
           </thead>
           <tbody>
-            {invoice.rows?.map((row, index) => (
-              <tr key={index} style={{ borderBottom: '1px solid #e5e7eb' }}>
-                <td style={{ padding: rowPad, color: '#111827' }}>{row.description}</td>
-                <td style={{ padding: rowPad, textAlign: 'right', color: '#4b5563' }}>
-                  {formatPrice(row.quantity)}
-                </td>
-                <td style={{ padding: rowPad, textAlign: 'center', color: '#4b5563' }}>
-                  {getUnitName(row.unit)}
-                </td>
-                <td style={{ padding: rowPad, textAlign: 'right', color: '#4b5563' }}>
-                  {formatPrice(row.priceNet)}
-                </td>
-                <td style={{ padding: rowPad, textAlign: 'right', color: '#4b5563' }}>
-                  {formatVatRate(row.vatRate)} %
-                </td>
-                <td style={{ padding: rowPad, textAlign: 'right', fontWeight: 500, color: '#111827' }}>
-                  {formatPrice(calculateRowTotal(row))}
-                </td>
-              </tr>
-            ))}
+            {invoice.rows?.map((row, index) => {
+              const rowNet = calculateRowTotal(row)
+              const rowVatAmount = rowNet * (parseFloat(row.vatRate) || 0) / 100
+              const rowGross = rowNet + rowVatAmount
+              return (
+                <tr key={index} style={{ borderBottom: '1px solid #e5e7eb' }}>
+                  <td style={{ padding: rowPad, color: '#111827' }}>{row.description}</td>
+                  <td style={{ padding: rowPad, textAlign: 'right', color: '#4b5563' }}>
+                    {formatPrice(row.quantity)}
+                  </td>
+                  <td style={{ padding: rowPad, textAlign: 'center', color: '#4b5563' }}>
+                    {getUnitName(row.unit)}
+                  </td>
+                  <td style={{ padding: rowPad, textAlign: 'right', color: '#4b5563' }}>
+                    {formatPrice(row.priceNet)}
+                  </td>
+                  <td style={{ padding: rowPad, textAlign: 'right', color: '#4b5563' }}>
+                    {formatPrice(rowNet)}
+                  </td>
+                  <td style={{ padding: rowPad, textAlign: 'right', color: '#4b5563' }}>
+                    {formatVatRate(row.vatRate)} %
+                  </td>
+                  <td style={{ padding: rowPad, textAlign: 'right', color: '#4b5563' }}>
+                    {formatPrice(Math.round(rowVatAmount * 100) / 100)}
+                  </td>
+                  <td style={{ padding: rowPad, textAlign: 'right', fontWeight: 500, color: '#111827' }}>
+                    {formatPrice(Math.round(rowGross * 100) / 100)}
+                  </td>
+                </tr>
+              )
+            })}
           </tbody>
         </table>
 
@@ -562,26 +579,28 @@ export default function InvoicePreview({ invoice, onClose, onDuplicate }) {
 
         {/* Totals */}
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: headerGap }}>
-          <div style={{ width: '18rem' }}>
-            {/* VAT breakdown */}
-            {Object.entries(vatSummary).map(([rate, values]) => (
-              <div key={rate} style={{ display: 'flex', justifyContent: 'space-between', fontSize: totalsFont, padding: '0.25rem 0' }}>
-                <span style={{ color: '#4b5563' }}>
-                  ALV {formatVatRate(rate)} % ({formatPrice(values.net)} EUR):
-                </span>
-                <span>{formatPrice(values.vat)} EUR</span>
-              </div>
-            ))}
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: totalsFont, padding: '0.25rem 0', borderTop: '1px solid #e5e7eb', marginTop: '0.5rem' }}>
-              <span style={{ color: '#4b5563' }}>{t('invoices.subtotal')}:</span>
+          <div style={{ width: '22rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: totalsFont, padding: '0.25rem 0' }}>
+              <span style={{ color: '#4b5563' }}>{language === 'fi' ? 'Veroton yhteensä (ALV 0 %)' : 'Subtotal (excl. VAT)'}:</span>
               <span>{formatPrice(invoice.totalNet)} EUR</span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: totalsFont, padding: '0.25rem 0' }}>
-              <span style={{ color: '#4b5563' }}>{t('invoices.vatTotal')}:</span>
+            {/* VAT breakdown per rate */}
+            {Object.entries(vatSummary)
+              .sort(([a], [b]) => parseFloat(b) - parseFloat(a))
+              .map(([rate, values]) => (
+              <div key={rate} style={{ display: 'flex', justifyContent: 'space-between', fontSize: totalsFont, padding: '0.25rem 0' }}>
+                <span style={{ color: '#4b5563' }}>
+                  ALV {formatVatRate(rate)} % ({language === 'fi' ? 'perusteesta' : 'of'} {formatPrice(Math.round(values.net * 100) / 100)} €):
+                </span>
+                <span>{formatPrice(Math.round(values.vat * 100) / 100)} EUR</span>
+              </div>
+            ))}
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: totalsFont, padding: '0.25rem 0', borderTop: '1px solid #e5e7eb', marginTop: '0.25rem' }}>
+              <span style={{ color: '#4b5563' }}>{language === 'fi' ? 'ALV yhteensä' : 'VAT total'}:</span>
               <span>{formatPrice(invoice.totalVat)} EUR</span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: grandTotalFont, fontWeight: 700, padding: '0.5rem 0', borderTop: '2px solid #111827', marginTop: '0.5rem' }}>
-              <span>{t('invoices.grandTotal')}:</span>
+              <span>{language === 'fi' ? 'Maksettava yhteensä' : t('invoices.grandTotal')}:</span>
               <span>{formatPrice(invoice.totalGross)} EUR</span>
             </div>
           </div>

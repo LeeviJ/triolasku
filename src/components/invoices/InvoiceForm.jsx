@@ -75,6 +75,8 @@ export default function InvoiceForm({ invoice, onClose, onPreview }) {
     additionalInfoPosition: invoice?.additionalInfoPosition || (invoice?.additionalInfoEnd ? 'end' : 'start'),
     status: invoice?.status || 'draft',
     paymentMethod: invoice?.paymentMethod || 'invoice',
+    isCreditNote: invoice?.isCreditNote || false,
+    creditedInvoiceNumber: invoice?.creditedInvoiceNumber || '',
     rows: invoice?.rows?.length > 0 ? invoice.rows : [{ ...EMPTY_ROW }],
   })
 
@@ -321,7 +323,7 @@ export default function InvoiceForm({ invoice, onClose, onPreview }) {
         </Button>
         <div className="flex-1 min-w-0">
           <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
-            {invoice?.id ? t('invoices.editInvoice') : isReceipt ? t('invoices.createReceipt') : t('invoices.createInvoice')}
+            {invoice?.id ? t('invoices.editInvoice') : formData.isCreditNote ? (language === 'fi' ? 'Hyvityslasku' : 'Credit Note') : isReceipt ? t('invoices.createReceipt') : t('invoices.createInvoice')}
           </h1>
           <div className="flex items-center gap-2 mt-1">
             <span className="text-sm text-gray-500">{t('invoices.invoiceNumber')}:</span>
@@ -342,6 +344,19 @@ export default function InvoiceForm({ invoice, onClose, onPreview }) {
       </div>
 
       <form onSubmit={handleSubmit}>
+        {/* Credit note banner */}
+        {formData.isCreditNote && (
+          <div className="mb-4 px-4 py-3 bg-orange-50 border border-orange-200 rounded-lg text-orange-800 text-sm">
+            <strong>{language === 'fi' ? 'Hyvityslasku' : 'Credit Note'}</strong>
+            {formData.creditedInvoiceNumber && (
+              <span> — {language === 'fi' ? 'Hyvitys laskuun' : 'Credit for invoice'} #{formData.creditedInvoiceNumber}</span>
+            )}
+            <p className="mt-1 text-xs text-orange-600">
+              {language === 'fi' ? 'Tarkista ja muokkaa rivit ennen tallennusta.' : 'Review and edit rows before saving.'}
+            </p>
+          </div>
+        )}
+
         {/* Document type: Invoice vs Receipt */}
         <div className="flex gap-3 mb-4">
           <button
@@ -627,7 +642,7 @@ export default function InvoiceForm({ invoice, onClose, onPreview }) {
                     <select value={row.unit} onChange={(e) => handleRowChange(index, 'unit', e.target.value)} className="w-full px-0.5 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white">
                       {units.map((u) => <option key={u.id} value={u.id}>{getUnitName(u.id)}</option>)}
                     </select>
-                    <input type="number" step="0.01" min="0" value={row.priceNet} onChange={(e) => handleRowChange(index, 'priceNet', e.target.value)} className="w-full px-1 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 text-right" />
+                    <input type="number" step="0.01" value={row.priceNet} onChange={(e) => handleRowChange(index, 'priceNet', e.target.value)} className="w-full px-1 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 text-right" />
                     <div className="relative" data-vat-dropdown>
                       <input type="number" step="0.1" min="0" max="100" value={row.vatRate} onChange={(e) => handleRowChange(index, 'vatRate', e.target.value)} onFocus={() => setActiveVatRow(index)} className="w-full px-0.5 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 text-right" />
                       {activeVatRow === index && (
@@ -681,7 +696,7 @@ export default function InvoiceForm({ invoice, onClose, onPreview }) {
                       <select value={row.unit} onChange={(e) => handleRowChange(index, 'unit', e.target.value)} className="w-14 px-0.5 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white">
                         {units.map((u) => <option key={u.id} value={u.id}>{getUnitName(u.id)}</option>)}
                       </select>
-                      <input type="number" step="0.01" min="0" value={row.priceNet} onChange={(e) => handleRowChange(index, 'priceNet', e.target.value)} className="w-20 px-1.5 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 text-right" />
+                      <input type="number" step="0.01" value={row.priceNet} onChange={(e) => handleRowChange(index, 'priceNet', e.target.value)} className="w-20 px-1.5 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 text-right" />
                       <div className="w-16 relative" data-vat-dropdown>
                         <input type="number" step="0.1" min="0" max="100" value={row.vatRate} onChange={(e) => handleRowChange(index, 'vatRate', e.target.value)} onFocus={() => setActiveVatRow(index)} className="w-full px-0.5 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 text-right" />
                         {activeVatRow === index && (

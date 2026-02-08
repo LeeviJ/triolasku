@@ -20,7 +20,7 @@ import InvoicePreview from '../components/invoices/InvoicePreview'
 
 export default function Invoices() {
   const { t } = useLanguage()
-  const { invoices, companies, customers, deleteInvoice, createCreditNote } = useData()
+  const { invoices, companies, customers, deleteInvoice } = useData()
 
   const [showForm, setShowForm] = useState(false)
   const [showPreview, setShowPreview] = useState(false)
@@ -86,6 +86,26 @@ export default function Invoices() {
     }
     setShowPreview(false)
     setPreviewInvoice(null)
+    setEditingInvoice(template)
+    setShowForm(true)
+  }
+
+  const handleCreditNote = (sourceInvoice) => {
+    const today = new Date().toISOString().split('T')[0]
+    const { id, invoiceNumber, createdAt, updatedAt, ...data } = sourceInvoice
+    const template = {
+      ...data,
+      invoiceDate: today,
+      dueDate: today,
+      status: 'draft',
+      isCreditNote: true,
+      creditedInvoiceNumber: sourceInvoice.invoiceNumber,
+      ourReference: `Hyvitys laskuun ${sourceInvoice.invoiceNumber}`,
+      rows: (sourceInvoice.rows || []).map(row => ({
+        ...row,
+        priceNet: -(Math.abs(parseFloat(row.priceNet) || 0)),
+      })),
+    }
     setEditingInvoice(template)
     setShowForm(true)
   }
@@ -304,9 +324,7 @@ export default function Invoices() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => {
-                            createCreditNote(invoice)
-                          }}
+                          onClick={() => handleCreditNote(invoice)}
                           title="Luo hyvityslasku"
                         >
                           <RotateCcw className="w-4 h-4 text-orange-500" />

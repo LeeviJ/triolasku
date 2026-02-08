@@ -21,6 +21,11 @@ export default function Layout({ children }) {
         <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-auto">
           {children}
         </main>
+
+        {/* Footer */}
+        <footer className="border-t border-gray-200 bg-gray-50 px-4 py-3 text-center text-xs text-gray-500 print:hidden">
+          Kyyränkoski Tmi (Y-tunnus: 1437272-9) | Kylänpääntie 54
+        </footer>
       </div>
     </div>
   )
