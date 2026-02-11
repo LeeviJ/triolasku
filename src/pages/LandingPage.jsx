@@ -5,7 +5,7 @@ import { FileText, Send, ArrowRight } from 'lucide-react'
 /* ── Hero ──────────────────────────────────────────────── */
 function Hero() {
   return (
-    <section className="pt-32 pb-20 px-6">
+    <section className="pt-24 pb-10 px-6">
       <div className="max-w-4xl mx-auto text-center space-y-6">
         <div className="inline-block bg-blue-50 text-blue-600 text-sm font-semibold px-4 py-1.5 rounded-full mb-2">
           Laskutusohjelma pienyrittäjille
@@ -43,7 +43,7 @@ function TrioLaskuSection() {
   const features = ['PDF-laskut sekunneissa', 'Uusi 13,5 % ALV-tuki', 'Asiakas- ja tuoterekisteri', 'Hyvityslaskut', 'Varmuuskopiointi', 'Toimii kaikilla laitteilla']
 
   return (
-    <section id="triolasku" className="py-20 px-6 bg-gray-50">
+    <section id="triolasku" className="py-10 px-6 bg-gray-50">
       <div className="max-w-3xl mx-auto">
         <div className="bg-blue-50 border border-blue-200 rounded-2xl p-8 space-y-5">
           <div className="flex items-center gap-3">
@@ -84,7 +84,7 @@ const plans = [
 
 function Pricing() {
   return (
-    <section id="pricing" className="py-20 px-6">
+    <section id="pricing" className="py-10 px-6">
       <div className="max-w-5xl mx-auto">
         <div className="text-center mb-14">
           <h2 className="text-3xl sm:text-4xl font-bold mb-4">Hinnoittelu</h2>
@@ -145,7 +145,7 @@ function Contact() {
   }
 
   return (
-    <section id="contact" className="py-20 px-6">
+    <section id="contact" className="py-10 px-6">
       <div className="max-w-2xl mx-auto">
         <div className="text-center mb-10">
           <h2 className="text-3xl sm:text-4xl font-bold mb-4">Ota yhteyttä</h2>
@@ -176,36 +176,6 @@ function Contact() {
   )
 }
 
-/* ── Landing Footer ────────────────────────────────────── */
-function LandingFooter() {
-  return (
-    <footer className="border-t border-gray-100 py-12 px-6">
-      <div className="max-w-6xl mx-auto space-y-8">
-        <div className="grid sm:grid-cols-3 gap-8 text-sm text-gray-500">
-          <div className="space-y-2">
-            <h4 className="font-semibold text-gray-900">Kyyränkoski Tmi</h4>
-            <p>Y-tunnus: 1437272-9</p>
-            <p>Kylänpääntie 54, 61450 Kylänpää</p>
-          </div>
-          <div className="space-y-2">
-            <h4 className="font-semibold text-gray-900">Tietoa</h4>
-            <p>Hintoihin lisätään ALV.</p>
-            <p>ALV-velvollisuus rekisteröity 1.2.2026 alkaen.</p>
-            <a href="mailto:info@triotools.fi" className="block text-green-600 hover:text-green-700 transition-colors">info@triotools.fi</a>
-          </div>
-          <div className="space-y-2">
-            <h4 className="font-semibold text-gray-900">Työkalut</h4>
-            <Link to="/invoices" className="block hover:text-gray-900 transition-colors">TrioLasku</Link>
-          </div>
-        </div>
-        <div className="border-t border-gray-100 pt-6 text-center text-xs text-gray-400">
-          <div>© {new Date().getFullYear()} TrioTools — Kyyränkoski Tmi. Kaikki oikeudet pidätetään.</div>
-        </div>
-      </div>
-    </footer>
-  )
-}
-
 /* ── Main Landing Page ─────────────────────────────────── */
 export default function LandingPage() {
   return (
@@ -231,7 +201,6 @@ export default function LandingPage() {
       <TrioLaskuSection />
       <Pricing />
       <Contact />
-      <LandingFooter />
     </div>
   )
 }

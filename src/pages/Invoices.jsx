@@ -8,7 +8,6 @@ import {
   Search,
   Building2,
   User,
-  RotateCcw,
 } from 'lucide-react'
 import { useLanguage } from '../context/LanguageContext'
 import { useData } from '../context/DataContext'
@@ -27,6 +26,7 @@ export default function Invoices() {
   const [editingInvoice, setEditingInvoice] = useState(null)
   const [previewInvoice, setPreviewInvoice] = useState(null)
   const [deleteConfirm, setDeleteConfirm] = useState(null)
+  const [creditNoteConfirm, setCreditNoteConfirm] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
 
   // Filter and sort invoices (newest first)
@@ -331,14 +331,34 @@ export default function Invoices() {
                         >
                           <Pencil className="w-4 h-4" />
                         </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleCreditNote(invoice)}
-                          title="Luo hyvityslasku"
-                        >
-                          <RotateCcw className="w-4 h-4 text-orange-500" />
-                        </Button>
+                        {creditNoteConfirm === invoice.id ? (
+                          <div className="flex items-center gap-1">
+                            <span className="text-xs text-gray-500">Hyvityslasku?</span>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => { setCreditNoteConfirm(null); handleCreditNote(invoice) }}
+                            >
+                              <span className="text-xs font-semibold text-green-600">{t('common.yes')}</span>
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setCreditNoteConfirm(null)}
+                            >
+                              <span className="text-xs font-semibold text-red-500">{t('common.no')}</span>
+                            </Button>
+                          </div>
+                        ) : (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setCreditNoteConfirm(invoice.id)}
+                            title="Luo hyvityslasku"
+                          >
+                            <span className="text-xs font-medium text-orange-500">H</span>
+                          </Button>
+                        )}
                         {deleteConfirm === invoice.id ? (
                           <div className="flex items-center gap-1">
                             <Button
