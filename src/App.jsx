@@ -6,8 +6,6 @@ import Companies from './pages/Companies'
 import Customers from './pages/Customers'
 import Products from './pages/Products'
 import Invoices from './pages/Invoices'
-import TrioLog from './pages/TrioLog'
-import TrioPromote from './pages/TrioPromote'
 
 function AppLayout({ children }) {
   return <Layout>{children}</Layout>
@@ -25,8 +23,6 @@ function App() {
       <Route path="/customers" element={<AppLayout><Customers /></AppLayout>} />
       <Route path="/products" element={<AppLayout><Products /></AppLayout>} />
       <Route path="/invoices" element={<AppLayout><Invoices /></AppLayout>} />
-      <Route path="/triolog" element={<AppLayout><TrioLog /></AppLayout>} />
-      <Route path="/triopromote" element={<AppLayout><TrioPromote /></AppLayout>} />
     </Routes>
   )
 }
