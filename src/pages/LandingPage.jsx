@@ -10,9 +10,9 @@ function Hero() {
         <div className="inline-block bg-blue-50 text-blue-600 text-sm font-semibold px-4 py-1.5 rounded-full mb-2">
           Laskutusohjelma pienyrittäjille
         </div>
-        <h1 className="text-5xl sm:text-6xl font-extrabold tracking-tight leading-tight">
+        <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight leading-tight">
           Laskuta{' '}
-          <span className="text-green-600">ammattimaisesti</span>,{' '}
+          <span className="text-green-600 break-normal">ammattimaisesti</span>,{' '}
           aloita heti
         </h1>
         <p className="text-lg sm:text-xl text-gray-500 max-w-2xl mx-auto leading-relaxed">
@@ -221,9 +221,9 @@ function PromoteDemo() {
 
 /* ── Pricing ───────────────────────────────────────────── */
 const plans = [
-  { name: '1 kuukausi', price: '12', period: '€ / kk', description: 'Kokeile ilman sitoutumista.', highlighted: false },
-  { name: '12 kuukautta', price: '120', period: '€ / vuosi', perMonth: 'Vain 10 €/kk', badge: 'Suosituin', description: 'Paras hinta — koko vuosi kerralla.', highlighted: true },
-  { name: '6 kuukautta', price: '65', period: '€ / 6 kk', perMonth: '~10,83 €/kk', description: 'Hyvä kompromissi.', highlighted: false },
+  { name: '1 kuukausi', price: '12', period: '€ / kk + alv', description: 'Kokeile ilman sitoutumista.', highlighted: false },
+  { name: '12 kuukautta', price: '120', period: '€ / vuosi + alv', perMonth: 'Vain 10 €/kk + alv', badge: 'Suosituin', description: 'Paras hinta — koko vuosi kerralla.', highlighted: true },
+  { name: '6 kuukautta', price: '65', period: '€ / 6 kk + alv', perMonth: '~10,83 €/kk + alv', description: 'Hyvä kompromissi.', highlighted: false },
 ]
 
 function Pricing() {
@@ -253,7 +253,7 @@ function Pricing() {
             </div>
           ))}
         </div>
-        <p className="text-center text-sm text-gray-400 mt-8">Hinnat sisältävät ALV:n.</p>
+        <p className="text-center text-sm text-gray-400 mt-8">Hintoihin lisätään ALV.</p>
       </div>
     </section>
   )
@@ -309,6 +309,10 @@ function Contact() {
             <p className="text-sm text-gray-500">Y-tunnus: 1437272-9</p>
             <p className="text-sm text-gray-500">Kylänpääntie 54, 61450 Kylänpää</p>
             <p className="text-sm text-gray-500">ALV-velvollisuus rekisteröity 1.2.2026 alkaen</p>
+            <a href="mailto:info@triotools.fi" className="inline-flex items-center gap-2 text-sm font-semibold text-green-600 hover:text-green-700 transition-colors">
+              <Send className="w-4 h-4" />
+              info@triotools.fi
+            </a>
           </div>
         </div>
       </div>
@@ -329,8 +333,9 @@ function LandingFooter() {
           </div>
           <div className="space-y-2">
             <h4 className="font-semibold text-gray-900">Tietoa</h4>
-            <p>Hinnat sisältävät ALV:n.</p>
+            <p>Hintoihin lisätään ALV.</p>
             <p>ALV-velvollisuus rekisteröity 1.2.2026 alkaen.</p>
+            <a href="mailto:info@triotools.fi" className="block text-green-600 hover:text-green-700 transition-colors">info@triotools.fi</a>
           </div>
           <div className="space-y-2">
             <h4 className="font-semibold text-gray-900">Työkalut</h4>
@@ -370,10 +375,10 @@ export default function LandingPage() {
       </nav>
 
       <Hero />
-      <Products />
-      <PromoteDemo />
       <Pricing />
+      <PromoteDemo />
       <Contact />
+      <Products />
       <LandingFooter />
     </div>
   )
