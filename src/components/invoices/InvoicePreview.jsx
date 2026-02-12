@@ -1,18 +1,15 @@
 import { useRef, useState, useEffect } from 'react'
 import { ArrowLeft, Printer, Download, Check, Camera, CheckCircle, Copy, AlertTriangle } from 'lucide-react'
-import html2canvas from 'html2canvas'
-import { jsPDF } from 'jspdf'
-import JsBarcode from 'jsbarcode'
 import { useLanguage } from '../../context/LanguageContext'
 import { useData } from '../../context/DataContext'
 import Button from '../ui/Button'
-import { formatPrice, formatVatRate, calculateGrossPrice, formatDateFI } from '../../utils/formatters'
+import InvoiceSheet from './InvoiceSheet'
+import { generatePdfFromElement } from '../../utils/pdfGenerator'
 
 export default function InvoicePreview({ invoice, onClose, onDuplicate, onCreditNote }) {
   const { t, language } = useLanguage()
-  const { companies, customers, units, updateInvoice } = useData()
+  const { companies, customers, updateInvoice } = useData()
   const invoiceRef = useRef(null)
-  const barcodeRef = useRef(null)
   const [generating, setGenerating] = useState(false)
   const [statusNotice, setStatusNotice] = useState(false)
   const [paidNotice, setPaidNotice] = useState(false)
@@ -20,11 +17,12 @@ export default function InvoicePreview({ invoice, onClose, onDuplicate, onCredit
   const [screenshotMode, setScreenshotMode] = useState(false)
   const [previewScale, setPreviewScale] = useState(1)
   const wrapperRef = useRef(null)
+  const autoPdfDone = useRef(false)
 
-  // Scale invoice to fit available width (both normal and screenshot modes)
+  // Scale invoice to fit available width
   useEffect(() => {
     const update = () => {
-      const invoicePx = 793 // 210mm ≈ 793px
+      const invoicePx = 793
       if (screenshotMode) {
         setPreviewScale(window.innerWidth < invoicePx ? window.innerWidth / invoicePx : 1)
       } else if (wrapperRef.current) {
@@ -37,35 +35,13 @@ export default function InvoicePreview({ invoice, onClose, onDuplicate, onCredit
     return () => window.removeEventListener('resize', update)
   }, [screenshotMode])
 
-  // Use live data if available, fallback to embedded data (survives deletion)
   const liveCompany = companies.find((c) => c.id === invoice.companyId)
-  const liveCustomer = customers.find((c) => c.id === invoice.customerId)
-
-  // Build company object from embedded data if company was deleted
   const company = invoice.company || liveCompany || {
     name: invoice._companyName || '',
-    businessId: invoice._companyBusinessId || '',
-    vatNumber: invoice._companyVatNumber || '',
-    streetAddress: invoice._companyAddress || '',
-    postalCode: invoice._companyPostalCode || '',
-    city: invoice._companyCity || '',
-    phone: invoice._companyPhone || '',
-    email: invoice._companyEmail || '',
-    bankAccounts: invoice.company?.bankAccounts || [],
   }
 
-  // Build customer object from embedded data if customer was deleted
-  const customer = invoice.customer || liveCustomer || {
-    name: invoice._customerName || '',
-    businessId: invoice._customerBusinessId || '',
-    streetAddress: invoice._customerAddress || '',
-    postalCode: invoice._customerPostalCode || '',
-    city: invoice._customerCity || '',
-    contactPerson: invoice._customerContactPerson || '',
-  }
-
-  const isReceipt = invoice.paymentMethod && invoice.paymentMethod !== 'invoice'
   const isCreditNote = invoice.isCreditNote === true
+  const isReceipt = invoice.paymentMethod && invoice.paymentMethod !== 'invoice'
   const docLabel = isCreditNote
     ? (language === 'fi' ? 'Hyvityslasku' : 'Credit Note')
     : isReceipt
@@ -77,197 +53,11 @@ export default function InvoicePreview({ invoice, onClose, onDuplicate, onCredit
     return `${docLabel}_${invoice.invoiceNumber}_${companyName}.pdf`
   }
 
-  const getUnitName = (unitId) => {
-    const unit = units.find((u) => u.id === unitId)
-    if (!unit) return unitId
-    return language === 'fi' ? unit.name : unit.nameEn
-  }
-
-  const calculateRowTotal = (row) => {
-    const qty = parseFloat(row.quantity) || 0
-    const price = parseFloat(row.priceNet) || 0
-    return qty * price
-  }
-
-  // Group VAT by rate for summary
-  const vatSummary = {}
-  invoice.rows?.forEach((row) => {
-    const rowNet = calculateRowTotal(row)
-    const rate = parseFloat(row.vatRate) || 0
-    if (!vatSummary[rate]) {
-      vatSummary[rate] = { net: 0, vat: 0 }
-    }
-    vatSummary[rate].net += rowNet
-    vatSummary[rate].vat += rowNet * (rate / 100)
-  })
-
-  // Dynamic density: compact rows/totals for many-row invoices (header/logo stay full size)
-  const rowCount = invoice.rows?.length || 0
-  const density = rowCount > 20 ? 'ultra' : rowCount > 10 ? 'compact' : 'normal'
-  const rowFont = density === 'ultra' ? '0.7rem' : density === 'compact' ? '0.8rem' : '0.875rem'
-  const rowPad = density === 'ultra' ? '0.15rem 0' : density === 'compact' ? '0.3rem 0' : '0.5rem 0'
-  const sectionGap = density === 'ultra' ? '0.75rem' : density === 'compact' ? '1rem' : '1.5rem'
-  const headerGap = density === 'ultra' ? '1rem' : density === 'compact' ? '1.5rem' : '2rem'
-  const totalsFont = density === 'ultra' ? '0.75rem' : density === 'compact' ? '0.8rem' : '0.875rem'
-  const grandTotalFont = density === 'ultra' ? '0.95rem' : density === 'compact' ? '1rem' : '1.125rem'
-  const paymentFont = density === 'ultra' ? '1rem' : density === 'compact' ? '1.1rem' : '1.25rem'
-
   const handlePrint = () => {
     window.print()
   }
 
-  // Generate Finnish reference number with check digit (modulo 10, weights 7-3-1)
-  const generateFinnishReferenceNumber = () => {
-    const base = `${invoice.invoiceNumber || 1}`.padStart(4, '0')
-    const weights = [7, 3, 1]
-    let sum = 0
-    for (let i = base.length - 1, w = 0; i >= 0; i--, w++) {
-      sum += parseInt(base[i], 10) * weights[w % 3]
-    }
-    const checkDigit = (10 - (sum % 10)) % 10
-    return `${base}${checkDigit}`
-  }
-
-  // Generate 54-character Finnish virtual barcode (version 4)
-  const generateVirtualBarcode = () => {
-    const iban = (company?.bankAccounts?.[0]?.iban || '').replace(/\s/g, '')
-    const ibanDigits = iban.replace(/^FI/, '').padStart(16, '0')
-
-    const totalCents = Math.round((parseFloat(invoice.totalGross) || 0) * 100)
-    const amountStr = totalCents.toString().padStart(8, '0')
-
-    const reserved = '000'
-
-    const refNum = generateFinnishReferenceNumber().padStart(20, '0')
-
-    // Due date as DDMMYY
-    let dueDateStr = '000000'
-    if (invoice.dueDate) {
-      const parts = invoice.dueDate.split('-') // YYYY-MM-DD
-      if (parts.length === 3) {
-        dueDateStr = `${parts[2]}${parts[1]}${parts[0].slice(2)}`
-      }
-    }
-
-    return `4${ibanDigits}${amountStr}${reserved}${refNum}${dueDateStr}`
-  }
-
-  const referenceNumber = generateFinnishReferenceNumber()
-  const virtualBarcode = generateVirtualBarcode()
-
-  useEffect(() => {
-    if (barcodeRef.current) {
-      try {
-        JsBarcode(barcodeRef.current, virtualBarcode, {
-          format: 'CODE128',
-          width: 1.5,
-          height: 50,
-          displayValue: false,
-          margin: 0,
-        })
-      } catch (e) {
-        // barcode generation failed silently
-      }
-    }
-  }, [virtualBarcode])
-
-  // Fix for Tailwind CSS v4 which generates oklch() colors that html2canvas cannot parse.
-  // Order matters: read computed styles FIRST (browser resolves oklch->rgb), inline them,
-  // THEN remove all stylesheets so html2canvas only sees inline rgb values.
-  // TABLET OPTIMIZATION: Extended property list for hybrid device compatibility.
-  const fixColorsForHtml2Canvas = (clonedDoc, clonedElement) => {
-    const colorProps = [
-      'color', 'background-color', 'border-color',
-      'border-top-color', 'border-bottom-color', 'border-left-color', 'border-right-color',
-      'box-shadow', 'outline-color', 'text-decoration-color',
-      'fill', 'stroke', 'stop-color', 'flood-color', 'lighting-color', // SVG colors for barcode
-    ]
-    const win = clonedDoc.defaultView
-
-    const sanitize = (v) => {
-      if (!v || v === 'none' || v === 'transparent') return v
-      if (v.includes('oklch') || v.includes('oklab')) return '#000000'
-      return v
-    }
-
-    // Step 1: WHILE stylesheets are still active, read all computed colors
-    // and bake them as inline styles. The browser resolves oklch to rgb for us.
-    const allElements = clonedDoc.querySelectorAll('*')
-    for (const el of allElements) {
-      const computed = win.getComputedStyle(el)
-      for (const prop of colorProps) {
-        const resolved = computed.getPropertyValue(prop)
-        if (resolved && resolved !== 'none' && resolved !== 'transparent') {
-          el.style.setProperty(prop, sanitize(resolved), 'important')
-        }
-      }
-    }
-
-    // Step 2: NOW remove ALL stylesheets so html2canvas never parses oklch()
-    const sheets = clonedDoc.querySelectorAll('style, link[rel="stylesheet"]')
-    sheets.forEach((sheet) => sheet.remove())
-
-    // Step 3: Ensure the invoice container is visible
-    clonedElement.style.visibility = 'visible'
-    clonedElement.style.position = 'static'
-    clonedElement.style.display = 'block'
-    clonedElement.style.backgroundColor = '#ffffff'
-    clonedElement.style.boxShadow = 'none'
-    clonedElement.style.transform = 'none'
-  }
-
-  const generatePdf = async () => {
-    const element = invoiceRef.current
-    if (!element) {
-      throw new Error('Invoice element not found')
-    }
-
-    const canvas = await html2canvas(element, {
-      scale: 2,
-      useCORS: true,
-      allowTaint: true,
-      backgroundColor: '#ffffff',
-      logging: false,
-      windowWidth: element.scrollWidth,
-      windowHeight: element.scrollHeight,
-      onclone: fixColorsForHtml2Canvas,
-    })
-
-    const imgData = canvas.toDataURL('image/jpeg', 0.95)
-    const pdf = new jsPDF('p', 'mm', 'a4')
-    const pdfWidth = 210
-    const pdfHeight = 297
-    const imgWidth = canvas.width
-    const imgHeight = canvas.height
-    const ratio = pdfWidth / imgWidth
-    const scaledHeight = imgHeight * ratio
-
-    if (scaledHeight <= pdfHeight) {
-      pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, scaledHeight)
-    } else {
-      let y = 0
-      const pageHeightPx = pdfHeight / ratio
-      let pageIndex = 0
-      while (y < imgHeight) {
-        const sliceHeight = Math.min(pageHeightPx, imgHeight - y)
-        const pageCanvas = document.createElement('canvas')
-        pageCanvas.width = imgWidth
-        pageCanvas.height = sliceHeight
-        const ctx = pageCanvas.getContext('2d')
-        ctx.drawImage(canvas, 0, y, imgWidth, sliceHeight, 0, 0, imgWidth, sliceHeight)
-        const pageImg = pageCanvas.toDataURL('image/jpeg', 0.95)
-        if (pageIndex > 0) pdf.addPage()
-        pdf.addImage(pageImg, 'JPEG', 0, 0, pdfWidth, sliceHeight * ratio)
-        y += sliceHeight
-        pageIndex++
-      }
-    }
-
-    return pdf
-  }
-
   const markAsSent = () => {
-    // Mark as 'sent' when PDF is downloaded (from draft or ready status)
     if (invoice.id && (!invoice.status || invoice.status === 'draft' || invoice.status === 'ready')) {
       updateInvoice(invoice.id, { status: 'sent' })
       setStatusNotice(true)
@@ -296,9 +86,8 @@ export default function InvoicePreview({ invoice, onClose, onDuplicate, onCredit
   const handleDownloadPdf = async () => {
     setGenerating(true)
     try {
-      const pdf = await generatePdf()
+      const pdf = await generatePdfFromElement(invoiceRef.current)
       pdf.save(getFileName())
-      // Mark as sent ONLY after successful PDF generation
       markAsSent()
     } catch (err) {
       console.error('PDF error:', err)
@@ -308,7 +97,16 @@ export default function InvoicePreview({ invoice, onClose, onDuplicate, onCredit
     }
   }
 
-  // Share removed - just use download to avoid "Share too large" errors
+  // Auto-download PDF when opened with _autoPdf flag
+  useEffect(() => {
+    if (invoice._autoPdf && invoiceRef.current && !generating && !autoPdfDone.current) {
+      autoPdfDone.current = true
+      const timer = setTimeout(() => {
+        handleDownloadPdf()
+      }, 600)
+      return () => clearTimeout(timer)
+    }
+  }, [invoice._autoPdf])
 
   return (
     <div
@@ -316,7 +114,7 @@ export default function InvoicePreview({ invoice, onClose, onDuplicate, onCredit
       style={screenshotMode ? { position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: '#ffffff', overflow: 'hidden', zIndex: 9999, margin: 0, padding: 0 } : {}}
       onClick={screenshotMode ? () => setScreenshotMode(false) : undefined}
     >
-      {/* Controls (hidden when printing and in screenshot mode) */}
+      {/* Controls */}
       {!screenshotMode && (
         <div className="flex flex-wrap items-center justify-between gap-4 mb-6 print:hidden">
           <Button variant="ghost" onClick={onClose}>
@@ -358,8 +156,6 @@ export default function InvoicePreview({ invoice, onClose, onDuplicate, onCredit
         </div>
       )}
 
-      {/* Screenshot mode: no buttons, tap anywhere to exit */}
-
       {/* Status notification */}
       {statusNotice && !screenshotMode && (
         <div className="mb-4 px-4 py-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2 text-green-800 text-sm print:hidden">
@@ -384,289 +180,21 @@ export default function InvoicePreview({ invoice, onClose, onDuplicate, onCredit
         </div>
       )}
 
-      {/* A4 Invoice — 100% inline styles, zero Tailwind classes for html2canvas compatibility */}
+      {/* Auto-download notification */}
+      {invoice._autoPdf && generating && !screenshotMode && (
+        <div className="mb-4 px-4 py-3 bg-blue-50 border border-blue-200 rounded-lg flex items-center gap-2 text-blue-800 text-sm print:hidden">
+          <Download className="w-4 h-4" />
+          PDF ladataan automaattisesti...
+        </div>
+      )}
+
+      {/* A4 Invoice */}
       <div ref={wrapperRef} style={{ maxWidth: '100%', overflowX: 'hidden' }}>
-      <div ref={invoiceRef} className="invoice-sheet" style={{ width: '210mm', minHeight: '297mm', padding: '15mm', backgroundColor: '#ffffff', color: '#111827', margin: screenshotMode ? '0' : '0 auto', boxShadow: screenshotMode ? 'none' : '0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1)', fontFamily: 'system-ui, -apple-system, sans-serif', fontSize: '14px', lineHeight: '1.5', boxSizing: 'border-box', ...(previewScale < 1 ? { transform: `scale(${previewScale})`, transformOrigin: 'top left' } : {}) }}>
-        {/* Header with logo */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: headerGap }}>
-          {/* Company logo and info */}
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
-            {company?.logo ? (
-              <img
-                src={company.logo.startsWith('data:') ? company.logo : `data:image/png;base64,${company.logo}`}
-                alt={company.name}
-                style={{ height: '100px', width: 'auto', objectFit: 'contain' }}
-              />
-            ) : (
-              <div style={{ width: '100px', height: '100px', backgroundColor: '#f3f4f6', color: '#9ca3af', fontSize: '0.75rem', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                LOGO
-              </div>
-            )}
-            <div>
-              <h1 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#111827', margin: 0 }}>{company?.name}</h1>
-              <p style={{ fontSize: '0.875rem', color: '#4b5563', margin: 0 }}>{company?.streetAddress}</p>
-              <p style={{ fontSize: '0.875rem', color: '#4b5563', margin: 0 }}>
-                {company?.postalCode} {company?.city}
-              </p>
-              {company?.phone && (
-                <p style={{ fontSize: '0.875rem', color: '#4b5563', margin: 0 }}>{company.phone}</p>
-              )}
-              {company?.email && (
-                <p style={{ fontSize: '0.875rem', color: '#4b5563', margin: 0 }}>{company.email}</p>
-              )}
-            </div>
-          </div>
-
-          {/* Invoice/Receipt title */}
-          <div style={{ textAlign: 'right' }}>
-            <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#111827', textTransform: 'uppercase', margin: 0 }}>
-              {isCreditNote
-                ? (language === 'fi' ? 'HYVITYSLASKU' : 'CREDIT NOTE')
-                : invoice.paymentMethod && invoice.paymentMethod !== 'invoice'
-                  ? (language === 'fi' ? 'KUITTI' : language === 'sv' ? 'KVITTO' : 'RECEIPT')
-                  : (language === 'fi' ? 'LASKU' : language === 'sv' ? 'FAKTURA' : 'INVOICE')}
-            </h2>
-            {isCreditNote && invoice.creditedInvoiceNumber && (
-              <p style={{ fontSize: '0.875rem', color: '#dc2626', marginTop: '0.25rem', fontWeight: 600 }}>
-                Hyvitys laskuun {invoice.creditedInvoiceNumber}
-              </p>
-            )}
-            {invoice.paymentMethod && invoice.paymentMethod !== 'invoice' && !isCreditNote && (
-              <p style={{ fontSize: '0.875rem', color: '#4b5563', marginTop: '0.25rem' }}>
-                {t('invoices.paidWith')}: {t(`invoices.paymentMethod${invoice.paymentMethod === 'cash' ? 'Cash' : invoice.paymentMethod === 'card' ? 'Card' : invoice.paymentMethod === 'mobilepay' ? 'MobilePay' : 'BankTransfer'}`)}
-              </p>
-            )}
-          </div>
-        </div>
-
-        {/* Invoice details and recipient */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: headerGap, marginBottom: headerGap }}>
-          {/* Recipient */}
-          <div>
-            <h3 style={{ fontSize: '0.75rem', fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', marginBottom: '0.5rem' }}>
-              {t('invoices.recipient')}
-            </h3>
-            <div style={{ fontSize: '0.875rem' }}>
-              <p style={{ fontWeight: 600, color: '#111827', margin: 0 }}>{customer?.name}</p>
-              {customer?.contactPerson && (
-                <p style={{ color: '#4b5563', margin: 0 }}>{customer.contactPerson}</p>
-              )}
-              <p style={{ color: '#4b5563', margin: 0 }}>{customer?.streetAddress}</p>
-              <p style={{ color: '#4b5563', margin: 0 }}>
-                {customer?.postalCode} {customer?.city}
-              </p>
-              {customer?.businessId && (
-                <p style={{ color: '#4b5563', marginTop: '0.25rem' }}>
-                  {language === 'fi' ? 'Y-tunnus' : language === 'sv' ? 'FO-nummer' : 'Business ID'}: {customer.businessId}
-                </p>
-              )}
-            </div>
-          </div>
-
-          {/* Invoice details */}
-          <div>
-            <table style={{ width: '100%', fontSize: '0.875rem', borderCollapse: 'collapse' }}>
-              <tbody>
-                <tr>
-                  <td style={{ padding: '0.25rem 0', color: '#4b5563' }}>{t('invoices.invoiceNumber')}:</td>
-                  <td style={{ padding: '0.25rem 0', fontWeight: 600, textAlign: 'right' }}>{invoice.invoiceNumber}</td>
-                </tr>
-                <tr>
-                  <td style={{ padding: '0.25rem 0', color: '#4b5563' }}>{t('invoices.invoiceDate')}:</td>
-                  <td style={{ padding: '0.25rem 0', textAlign: 'right' }}>{formatDateFI(invoice.invoiceDate)}</td>
-                </tr>
-                <tr>
-                  <td style={{ padding: '0.25rem 0', color: '#4b5563' }}>{t('invoices.dueDate')}:</td>
-                  <td style={{ padding: '0.25rem 0', fontWeight: 600, textAlign: 'right' }}>{formatDateFI(invoice.dueDate)}</td>
-                </tr>
-                <tr>
-                  <td style={{ padding: '0.25rem 0', color: '#4b5563' }}>{t('invoices.paymentTerms')}:</td>
-                  <td style={{ padding: '0.25rem 0', textAlign: 'right' }}>{invoice.paymentTermDays} {t('invoices.days')}</td>
-                </tr>
-                <tr>
-                  <td style={{ padding: '0.25rem 0', color: '#4b5563' }}>{t('invoices.lateInterest')}:</td>
-                  <td style={{ padding: '0.25rem 0', textAlign: 'right' }}>{invoice.lateInterest} %</td>
-                </tr>
-                {invoice.ourReference && (
-                  <tr>
-                    <td style={{ padding: '0.25rem 0', color: '#4b5563' }}>{t('invoices.ourReference')}:</td>
-                    <td style={{ padding: '0.25rem 0', textAlign: 'right' }}>{invoice.ourReference}</td>
-                  </tr>
-                )}
-                {invoice.yourReference && (
-                  <tr>
-                    <td style={{ padding: '0.25rem 0', color: '#4b5563' }}>{t('invoices.yourReference')}:</td>
-                    <td style={{ padding: '0.25rem 0', textAlign: 'right' }}>{invoice.yourReference}</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* Additional info start */}
-        {invoice.additionalInfoStart && (
-          <div style={{ marginBottom: sectionGap, padding: '0.75rem', backgroundColor: '#f9fafb', color: '#374151', borderRadius: '4px', fontSize: rowFont }}>
-            {invoice.additionalInfoStart}
-          </div>
-        )}
-
-        {/* Invoice rows */}
-        <table style={{ width: '100%', fontSize: rowFont, marginBottom: sectionGap, borderCollapse: 'collapse' }}>
-          <thead>
-            <tr style={{ borderBottom: '2px solid #d1d5db' }}>
-              <th style={{ padding: rowPad, textAlign: 'left', fontWeight: 600, color: '#374151' }}>
-                {t('invoices.description')}
-              </th>
-              <th style={{ padding: rowPad, textAlign: 'right', fontWeight: 600, color: '#374151', width: '4rem' }}>
-                {t('invoices.quantity')}
-              </th>
-              <th style={{ padding: rowPad, textAlign: 'center', fontWeight: 600, color: '#374151', width: '3rem' }}>
-                {t('invoices.unit')}
-              </th>
-              <th style={{ padding: rowPad, textAlign: 'right', fontWeight: 600, color: '#374151', width: '5rem' }}>
-                {language === 'fi' ? 'á netto' : 'Unit net'}
-              </th>
-              <th style={{ padding: rowPad, textAlign: 'right', fontWeight: 600, color: '#374151', width: '5rem' }}>
-                {language === 'fi' ? 'Netto' : 'Net'}
-              </th>
-              <th style={{ padding: rowPad, textAlign: 'right', fontWeight: 600, color: '#374151', width: '3.5rem' }}>
-                {language === 'fi' ? 'ALV %' : 'VAT %'}
-              </th>
-              <th style={{ padding: rowPad, textAlign: 'right', fontWeight: 600, color: '#374151', width: '5rem' }}>
-                {language === 'fi' ? 'ALV €' : 'VAT €'}
-              </th>
-              <th style={{ padding: rowPad, textAlign: 'right', fontWeight: 600, color: '#374151', width: '5.5rem' }}>
-                {language === 'fi' ? 'Yhteensä' : 'Total'}
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {invoice.rows?.map((row, index) => {
-              const rowNet = calculateRowTotal(row)
-              const rowVatAmount = rowNet * (parseFloat(row.vatRate) || 0) / 100
-              const rowGross = rowNet + rowVatAmount
-              return (
-                <tr key={index} style={{ borderBottom: '1px solid #e5e7eb' }}>
-                  <td style={{ padding: rowPad, color: '#111827' }}>{row.description}</td>
-                  <td style={{ padding: rowPad, textAlign: 'right', color: '#4b5563' }}>
-                    {formatPrice(row.quantity)}
-                  </td>
-                  <td style={{ padding: rowPad, textAlign: 'center', color: '#4b5563' }}>
-                    {getUnitName(row.unit)}
-                  </td>
-                  <td style={{ padding: rowPad, textAlign: 'right', color: '#4b5563' }}>
-                    {formatPrice(row.priceNet)}
-                  </td>
-                  <td style={{ padding: rowPad, textAlign: 'right', color: '#4b5563' }}>
-                    {formatPrice(rowNet)}
-                  </td>
-                  <td style={{ padding: rowPad, textAlign: 'right', color: '#4b5563' }}>
-                    {formatVatRate(row.vatRate)} %
-                  </td>
-                  <td style={{ padding: rowPad, textAlign: 'right', color: '#4b5563' }}>
-                    {formatPrice(Math.round(rowVatAmount * 100) / 100)}
-                  </td>
-                  <td style={{ padding: rowPad, textAlign: 'right', fontWeight: 500, color: '#111827' }}>
-                    {formatPrice(Math.round(rowGross * 100) / 100)}
-                  </td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
-
-        {/* Additional info end */}
-        {invoice.additionalInfoEnd && (
-          <div style={{ marginBottom: sectionGap, padding: '0.75rem', backgroundColor: '#f9fafb', color: '#374151', borderRadius: '4px', fontSize: rowFont }}>
-            {invoice.additionalInfoEnd}
-          </div>
-        )}
-
-        {/* Totals */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: headerGap }}>
-          <div style={{ width: '22rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: totalsFont, padding: '0.25rem 0' }}>
-              <span style={{ color: '#4b5563' }}>{language === 'fi' ? 'Veroton yhteensä (ALV 0 %)' : 'Subtotal (excl. VAT)'}:</span>
-              <span>{formatPrice(invoice.totalNet)} EUR</span>
-            </div>
-            {/* VAT breakdown per rate */}
-            {Object.entries(vatSummary)
-              .sort(([a], [b]) => parseFloat(b) - parseFloat(a))
-              .map(([rate, values]) => (
-              <div key={rate} style={{ display: 'flex', justifyContent: 'space-between', fontSize: totalsFont, padding: '0.25rem 0' }}>
-                <span style={{ color: '#4b5563' }}>
-                  ALV {formatVatRate(rate)} % ({language === 'fi' ? 'perusteesta' : 'of'} {formatPrice(Math.round(values.net * 100) / 100)} €):
-                </span>
-                <span>{formatPrice(Math.round(values.vat * 100) / 100)} EUR</span>
-              </div>
-            ))}
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: totalsFont, padding: '0.25rem 0', borderTop: '1px solid #e5e7eb', marginTop: '0.25rem' }}>
-              <span style={{ color: '#4b5563' }}>{language === 'fi' ? 'ALV yhteensä' : 'VAT total'}:</span>
-              <span>{formatPrice(invoice.totalVat)} EUR</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: grandTotalFont, fontWeight: 700, padding: '0.5rem 0', borderTop: '2px solid #111827', marginTop: '0.5rem' }}>
-              <span>{language === 'fi' ? 'Maksettava yhteensä' : t('invoices.grandTotal')}:</span>
-              <span>{formatPrice(invoice.totalGross)} EUR</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Maksutiedot */}
-        <div style={{ borderTop: '2px solid #d1d5db', paddingTop: sectionGap }}>
-          <h3 style={{ fontSize: totalsFont, fontWeight: 600, color: '#374151', marginBottom: '0.75rem' }}>
-            {language === 'fi' ? 'Maksutiedot' : language === 'sv' ? 'Betalningsuppgifter' : 'Payment Details'}
-          </h3>
-          <div>
-            {company?.bankAccounts?.map((account, index) => (
-              <div key={index} style={{ marginBottom: '0.75rem' }}>
-                {account.bankName && (
-                  <p style={{ fontSize: totalsFont, color: '#4b5563', margin: 0 }}>{account.bankName}</p>
-                )}
-                <p style={{ color: '#111827', fontWeight: 700, fontSize: paymentFont, letterSpacing: '0.05em', margin: '0.25rem 0' }}>IBAN: {account.iban}</p>
-                {account.bic && <p style={{ fontSize: totalsFont, color: '#4b5563', margin: 0 }}>BIC: {account.bic}</p>}
-              </div>
-            ))}
-            <div style={{ display: 'flex', gap: headerGap, marginTop: '0.75rem' }}>
-              <div>
-                <p style={{ fontSize: totalsFont, color: '#4b5563', margin: 0 }}>{t('invoices.referenceNumber')}:</p>
-                <p style={{ fontWeight: 700, fontSize: paymentFont, color: '#111827', margin: 0 }}>{referenceNumber}</p>
-              </div>
-              <div>
-                <p style={{ fontSize: totalsFont, color: '#4b5563', margin: 0 }}>{t('invoices.grandTotal')}:</p>
-                <p style={{ fontWeight: 700, fontSize: paymentFont, color: '#111827', margin: 0 }}>{formatPrice(invoice.totalGross)} EUR</p>
-              </div>
-              <div>
-                <p style={{ fontSize: totalsFont, color: '#4b5563', margin: 0 }}>{t('invoices.dueDate')}:</p>
-                <p style={{ fontWeight: 700, fontSize: paymentFont, color: '#111827', margin: 0 }}>{formatDateFI(invoice.dueDate)}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Barcode area */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', marginTop: sectionGap, minHeight: '30mm' }}>
-          <svg ref={barcodeRef}></svg>
-          <p style={{ fontFamily: 'monospace', fontSize: '0.75rem', color: '#374151', letterSpacing: '0.05em', marginTop: '0.5rem', marginBottom: '0.25rem', userSelect: 'all' }}>
-            {virtualBarcode}
-          </p>
-          <p style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.5rem' }}>
-            {language === 'fi' ? 'VIRTUAALIVIIVAKOODI' : language === 'sv' ? 'VIRTUELL STRECKKOD' : 'VIRTUAL BARCODE'}
-          </p>
-        </div>
-
-        {/* Footer */}
-        <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #e5e7eb', fontSize: '0.75rem', color: '#6b7280', textAlign: 'center' }}>
-          <div>
-            {company?.name} | {company?.businessId && `${language === 'fi' ? 'Y-tunnus' : language === 'sv' ? 'FO-nummer' : 'Business ID'}: ${company.businessId}`}
-            {company?.vatNumber && ` | ${company.vatNumber}`}
-            {company?.streetAddress && ` | ${company.streetAddress}`}
-          </div>
-          <div style={{ marginTop: '0.25rem', fontSize: '0.7rem' }}>
-            {language === 'fi' ? 'ALV-velvollisuus rekisteröity 1.2.2026 alkaen' : language === 'sv' ? 'Momsskyldighet registrerad fr.o.m. 1.2.2026' : 'VAT liability registered from 1 Feb 2026'}
-          </div>
-        </div>
-      </div>
+        <InvoiceSheet
+          invoice={invoice}
+          invoiceRef={invoiceRef}
+          scale={previewScale}
+        />
       </div>
 
       {/* Print styles */}

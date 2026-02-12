@@ -287,16 +287,17 @@ export default function InvoiceForm({ invoice, onClose, onPreview }) {
     }
 
     // SAVE NOW - synchronous, immediate
+    let savedInvoice
     if (invoice?.id) {
       updateInvoice(invoice.id, invoiceData)
+      savedInvoice = { ...invoiceData, id: invoice.id }
     } else {
-      addInvoice(invoiceData)
+      const result = addInvoice(invoiceData)
+      savedInvoice = result.invoice
     }
 
-    setSaved(true)
-    setTimeout(() => {
-      onClose()
-    }, 1000)
+    // Navigate to preview with auto-PDF download
+    onPreview({ ...savedInvoice, _autoPdf: true })
   }
 
   const handlePreview = () => {

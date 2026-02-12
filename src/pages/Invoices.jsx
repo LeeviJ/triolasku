@@ -144,6 +144,7 @@ export default function Invoices() {
         invoice={editingInvoice}
         onClose={handleFormClose}
         onPreview={(invoice) => {
+          setShowForm(false)
           setPreviewInvoice(invoice)
           setShowPreview(true)
         }}

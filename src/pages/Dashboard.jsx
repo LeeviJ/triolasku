@@ -1,11 +1,12 @@
 import { useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Building2, Users, Package, FileText, ArrowRight, Download, Upload, Mail, ExternalLink } from 'lucide-react'
+import { Building2, Users, Package, FileText, ArrowRight, Download, Upload, Mail, ExternalLink, Archive } from 'lucide-react'
 import { useLanguage } from '../context/LanguageContext'
 import { useData, STORAGE_KEYS } from '../context/DataContext'
 import Card, { CardBody } from '../components/ui/Card'
 import Button from '../components/ui/Button'
 import { formatPrice, formatDateFI } from '../utils/formatters'
+import BackupExport from '../components/invoices/BackupExport'
 // emailBackup not needed for Gmail button - uses direct URL
 
 export default function Dashboard() {
@@ -13,6 +14,7 @@ export default function Dashboard() {
   const { companies, customers, products, invoices, settings, setSettings, sendEmailBackup: sendEmail } = useData()
   const backupFileInputRef = useRef(null)
   const [emailMsg, setEmailMsg] = useState(null)
+  const [showBackupExport, setShowBackupExport] = useState(false)
 
   const handleDownloadBackup = () => {
     // Direct file download - completely invisible, no share or popup
@@ -109,6 +111,7 @@ export default function Dashboard() {
 
   return (
     <div className="max-w-6xl mx-auto">
+      {showBackupExport && <BackupExport onClose={() => setShowBackupExport(false)} />}
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
@@ -180,6 +183,12 @@ export default function Dashboard() {
               <Download className="w-4 h-4" />
               {t('dashboard.downloadBackup')}
             </Button>
+            {invoices.length > 0 && (
+              <Button variant="secondary" onClick={() => setShowBackupExport(true)}>
+                <Archive className="w-4 h-4" />
+                Lataa PDF + varmuuskopio (ZIP)
+              </Button>
+            )}
             <input
               ref={backupFileInputRef}
               type="file"
