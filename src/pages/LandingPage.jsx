@@ -77,12 +77,35 @@ function TrioLaskuSection() {
 
 /* ── Pricing ───────────────────────────────────────────── */
 const plans = [
-  { name: '1 kuukausi', price: '12', period: '€ / kk + alv', description: 'Kokeile ilman sitoutumista.', highlighted: false },
-  { name: '12 kuukautta', price: '120', period: '€ / vuosi + alv', perMonth: 'Vain 10 €/kk + alv', badge: 'Suosituin', description: 'Paras hinta — koko vuosi kerralla.', highlighted: true },
-  { name: '6 kuukautta', price: '65', period: '€ / 6 kk + alv', perMonth: '~10,83 €/kk + alv', description: 'Hyvä kompromissi.', highlighted: false },
+  { name: '1 kuukausi', price: '12', period: '€ / kk + alv', description: 'Kokeile ilman sitoutumista.', highlighted: false, priceId: 'price_1T04k1RlDDEGqPN1D1PTvtz8' },
+  { name: '12 kuukautta', price: '120', period: '€ / vuosi + alv', perMonth: 'Vain 10 €/kk + alv', badge: 'Suosituin', description: 'Paras hinta — koko vuosi kerralla.', highlighted: true, priceId: 'price_1T04Q5RlDDEGqPN1rOa8NI1C' },
+  { name: '6 kuukautta', price: '65', period: '€ / 6 kk + alv', perMonth: '~10,83 €/kk + alv', description: 'Hyvä kompromissi.', highlighted: false, priceId: 'price_1T04jORlDDEGqPN162NEJG6d' },
 ]
 
 function Pricing() {
+  const [loading, setLoading] = useState(null)
+
+  const handleCheckout = async (plan) => {
+    setLoading(plan.priceId)
+    try {
+      const res = await fetch('/.netlify/functions/create-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ priceId: plan.priceId }),
+      })
+      const data = await res.json()
+      if (data.url) {
+        window.location.href = data.url
+      } else {
+        alert('Virhe: ' + (data.error || 'Tuntematon virhe'))
+        setLoading(null)
+      }
+    } catch {
+      alert('Yhteysvirhe. Yritä uudelleen.')
+      setLoading(null)
+    }
+  }
+
   return (
     <section id="pricing" className="py-10 px-6">
       <div className="max-w-5xl mx-auto">
@@ -103,13 +126,17 @@ function Pricing() {
                 <span className={`text-sm ${plan.highlighted ? 'text-green-100' : 'text-gray-400'}`}>{plan.period}</span>
               </div>
               {plan.perMonth && <p className={`text-sm font-medium ${plan.highlighted ? 'text-green-100' : 'text-gray-500'}`}>{plan.perMonth}</p>}
-              <a href="#contact" className={`block text-center font-semibold py-3 rounded-xl transition-colors ${plan.highlighted ? 'bg-white text-green-700 hover:bg-green-50' : 'bg-green-600 text-white hover:bg-green-700'}`}>
-                Tilaa nyt
-              </a>
+              <button
+                onClick={() => handleCheckout(plan)}
+                disabled={loading === plan.priceId}
+                className={`block w-full text-center font-semibold py-3 rounded-xl transition-colors disabled:opacity-60 ${plan.highlighted ? 'bg-white text-green-700 hover:bg-green-50' : 'bg-green-600 text-white hover:bg-green-700'}`}
+              >
+                {loading === plan.priceId ? 'Ohjataan maksuun...' : 'Tilaa nyt'}
+              </button>
             </div>
           ))}
         </div>
-        <p className="text-center text-sm text-gray-400 mt-8">Hintoihin lisätään ALV.</p>
+        <p className="text-center text-sm text-gray-400 mt-8">Hintoihin lisätään ALV. Alennuskoodi syötetään kassalla.</p>
       </div>
     </section>
   )
