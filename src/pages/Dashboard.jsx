@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Building2, Users, Package, FileText, ArrowRight, Download, Upload, Mail, ExternalLink, Archive } from 'lucide-react'
+import { Building2, Users, Package, FileText, ArrowRight, Download, Upload, Archive, HelpCircle } from 'lucide-react'
 import { useLanguage } from '../context/LanguageContext'
 import { useData, STORAGE_KEYS } from '../context/DataContext'
 import Card, { CardBody } from '../components/ui/Card'
@@ -11,9 +11,8 @@ import BackupExport from '../components/invoices/BackupExport'
 
 export default function Dashboard() {
   const { t } = useLanguage()
-  const { companies, customers, products, invoices, settings, setSettings, sendEmailBackup: sendEmail } = useData()
+  const { companies, customers, products, invoices } = useData()
   const backupFileInputRef = useRef(null)
-  const [emailMsg, setEmailMsg] = useState(null)
   const [showBackupExport, setShowBackupExport] = useState(false)
 
   const handleDownloadBackup = () => {
@@ -179,16 +178,16 @@ export default function Dashboard() {
             {t('dashboard.backup')}
           </h2>
           <div className="flex flex-wrap gap-3 mb-3">
-            <Button variant="secondary" onClick={handleDownloadBackup}>
-              <Download className="w-4 h-4" />
-              {t('dashboard.downloadBackup')}
-            </Button>
             {invoices.length > 0 && (
               <Button variant="secondary" onClick={() => setShowBackupExport(true)}>
                 <Archive className="w-4 h-4" />
                 Lataa PDF + varmuuskopio (ZIP)
               </Button>
             )}
+            <Button variant="secondary" onClick={handleDownloadBackup}>
+              <Download className="w-4 h-4" />
+              {t('dashboard.downloadBackup')}
+            </Button>
             <input
               ref={backupFileInputRef}
               type="file"
@@ -200,101 +199,9 @@ export default function Dashboard() {
               <Upload className="w-4 h-4" />
               {t('dashboard.restoreBackup')}
             </Button>
-            <Button
-              variant="secondary"
-              onClick={async () => {
-                if (!settings.backupEmail) { setEmailMsg('Aseta ensin sähköpostiosoite.'); setTimeout(() => setEmailMsg(null), 5000); return }
-                if (invoices.length === 0) { setEmailMsg('Ei laskuja lähetettäväksi.'); setTimeout(() => setEmailMsg(null), 5000); return }
-
-                // Get latest invoice
-                const latest = invoices[invoices.length - 1]
-                const company = companies.find((c) => c.id === latest?.companyId)
-                const invoiceWithName = { ...latest, _companyName: company?.name }
-
-                setEmailMsg('Lähetetään...')
-                try {
-                  await sendEmail(settings.backupEmail, invoiceWithName, 'TrioLasku')
-                  setEmailMsg('Varmuuskopio lähetetty!')
-                  setTimeout(() => setEmailMsg(null), 5000)
-                } catch {
-                  setEmailMsg('Lähetys epäonnistui. Käytä "Lähetä Gmaililla" -nappia.')
-                }
-              }}
-            >
-              <Mail className="w-4 h-4" />
-              Lähetä sähköpostiin
-            </Button>
-            {/* DIRECT GMAIL BUTTON */}
-            <Button
-              variant="secondary"
-              onClick={() => {
-                if (invoices.length === 0) { setEmailMsg('Ei laskuja.'); setTimeout(() => setEmailMsg(null), 5000); return }
-
-                const latest = invoices[invoices.length - 1]
-
-                // Build rich message with products
-                const products = (latest.rows || [])
-                  .filter(row => row.description)
-                  .map(row => row.description + ' ' + row.quantity + ' kpl ' + row.priceNet + '€')
-                  .join(', ')
-
-                let message = 'Lasku ' + String(latest.invoiceNumber || '')
-                if (latest._customerName) message += ' | Asiakas: ' + latest._customerName
-                if (products) message += ' | Tuotteet: ' + products
-                message += ' | Yhteensä: ' + String(latest.totalGross || '0') + ' EUR'
-
-                const gmailUrl = 'https://mail.google.com/mail/?view=cm&fs=1&to=leevi.latvatalo@gmail.com&su=' + encodeURIComponent('Varmuuskopio') + '&body=' + encodeURIComponent(message)
-
-                const popupWidth = 600
-                const popupHeight = 700
-                const left = (window.screen.width - popupWidth) / 2
-                const top = (window.screen.height - popupHeight) / 2
-                window.open(gmailUrl, 'GmailCompose', 'width=' + popupWidth + ',height=' + popupHeight + ',left=' + left + ',top=' + top + ',scrollbars=yes,resizable=yes')
-                setEmailMsg('Gmail avattu!')
-                setTimeout(() => setEmailMsg(null), 3000)
-              }}
-              className="bg-red-50 border-red-300 text-red-700 hover:bg-red-100"
-            >
-              <ExternalLink className="w-4 h-4" />
-              Lähetä Gmaililla
-            </Button>
           </div>
-          {emailMsg && <p className={`text-sm mb-3 ${emailMsg.includes('epäonnistui') ? 'text-orange-600' : 'text-green-600'}`}>{emailMsg}</p>}
-
-          {/* Email backup settings */}
-          <div className="border-t border-gray-200 pt-4 mt-4 space-y-3">
-            <h3 className="text-sm font-semibold text-gray-700">Sähköpostivarmuuskopio</h3>
-            <input
-              type="email"
-              value={settings.backupEmail || ''}
-              onChange={(e) => setSettings((prev) => ({ ...prev, backupEmail: e.target.value }))}
-              placeholder="nimi@esimerkki.fi"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
-            />
-            <label className="flex items-center justify-between cursor-pointer">
-              <span className="text-sm text-gray-600">Lähetä automaattisesti kun lasku luodaan</span>
-              <div
-                onClick={() => setSettings((prev) => ({ ...prev, autoEmailBackup: !prev.autoEmailBackup }))}
-                className={`relative w-12 h-6 rounded-full transition-colors cursor-pointer ${
-                  settings.autoEmailBackup ? 'bg-green-500' : 'bg-gray-300'
-                }`}
-              >
-                <div
-                  className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${
-                    settings.autoEmailBackup ? 'translate-x-6' : 'translate-x-0.5'
-                  }`}
-                />
-              </div>
-            </label>
-          </div>
-
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-3">
-            <p className="text-sm text-blue-800">
-              Sähköposti sisältää vain viimeisimmän laskun numeron, päiväyksen ja summan. Täysi varmuuskopiointi on tehtävä manuaalisesti &quot;Jaa varmuuskopio&quot; -toiminnolla.
-            </p>
-          </div>
-          <p className="text-xs text-gray-500 mt-3">
-            {t('dashboard.backupHint')}
+          <p className="text-xs text-gray-500">
+            ZIP-varmuuskopio sisältää kaikki laskut PDF-tiedostoina sekä kaikki tiedot JSON-muodossa. JSON-varmuuskopio sisältää vain tiedot ilman PDF-tiedostoja.
           </p>
         </CardBody>
       </Card>
@@ -368,6 +275,72 @@ export default function Dashboard() {
           </CardBody>
         </Card>
       )}
+
+      {/* Ohjeet */}
+      <Card className="mt-8">
+        <CardBody>
+          <div className="flex items-center gap-2 mb-4">
+            <HelpCircle className="w-5 h-5 text-blue-600" />
+            <h2 className="text-lg font-semibold text-gray-900">Käyttöohjeet</h2>
+          </div>
+          <div className="space-y-5 text-sm text-gray-700">
+
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-1">1. Alkuvalmistelut</h3>
+              <ul className="list-disc list-inside space-y-1 text-gray-600">
+                <li>Lisää ensin yrityksesi tiedot <strong>Yritykset</strong>-sivulla (nimi, Y-tunnus, osoite, pankkitili, logo)</li>
+                <li>Lisää asiakkaat <strong>Asiakkaat</strong>-sivulla</li>
+                <li>Lisää usein käytetyt tuotteet/palvelut <strong>Tuotteet</strong>-sivulla (valinnainen, nopeuttaa laskun tekoa)</li>
+              </ul>
+            </div>
+
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-1">2. Laskun luominen</h3>
+              <ul className="list-disc list-inside space-y-1 text-gray-600">
+                <li>Avaa <strong>Laskut</strong>-sivu ja paina <strong>+ Uusi lasku</strong></li>
+                <li>Valitse yritys ja asiakas, lisää tuoterivit (kuvaus, määrä, yksikköhinta, ALV-%)</li>
+                <li>Tarkista eräpäivä, maksuehto ja viivästyskorko</li>
+                <li>Paina <strong>Tallenna</strong> — lasku tallennetaan ja <strong>PDF latautuu automaattisesti</strong> laitteellesi</li>
+              </ul>
+            </div>
+
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-1">3. PDF-laskun lähetys</h3>
+              <ul className="list-disc list-inside space-y-1 text-gray-600">
+                <li>Tallennettu PDF löytyy laitteesi <strong>Lataukset</strong>-kansiosta</li>
+                <li>Lähetä PDF asiakkaalle sähköpostilla tai jaa pilvitallennuksesta</li>
+                <li>Voit myös tulostaa laskun esikatselunäkymästä</li>
+              </ul>
+            </div>
+
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-1">4. Laskujen hallinta</h3>
+              <ul className="list-disc list-inside space-y-1 text-gray-600">
+                <li><strong>Silmä-ikoni</strong> — avaa laskun esikatselun ja PDF-latauksen</li>
+                <li><strong>Kynä-ikoni</strong> — muokkaa laskua</li>
+                <li><strong>H-kirjain</strong> — luo hyvityslasku (kysyy vahvistuksen ensin)</li>
+                <li>Laskun tila muuttuu automaattisesti: luonnos → valmis → lähetetty → maksettu</li>
+              </ul>
+            </div>
+
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-1">5. Varmuuskopiointi</h3>
+              <ul className="list-disc list-inside space-y-1 text-gray-600">
+                <li><strong>Lataa PDF + varmuuskopio (ZIP)</strong> — lataa kaikki laskut PDF-tiedostoina + tietokannan JSON-muodossa yhtenä ZIP-pakettina</li>
+                <li><strong>Lataa varmuuskopio (JSON)</strong> — lataa vain tiedot ilman PDF-tiedostoja (pienempi tiedosto)</li>
+                <li><strong>Palauta varmuuskopio</strong> — palauttaa aiemmin ladatun JSON-varmuuskopion tiedot</li>
+                <li>Suositus: ota varmuuskopio säännöllisesti ja tallenna se turvalliseen paikkaan (pilvi, ulkoinen levy)</li>
+              </ul>
+            </div>
+
+            <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+              <p className="text-sm text-green-800">
+                <strong>Vinkki:</strong> Kaikki tiedot tallennetaan laitteesi selaimeen. Tiedot säilyvät niin kauan kuin et tyhjennä selaimen tietoja. Varmuuskopioi säännöllisesti!
+              </p>
+            </div>
+          </div>
+        </CardBody>
+      </Card>
     </div>
   )
 }
