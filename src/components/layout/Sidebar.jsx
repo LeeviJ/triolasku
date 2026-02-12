@@ -5,6 +5,7 @@ import {
   Users,
   Package,
   FileText,
+  HelpCircle,
   Menu,
   X,
   Globe,
@@ -17,6 +18,7 @@ const navItems = [
   { path: '/customers', icon: Users, labelKey: 'nav.customers' },
   { path: '/products', icon: Package, labelKey: 'nav.products' },
   { path: '/invoices', icon: FileText, labelKey: 'nav.invoices' },
+  { path: '/guide', icon: HelpCircle, label: 'Ohjeet' },
 ]
 
 export default function Sidebar({ isOpen, onToggle }) {
@@ -81,7 +83,7 @@ export default function Sidebar({ isOpen, onToggle }) {
               }
             >
               <item.icon className="w-5 h-5" />
-              <span>{t(item.labelKey)}</span>
+              <span>{item.label || t(item.labelKey)}</span>
             </NavLink>
           ))}
         </nav>

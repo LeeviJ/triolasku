@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Building2, Users, Package, FileText, ArrowRight, Download, Upload, Archive, HelpCircle } from 'lucide-react'
+import { Building2, Users, Package, FileText, ArrowRight, Download, Upload, Archive } from 'lucide-react'
 import { useLanguage } from '../context/LanguageContext'
 import { useData, STORAGE_KEYS } from '../context/DataContext'
 import Card, { CardBody } from '../components/ui/Card'
@@ -276,71 +276,6 @@ export default function Dashboard() {
         </Card>
       )}
 
-      {/* Ohjeet */}
-      <Card className="mt-8">
-        <CardBody>
-          <div className="flex items-center gap-2 mb-4">
-            <HelpCircle className="w-5 h-5 text-blue-600" />
-            <h2 className="text-lg font-semibold text-gray-900">Käyttöohjeet</h2>
-          </div>
-          <div className="space-y-5 text-sm text-gray-700">
-
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-1">1. Alkuvalmistelut</h3>
-              <ul className="list-disc list-inside space-y-1 text-gray-600">
-                <li>Lisää ensin yrityksesi tiedot <strong>Yritykset</strong>-sivulla (nimi, Y-tunnus, osoite, pankkitili, logo)</li>
-                <li>Lisää asiakkaat <strong>Asiakkaat</strong>-sivulla</li>
-                <li>Lisää usein käytetyt tuotteet/palvelut <strong>Tuotteet</strong>-sivulla (valinnainen, nopeuttaa laskun tekoa)</li>
-              </ul>
-            </div>
-
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-1">2. Laskun luominen</h3>
-              <ul className="list-disc list-inside space-y-1 text-gray-600">
-                <li>Avaa <strong>Laskut</strong>-sivu ja paina <strong>+ Uusi lasku</strong></li>
-                <li>Valitse yritys ja asiakas, lisää tuoterivit (kuvaus, määrä, yksikköhinta, ALV-%)</li>
-                <li>Tarkista eräpäivä, maksuehto ja viivästyskorko</li>
-                <li>Paina <strong>Tallenna</strong> — lasku tallennetaan ja <strong>PDF latautuu automaattisesti</strong> laitteellesi</li>
-              </ul>
-            </div>
-
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-1">3. PDF-laskun lähetys</h3>
-              <ul className="list-disc list-inside space-y-1 text-gray-600">
-                <li>Tallennettu PDF löytyy laitteesi <strong>Lataukset</strong>-kansiosta</li>
-                <li>Lähetä PDF asiakkaalle sähköpostilla tai jaa pilvitallennuksesta</li>
-                <li>Voit myös tulostaa laskun esikatselunäkymästä</li>
-              </ul>
-            </div>
-
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-1">4. Laskujen hallinta</h3>
-              <ul className="list-disc list-inside space-y-1 text-gray-600">
-                <li><strong>Silmä-ikoni</strong> — avaa laskun esikatselun ja PDF-latauksen</li>
-                <li><strong>Kynä-ikoni</strong> — muokkaa laskua</li>
-                <li><strong>H-kirjain</strong> — luo hyvityslasku (kysyy vahvistuksen ensin)</li>
-                <li>Laskun tila muuttuu automaattisesti: luonnos → valmis → lähetetty → maksettu</li>
-              </ul>
-            </div>
-
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-1">5. Varmuuskopiointi</h3>
-              <ul className="list-disc list-inside space-y-1 text-gray-600">
-                <li><strong>Lataa PDF + varmuuskopio (ZIP)</strong> — lataa kaikki laskut PDF-tiedostoina + tietokannan JSON-muodossa yhtenä ZIP-pakettina</li>
-                <li><strong>Lataa varmuuskopio (JSON)</strong> — lataa vain tiedot ilman PDF-tiedostoja (pienempi tiedosto)</li>
-                <li><strong>Palauta varmuuskopio</strong> — palauttaa aiemmin ladatun JSON-varmuuskopion tiedot</li>
-                <li>Suositus: ota varmuuskopio säännöllisesti ja tallenna se turvalliseen paikkaan (pilvi, ulkoinen levy)</li>
-              </ul>
-            </div>
-
-            <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-              <p className="text-sm text-green-800">
-                <strong>Vinkki:</strong> Kaikki tiedot tallennetaan laitteesi selaimeen. Tiedot säilyvät niin kauan kuin et tyhjennä selaimen tietoja. Varmuuskopioi säännöllisesti!
-              </p>
-            </div>
-          </div>
-        </CardBody>
-      </Card>
     </div>
   )
 }

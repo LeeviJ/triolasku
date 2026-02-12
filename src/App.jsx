@@ -6,6 +6,7 @@ import Companies from './pages/Companies'
 import Customers from './pages/Customers'
 import Products from './pages/Products'
 import Invoices from './pages/Invoices'
+import Guide from './pages/Guide'
 
 function AppLayout({ children }) {
   return <Layout>{children}</Layout>
@@ -23,6 +24,7 @@ function App() {
       <Route path="/customers" element={<AppLayout><Customers /></AppLayout>} />
       <Route path="/products" element={<AppLayout><Products /></AppLayout>} />
       <Route path="/invoices" element={<AppLayout><Invoices /></AppLayout>} />
+      <Route path="/guide" element={<AppLayout><Guide /></AppLayout>} />
     </Routes>
   )
 }
