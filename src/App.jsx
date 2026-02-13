@@ -1,5 +1,6 @@
 import { Routes, Route } from 'react-router-dom'
 import Layout from './components/layout/Layout'
+import LicenseGate from './components/LicenseGate'
 import LandingPage from './pages/LandingPage'
 import Dashboard from './pages/Dashboard'
 import Companies from './pages/Companies'
@@ -8,8 +9,12 @@ import Products from './pages/Products'
 import Invoices from './pages/Invoices'
 import Guide from './pages/Guide'
 
-function AppLayout({ children }) {
-  return <Layout>{children}</Layout>
+function ProtectedLayout({ children }) {
+  return (
+    <LicenseGate>
+      <Layout>{children}</Layout>
+    </LicenseGate>
+  )
 }
 
 function App() {
@@ -18,13 +23,13 @@ function App() {
       {/* Landing page — only exact "/" */}
       <Route path="/" element={<LandingPage />} />
 
-      {/* App pages — each wrapped in Layout */}
-      <Route path="/dashboard" element={<AppLayout><Dashboard /></AppLayout>} />
-      <Route path="/companies" element={<AppLayout><Companies /></AppLayout>} />
-      <Route path="/customers" element={<AppLayout><Customers /></AppLayout>} />
-      <Route path="/products" element={<AppLayout><Products /></AppLayout>} />
-      <Route path="/invoices" element={<AppLayout><Invoices /></AppLayout>} />
-      <Route path="/guide" element={<AppLayout><Guide /></AppLayout>} />
+      {/* App pages — protected by license + wrapped in Layout */}
+      <Route path="/dashboard" element={<ProtectedLayout><Dashboard /></ProtectedLayout>} />
+      <Route path="/companies" element={<ProtectedLayout><Companies /></ProtectedLayout>} />
+      <Route path="/customers" element={<ProtectedLayout><Customers /></ProtectedLayout>} />
+      <Route path="/products" element={<ProtectedLayout><Products /></ProtectedLayout>} />
+      <Route path="/invoices" element={<ProtectedLayout><Invoices /></ProtectedLayout>} />
+      <Route path="/guide" element={<ProtectedLayout><Guide /></ProtectedLayout>} />
     </Routes>
   )
 }
