@@ -22,9 +22,14 @@ export async function handler(event) {
       },
     })
 
+    // Use envelope to set exact sender, avoid sender verify issues
     await transporter.sendMail({
-      from: `"TrioTools yhteydenotto" <${process.env.SMTP_USER}>`,
-      replyTo: `"${name}" <${email}>`,
+      from: process.env.SMTP_USER,
+      envelope: {
+        from: process.env.SMTP_USER,
+        to: process.env.SMTP_USER,
+      },
+      replyTo: email,
       to: process.env.SMTP_USER,
       subject: `Yhteydenotto: ${name}`,
       text: `Nimi: ${name}\nSähköposti: ${email}\n\nViesti:\n${message}`,
