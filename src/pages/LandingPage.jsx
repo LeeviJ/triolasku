@@ -148,17 +148,27 @@ function Contact() {
   const [submitted, setSubmitted] = useState(false)
   const [loading, setLoading] = useState(false)
 
+  const [error, setError] = useState('')
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
+    setError('')
     try {
-      await fetch('/', {
+      const res = await fetch('/.netlify/functions/send-contact', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({ 'form-name': 'contact', ...form }).toString(),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
       })
-      setSubmitted(true)
-    } catch { /* ignore */ } finally { setLoading(false) }
+      const data = await res.json()
+      if (res.ok) {
+        setSubmitted(true)
+      } else {
+        setError(data.error || 'Viestin lähetys epäonnistui')
+      }
+    } catch {
+      setError('Yhteysvirhe. Yritä uudelleen.')
+    } finally { setLoading(false) }
   }
 
   if (submitted) {
@@ -178,8 +188,8 @@ function Contact() {
           <h2 className="text-3xl sm:text-4xl font-bold mb-4">Ota yhteyttä</h2>
         </div>
         <div className="grid sm:grid-cols-5 gap-8">
-          <form name="contact" method="POST" data-netlify="true" onSubmit={handleSubmit} className="sm:col-span-3 bg-white border border-gray-200 rounded-2xl p-8 space-y-5">
-            <input type="hidden" name="form-name" value="contact" />
+          <form onSubmit={handleSubmit} className="sm:col-span-3 bg-white border border-gray-200 rounded-2xl p-8 space-y-5">
+            {error && <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-2">{error}</p>}
             <input name="name" type="text" required value={form.name} onChange={(e) => setForm(p => ({ ...p, name: e.target.value }))} placeholder="Nimi" className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
             <input name="email" type="email" required value={form.email} onChange={(e) => setForm(p => ({ ...p, email: e.target.value }))} placeholder="Sähköposti" className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
             <textarea name="message" required rows={4} value={form.message} onChange={(e) => setForm(p => ({ ...p, message: e.target.value }))} placeholder="Viesti" className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 resize-none" />
