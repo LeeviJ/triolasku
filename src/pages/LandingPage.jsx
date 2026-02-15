@@ -73,6 +73,7 @@ function TrioLaskuSection() {
               </li>
             ))}
           </ul>
+          <p className="text-sm text-red-400">Ei tue e-laskua (Finvoice) — laskut luodaan PDF-muodossa.</p>
           <Link
             to="/invoices"
             className="inline-flex items-center gap-2 text-blue-600 font-semibold text-sm hover:underline"
@@ -147,7 +148,6 @@ function Pricing() {
           ))}
         </div>
         <p className="text-center text-sm text-gray-400 mt-8">Hintoihin lisätään ALV. Alennuskoodi syötetään kassalla.</p>
-        <p className="text-center text-sm text-gray-400 mt-2">TrioLasku luo PDF-laskuja — e-laskua (Finvoice) ei tueta.</p>
       </div>
     </section>
   )
