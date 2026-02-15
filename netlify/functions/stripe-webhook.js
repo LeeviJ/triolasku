@@ -1,6 +1,6 @@
 import Stripe from 'stripe'
 import nodemailer from 'nodemailer'
-import { generateLicenseKey, supabaseHeaders, SUPABASE_URL, PLAN_DURATIONS, PRICE_ID_TO_PLAN } from './utils/license.js'
+import { generateLicenseKey, supabaseHeaders, SUPABASE_URL, PLAN_DURATIONS, PRICE_ID_TO_PLAN, PLAN_PRICES, vatBreakdown } from './utils/license.js'
 
 export async function handler(event) {
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
@@ -58,19 +58,37 @@ export async function handler(event) {
         auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
       })
 
+      const planInfo = PLAN_PRICES[plan] || { gross: 0, label: plan }
+      const vat = vatBreakdown(planInfo.gross)
+
       await transporter.sendMail({
         from: process.env.SMTP_USER,
         envelope: { from: process.env.SMTP_USER, to: email },
         to: email,
-        subject: 'TrioLasku — Lisenssiavaimesi',
+        subject: 'TrioLasku — Tilausvahvistus ja lisenssiavain',
         text: [
           'Kiitos tilauksestasi!',
           '',
-          `Lisenssiavain: ${licenseKey}`,
-          `Tilaus: ${plan}`,
-          `Voimassa: ${expiresAt.toLocaleDateString('fi-FI')} asti`,
+          '─── TILAUSVAHVISTUS ───',
+          '',
+          `Tuote:          TrioLasku – ${planInfo.label}`,
+          `Hinta (alv 0%): ${vat.net} €`,
+          `ALV ${vat.vatRate} %:    ${vat.vat} €`,
+          `Yhteensä:       ${vat.gross} €`,
+          '',
+          '─── LISENSSIAVAIN ───',
+          '',
+          `Avain:     ${licenseKey}`,
+          `Voimassa:  ${expiresAt.toLocaleDateString('fi-FI')} asti`,
           '',
           'Syötä avain sovelluksessa osoitteessa https://triotools.fi/dashboard',
+          '',
+          '─── MYYJÄN TIEDOT ───',
+          '',
+          'Kyyränkoski Tmi',
+          'Y-tunnus: 1437272-9',
+          'Kylänpääntie 54, 61450 Kylänpää',
+          'trio.tools6@gmail.com',
           '',
           'Ystävällisin terveisin,',
           'TrioTools',

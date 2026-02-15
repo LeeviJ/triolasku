@@ -88,9 +88,9 @@ function TrioLaskuSection() {
 
 /* ── Pricing ───────────────────────────────────────────── */
 const plans = [
-  { name: '1 kuukausi', price: '12', period: '€ / kk + alv', description: 'Kokeile ilman sitoutumista.', highlighted: false, priceId: import.meta.env.VITE_STRIPE_PRICE_ID_1MO },
-  { name: '12 kuukautta', price: '120', period: '€ / vuosi + alv', perMonth: 'Vain 10 €/kk + alv', badge: 'Suosituin', description: 'Paras hinta — koko vuosi kerralla.', highlighted: true, priceId: import.meta.env.VITE_STRIPE_PRICE_ID_12MO },
-  { name: '6 kuukautta', price: '65', period: '€ / 6 kk + alv', perMonth: '~10,83 €/kk + alv', description: 'Hyvä kompromissi.', highlighted: false, priceId: import.meta.env.VITE_STRIPE_PRICE_ID_6MO },
+  { name: '1 kuukausi', price: '10', originalPrice: '15', period: '€ / kk', description: 'Kokeile ilman sitoutumista.', highlighted: false, priceId: import.meta.env.VITE_STRIPE_PRICE_ID_1MO },
+  { name: '12 kuukautta', price: '90', originalPrice: '150', period: '€ / vuosi', perMonth: 'Vain 7,50 €/kk', badge: 'Suosituin', description: 'Paras hinta — koko vuosi kerralla.', highlighted: true, priceId: import.meta.env.VITE_STRIPE_PRICE_ID_12MO },
+  { name: '6 kuukautta', price: '50', originalPrice: '80', period: '€ / 6 kk', perMonth: '~8,33 €/kk', description: 'Hyvä kompromissi.', highlighted: false, priceId: import.meta.env.VITE_STRIPE_PRICE_ID_6MO },
 ]
 
 function Pricing() {
@@ -132,7 +132,10 @@ function Pricing() {
                 <h3 className="text-lg font-semibold">{plan.name}</h3>
                 <p className={`text-sm mt-1 ${plan.highlighted ? 'text-green-100' : 'text-gray-500'}`}>{plan.description}</p>
               </div>
-              <div className="flex items-baseline gap-1">
+              <div className="flex items-baseline gap-2">
+                {plan.originalPrice && (
+                  <span className={`text-lg line-through ${plan.highlighted ? 'text-green-200' : 'text-gray-300'}`}>{plan.originalPrice}€</span>
+                )}
                 <span className="text-4xl font-extrabold">{plan.price}</span>
                 <span className={`text-sm ${plan.highlighted ? 'text-green-100' : 'text-gray-400'}`}>{plan.period}</span>
               </div>
@@ -147,7 +150,8 @@ function Pricing() {
             </div>
           ))}
         </div>
-        <p className="text-center text-sm text-gray-400 mt-8">Hintoihin lisätään ALV. Alennuskoodi syötetään kassalla.</p>
+        <p className="text-center text-sm text-red-400 font-medium mt-6">Lanseeraustarjous –40 % — voimassa rajoitetun ajan!</p>
+        <p className="text-center text-sm text-gray-400 mt-2">Hinnat sisältävät ALV 25,5 %.</p>
       </div>
     </section>
   )
