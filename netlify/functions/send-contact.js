@@ -13,7 +13,7 @@ export async function handler(event) {
     }
 
     const transporter = nodemailer.createTransport({
-      host: 'whm62.louhi.net',
+      host: 'smtp.gmail.com',
       port: 465,
       secure: true,
       auth: {
