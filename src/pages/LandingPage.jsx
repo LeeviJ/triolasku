@@ -132,14 +132,20 @@ function Pricing() {
                 <h3 className="text-lg font-semibold">{plan.name}</h3>
                 <p className={`text-sm mt-1 ${plan.highlighted ? 'text-green-100' : 'text-gray-500'}`}>{plan.description}</p>
               </div>
-              <div className="flex items-baseline gap-2">
+              <div>
                 {plan.originalPrice && (
-                  <span className={`text-lg line-through ${plan.highlighted ? 'text-green-200' : 'text-gray-300'}`}>{plan.originalPrice}€</span>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className={`text-base line-through ${plan.highlighted ? 'text-green-200' : 'text-gray-400'}`}>{plan.originalPrice} €</span>
+                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${plan.highlighted ? 'bg-green-500 text-white' : 'bg-red-100 text-red-600'}`}>-40%</span>
+                  </div>
                 )}
-                <span className="text-4xl font-extrabold">{plan.price}</span>
-                <span className={`text-sm ${plan.highlighted ? 'text-green-100' : 'text-gray-400'}`}>{plan.period}</span>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-4xl font-extrabold">{plan.price}</span>
+                  <span className={`text-base font-medium ${plan.highlighted ? 'text-green-100' : 'text-gray-500'}`}>€</span>
+                </div>
+                <p className={`text-sm mt-1 ${plan.highlighted ? 'text-green-100' : 'text-gray-400'}`}>{plan.period}</p>
               </div>
-              {plan.perMonth && <p className={`text-sm font-medium ${plan.highlighted ? 'text-green-100' : 'text-gray-500'}`}>{plan.perMonth}</p>}
+              {plan.perMonth && <p className={`text-sm font-semibold ${plan.highlighted ? 'text-green-100' : 'text-green-600'}`}>{plan.perMonth}</p>}
               <button
                 onClick={() => handleCheckout(plan)}
                 disabled={loading === plan.priceId}
