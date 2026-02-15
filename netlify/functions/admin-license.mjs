@@ -1,5 +1,5 @@
 import nodemailer from 'nodemailer'
-import { generateLicenseKey, supabaseHeaders, SUPABASE_URL, PLAN_DURATIONS } from './utils/license.js'
+import { generateLicenseKey, supabaseHeaders, SUPABASE_URL, PLAN_DURATIONS } from './utils/license.mjs'
 
 export async function handler(event) {
   if (event.httpMethod !== 'POST') {

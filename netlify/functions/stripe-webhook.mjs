@@ -1,6 +1,6 @@
 import Stripe from 'stripe'
 import nodemailer from 'nodemailer'
-import { generateLicenseKey, supabaseHeaders, SUPABASE_URL, PLAN_DURATIONS, PRICE_ID_TO_PLAN, PLAN_PRICES, vatBreakdown } from './utils/license.js'
+import { generateLicenseKey, supabaseHeaders, SUPABASE_URL, PLAN_DURATIONS, PRICE_ID_TO_PLAN, PLAN_PRICES, vatBreakdown } from './utils/license.mjs'
 
 export async function handler(event) {
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
