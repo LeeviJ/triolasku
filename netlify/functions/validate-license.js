@@ -1,4 +1,4 @@
-import { supabaseHeaders, SUPABASE_URL } from './utils/license.mjs'
+import { supabaseHeaders, SUPABASE_URL } from './utils/license.js'
 
 export async function handler(event) {
   if (event.httpMethod !== 'POST') {

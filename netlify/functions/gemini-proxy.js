@@ -1,10 +1,3 @@
-// Netlify Function: Gemini AI proxy
-// Uses server-side GEMINI_API_KEY environment variable set in Netlify dashboard
-// Client calls: POST /.netlify/functions/gemini-proxy (or /api/gemini-proxy via redirect)
-// Supports two formats:
-//   1. { prompt } — returns { result: text }
-//   2. { product, audience } — returns { results: { facebook, instagram, linkedin, email } }
-
 export async function handler(event) {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: JSON.stringify({ error: 'Method not allowed' }) }

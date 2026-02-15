@@ -48,23 +48,3 @@ export function vatBreakdown(gross) {
     vatRate: VAT_RATE,
   }
 }
-
-// Prices including VAT 25.5%
-export const PLAN_PRICES = {
-  '1kk':  { gross: 12.00,  label: '1 kuukausi' },
-  '6kk':  { gross: 65.00,  label: '6 kuukautta' },
-  '12kk': { gross: 120.00, label: '12 kuukautta' },
-}
-
-const VAT_RATE = 25.5
-
-export function vatBreakdown(gross) {
-  const net = gross / (1 + VAT_RATE / 100)
-  const vat = gross - net
-  return {
-    net: net.toFixed(2),
-    vat: vat.toFixed(2),
-    gross: gross.toFixed(2),
-    vatRate: VAT_RATE,
-  }
-}
