@@ -147,6 +147,7 @@ function Pricing() {
           ))}
         </div>
         <p className="text-center text-sm text-gray-400 mt-8">Hintoihin lisätään ALV. Alennuskoodi syötetään kassalla.</p>
+        <p className="text-center text-sm text-gray-400 mt-2">TrioLasku luo PDF-laskuja — e-laskua (Finvoice) ei tueta.</p>
       </div>
     </section>
   )

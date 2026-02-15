@@ -9,6 +9,7 @@ import {
   Menu,
   X,
   Globe,
+  Home,
 } from 'lucide-react'
 import { useLanguage } from '../../context/LanguageContext'
 
@@ -87,6 +88,17 @@ export default function Sidebar({ isOpen, onToggle }) {
             </NavLink>
           ))}
         </nav>
+
+        {/* Back to landing page */}
+        <div className="p-4 border-t border-gray-200">
+          <NavLink
+            to="/"
+            className="flex items-center gap-3 px-3 py-2.5 text-gray-600 hover:bg-gray-100 hover:text-gray-900 rounded-lg transition-colors"
+          >
+            <Home className="w-5 h-5" />
+            <span>TrioTools.fi</span>
+          </NavLink>
+        </div>
 
         {/* Language switcher */}
         <div className="p-4 border-t border-gray-200">
