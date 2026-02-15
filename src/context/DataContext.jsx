@@ -1,5 +1,7 @@
 import { createContext, useContext, useState, useEffect, useRef } from 'react'
 import { sendEmailBackup } from '../utils/emailBackup'
+import { useDemo } from './DemoContext'
+import { DEMO_MAX_INVOICES } from '../data/demoData'
 
 const DataContext = createContext()
 
@@ -50,6 +52,7 @@ const saveToStorage = (key, value) => {
 }
 
 export function DataProvider({ children }) {
+  const { isDemo } = useDemo()
   const [companies, setCompanies] = useState(() =>
     loadFromStorage(STORAGE_KEYS.companies)
   )
@@ -271,6 +274,9 @@ export function DataProvider({ children }) {
   }
 
   const addInvoice = (invoice) => {
+    if (isDemo && invoices.length >= DEMO_MAX_INVOICES) {
+      return { success: false, error: 'demo_invoice_limit' }
+    }
     const invoiceNumber = invoice.invoiceNumber || getNextInvoiceNumberForCompany(invoice.companyId)
     const newInvoice = {
       ...invoice,
@@ -355,6 +361,9 @@ export function DataProvider({ children }) {
     deleteInvoice,
     duplicateInvoice,
     getNextInvoiceNumberForCompany,
+    // Demo
+    isDemo,
+    DEMO_MAX_INVOICES,
     // Settings & email backup
     settings,
     setSettings,

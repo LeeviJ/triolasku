@@ -293,6 +293,12 @@ export default function InvoiceForm({ invoice, onClose, onPreview }) {
       savedInvoice = { ...invoiceData, id: invoice.id }
     } else {
       const result = addInvoice(invoiceData)
+      if (!result.success) {
+        if (result.error === 'demo_invoice_limit') {
+          alert('Demo-tilassa voit luoda enintään 3 laskua. Tilaa lisenssi käyttääksesi rajattomasti.')
+        }
+        return
+      }
       savedInvoice = result.invoice
     }
 

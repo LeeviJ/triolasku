@@ -24,7 +24,7 @@ export const PLAN_DURATIONS = {
 }
 
 export const PRICE_ID_TO_PLAN = {
-  'price_1T04k1RlDDEGqPN1D1PTvtz8': '1kk',
-  'price_1T04Q5RlDDEGqPN1rOa8NI1C': '12kk',
-  'price_1T04jORlDDEGqPN162NEJG6d': '6kk',
+  [process.env.STRIPE_PRICE_ID_1MO]: '1kk',
+  [process.env.STRIPE_PRICE_ID_12MO]: '12kk',
+  [process.env.STRIPE_PRICE_ID_6MO]: '6kk',
 }

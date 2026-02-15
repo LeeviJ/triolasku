@@ -1,9 +1,18 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
-import { FileText, Send, ArrowRight } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
+import { FileText, Send, ArrowRight, Play } from 'lucide-react'
+import { useDemo } from '../context/DemoContext'
 
 /* ── Hero ──────────────────────────────────────────────── */
 function Hero() {
+  const { startDemo } = useDemo()
+  const navigate = useNavigate()
+
+  const handleDemo = () => {
+    startDemo()
+    navigate('/dashboard')
+  }
+
   return (
     <section className="pt-24 pb-10 px-6">
       <div className="max-w-4xl mx-auto text-center space-y-6">
@@ -26,12 +35,13 @@ function Hero() {
             <FileText className="w-5 h-5" />
             Avaa TrioLasku
           </Link>
-          <a
-            href="#triolasku"
-            className="border border-gray-300 hover:border-gray-400 text-gray-700 font-semibold px-8 py-3.5 rounded-xl transition-colors text-base"
+          <button
+            onClick={handleDemo}
+            className="border border-gray-300 hover:border-gray-400 text-gray-700 font-semibold px-8 py-3.5 rounded-xl transition-colors text-base inline-flex items-center justify-center gap-2"
           >
-            Lue lisää
-          </a>
+            <Play className="w-5 h-5" />
+            Kokeile demoa
+          </button>
         </div>
       </div>
     </section>
@@ -77,9 +87,9 @@ function TrioLaskuSection() {
 
 /* ── Pricing ───────────────────────────────────────────── */
 const plans = [
-  { name: '1 kuukausi', price: '12', period: '€ / kk + alv', description: 'Kokeile ilman sitoutumista.', highlighted: false, priceId: 'price_1T04k1RlDDEGqPN1D1PTvtz8' },
-  { name: '12 kuukautta', price: '120', period: '€ / vuosi + alv', perMonth: 'Vain 10 €/kk + alv', badge: 'Suosituin', description: 'Paras hinta — koko vuosi kerralla.', highlighted: true, priceId: 'price_1T04Q5RlDDEGqPN1rOa8NI1C' },
-  { name: '6 kuukautta', price: '65', period: '€ / 6 kk + alv', perMonth: '~10,83 €/kk + alv', description: 'Hyvä kompromissi.', highlighted: false, priceId: 'price_1T04jORlDDEGqPN162NEJG6d' },
+  { name: '1 kuukausi', price: '12', period: '€ / kk + alv', description: 'Kokeile ilman sitoutumista.', highlighted: false, priceId: import.meta.env.VITE_STRIPE_PRICE_ID_1MO },
+  { name: '12 kuukautta', price: '120', period: '€ / vuosi + alv', perMonth: 'Vain 10 €/kk + alv', badge: 'Suosituin', description: 'Paras hinta — koko vuosi kerralla.', highlighted: true, priceId: import.meta.env.VITE_STRIPE_PRICE_ID_12MO },
+  { name: '6 kuukautta', price: '65', period: '€ / 6 kk + alv', perMonth: '~10,83 €/kk + alv', description: 'Hyvä kompromissi.', highlighted: false, priceId: import.meta.env.VITE_STRIPE_PRICE_ID_6MO },
 ]
 
 function Pricing() {
@@ -202,9 +212,9 @@ function Contact() {
             <p className="text-sm text-gray-500">Y-tunnus: 1437272-9</p>
             <p className="text-sm text-gray-500">Kylänpääntie 54, 61450 Kylänpää</p>
             <p className="text-sm text-gray-500">ALV-velvollisuus rekisteröity 1.2.2026 alkaen</p>
-            <a href="mailto:info@triotools.fi" className="inline-flex items-center gap-2 text-sm font-semibold text-green-600 hover:text-green-700 transition-colors">
+            <a href="mailto:trio.tools6@gmail.com" className="inline-flex items-center gap-2 text-sm font-semibold text-green-600 hover:text-green-700 transition-colors">
               <Send className="w-4 h-4" />
-              info@triotools.fi
+              trio.tools6@gmail.com
             </a>
           </div>
         </div>

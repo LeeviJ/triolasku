@@ -2,9 +2,11 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { FileText, KeyRound } from 'lucide-react'
 import { useLicense } from '../context/LicenseContext'
+import { useDemo } from '../context/DemoContext'
 
 export default function LicenseGate({ children }) {
   const { licenseStatus, activate } = useLicense()
+  const { isDemo } = useDemo()
   const [input, setInput] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -20,7 +22,7 @@ export default function LicenseGate({ children }) {
     )
   }
 
-  if (licenseStatus === 'valid') {
+  if (licenseStatus === 'valid' || isDemo) {
     return children
   }
 
@@ -76,8 +78,8 @@ export default function LicenseGate({ children }) {
           <Link to="/#pricing" className="text-sm text-green-600 hover:underline block">
             Ei vielä lisenssiä? Tilaa tästä
           </Link>
-          <a href="mailto:info@triotools.fi" className="text-sm text-gray-400 hover:underline block">
-            Tarvitsetko apua? info@triotools.fi
+          <a href="mailto:trio.tools6@gmail.com" className="text-sm text-gray-400 hover:underline block">
+            Tarvitsetko apua? trio.tools6@gmail.com
           </a>
         </div>
       </div>
