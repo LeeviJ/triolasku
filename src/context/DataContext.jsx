@@ -76,6 +76,14 @@ export function DataProvider({ children }) {
   )
   const prevInvoiceLen = useRef(invoices.length)
 
+  // Reload state when demo mode changes
+  useEffect(() => {
+    setCompanies(loadFromStorage(STORAGE_KEYS.companies))
+    setCustomers(loadFromStorage(STORAGE_KEYS.customers))
+    setProducts(loadFromStorage(STORAGE_KEYS.products))
+    setInvoices(loadFromStorage(STORAGE_KEYS.invoices))
+  }, [isDemo])
+
   // Persist to localStorage
   useEffect(() => {
     saveToStorage(STORAGE_KEYS.companies, companies)
