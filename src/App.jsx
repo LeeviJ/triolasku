@@ -8,6 +8,7 @@ import Customers from './pages/Customers'
 import Products from './pages/Products'
 import Invoices from './pages/Invoices'
 import Guide from './pages/Guide'
+import TrioPromote from './pages/TrioPromote'
 
 function ProtectedLayout({ children }) {
   return (
@@ -29,6 +30,7 @@ function App() {
       <Route path="/customers" element={<ProtectedLayout><Customers /></ProtectedLayout>} />
       <Route path="/products" element={<ProtectedLayout><Products /></ProtectedLayout>} />
       <Route path="/invoices" element={<ProtectedLayout><Invoices /></ProtectedLayout>} />
+      <Route path="/triopromote" element={<ProtectedLayout><TrioPromote /></ProtectedLayout>} />
       <Route path="/guide" element={<ProtectedLayout><Guide /></ProtectedLayout>} />
     </Routes>
   )

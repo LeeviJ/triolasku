@@ -1,19 +1,22 @@
 import { useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Building2, Users, Package, FileText, ArrowRight, Download, Upload, Archive } from 'lucide-react'
+import { Building2, Users, Package, FileText, ArrowRight, Download, Upload, Archive, FileCheck } from 'lucide-react'
 import { useLanguage } from '../context/LanguageContext'
 import { useData, STORAGE_KEYS } from '../context/DataContext'
+import { useLicense } from '../context/LicenseContext'
 import Card, { CardBody } from '../components/ui/Card'
 import Button from '../components/ui/Button'
 import { formatPrice, formatDateFI } from '../utils/formatters'
 import BackupExport from '../components/invoices/BackupExport'
-// emailBackup not needed for Gmail button - uses direct URL
+import SubscriptionReceipt from '../components/SubscriptionReceipt'
 
 export default function Dashboard() {
   const { t } = useLanguage()
   const { companies, customers, products, invoices } = useData()
+  const { licenseKey, licenseStatus } = useLicense()
   const backupFileInputRef = useRef(null)
   const [showBackupExport, setShowBackupExport] = useState(false)
+  const [showReceipt, setShowReceipt] = useState(false)
 
   const handleDownloadBackup = () => {
     // Direct file download - completely invisible, no share or popup
@@ -111,6 +114,7 @@ export default function Dashboard() {
   return (
     <div className="max-w-6xl mx-auto">
       {showBackupExport && <BackupExport onClose={() => setShowBackupExport(false)} />}
+      {showReceipt && <SubscriptionReceipt onClose={() => setShowReceipt(false)} />}
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
@@ -178,6 +182,10 @@ export default function Dashboard() {
             {t('dashboard.backup')}
           </h2>
           <div className="flex flex-wrap gap-3 mb-3">
+            <Button variant="secondary" onClick={() => setShowReceipt(true)}>
+              <FileCheck className="w-4 h-4" />
+              {t('subscriptionReceipt.title')}
+            </Button>
             {invoices.length > 0 && (
               <Button variant="secondary" onClick={() => setShowBackupExport(true)}>
                 <Archive className="w-4 h-4" />

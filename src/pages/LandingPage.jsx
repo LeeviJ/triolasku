@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { FileText, Send, ArrowRight, Play } from 'lucide-react'
+import { FileText, Send, ArrowRight, Play, Sparkles, Check } from 'lucide-react'
 import { useDemo } from '../context/DemoContext'
 
 /* ── Hero ──────────────────────────────────────────────── */
@@ -87,22 +87,45 @@ function TrioLaskuSection() {
 }
 
 /* ── Pricing ───────────────────────────────────────────── */
-const plans = [
-  { name: '1 kuukausi', price: '10', originalPrice: '15', period: '€ / kk', description: 'Kokeile ilman sitoutumista.', highlighted: false, priceId: import.meta.env.VITE_STRIPE_PRICE_ID_1MO },
-  { name: '12 kuukautta', price: '90', originalPrice: '150', period: '€ / vuosi', perMonth: 'Vain 7,50 €/kk', badge: 'Suosituin', description: 'Paras hinta — koko vuosi kerralla.', highlighted: true, priceId: import.meta.env.VITE_STRIPE_PRICE_ID_12MO },
-  { name: '6 kuukautta', price: '50', originalPrice: '80', period: '€ / 6 kk', perMonth: '~8,33 €/kk', description: 'Hyvä kompromissi.', highlighted: false, priceId: import.meta.env.VITE_STRIPE_PRICE_ID_6MO },
+const standardFeatures = ['PDF-laskut viivakoodilla', 'Asiakas- ja tuoterekisteri', 'Hyvityslaskut & kuitit', 'TrioLog ajonseuranta', 'Varmuuskopiointi']
+const promoteFeatures = ['Kaikki TrioLasku-ominaisuudet', 'TrioPromote AI-markkinointi', 'Facebook, Instagram, LinkedIn...', 'Google Ads & sähköposti', 'Blogi-sisällöntuotanto']
+
+const pricingPlans = [
+  { id: '1kk', name: '1 kuukausi', period: '€ / kk' },
+  { id: '6kk', name: '6 kuukautta', period: '€ / 6 kk', perMonth: '~{price} €/kk' },
+  { id: '12kk', name: '12 kuukautta', period: '€ / vuosi', perMonth: 'Vain {price} €/kk', badge: 'Suosituin' },
 ]
+
+const tierPrices = {
+  standard: { '1kk': 10, '6kk': 50, '12kk': 90 },
+  promote: { '1kk': 15, '6kk': 80, '12kk': 150 },
+}
+
+const tierPriceIds = {
+  standard: {
+    '1kk': import.meta.env.VITE_STRIPE_PRICE_ID_1MO,
+    '6kk': import.meta.env.VITE_STRIPE_PRICE_ID_6MO,
+    '12kk': import.meta.env.VITE_STRIPE_PRICE_ID_12MO,
+  },
+  promote: {
+    '1kk': import.meta.env.VITE_STRIPE_PRICE_ID_1MO_PROMOTE,
+    '6kk': import.meta.env.VITE_STRIPE_PRICE_ID_6MO_PROMOTE,
+    '12kk': import.meta.env.VITE_STRIPE_PRICE_ID_12MO_PROMOTE,
+  },
+}
 
 function Pricing() {
   const [loading, setLoading] = useState(null)
+  const [selectedPlan, setSelectedPlan] = useState('12kk')
 
-  const handleCheckout = async (plan) => {
-    setLoading(plan.priceId)
+  const handleCheckout = async (tier) => {
+    const priceId = tierPriceIds[tier][selectedPlan]
+    setLoading(priceId)
     try {
       const res = await fetch('/.netlify/functions/create-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ priceId: plan.priceId }),
+        body: JSON.stringify({ priceId }),
       })
       const data = await res.json()
       if (data.url) {
@@ -117,46 +140,110 @@ function Pricing() {
     }
   }
 
+  const planInfo = pricingPlans.find((p) => p.id === selectedPlan)
+
   return (
     <section id="pricing" className="py-10 px-6">
       <div className="max-w-5xl mx-auto">
-        <div className="text-center mb-14">
+        <div className="text-center mb-10">
           <h2 className="text-3xl sm:text-4xl font-bold mb-4">Hinnoittelu</h2>
-          <p className="text-gray-500 max-w-xl mx-auto">Yksinkertainen hinnoittelu ilman yllätyksiä.</p>
+          <p className="text-gray-500 max-w-xl mx-auto">Valitse sinulle sopiva tilaus.</p>
         </div>
-        <div className="grid sm:grid-cols-3 gap-6 mb-10">
-          {plans.map((plan) => (
-            <div key={plan.name} className={`rounded-2xl p-8 space-y-5 relative ${plan.highlighted ? 'bg-green-600 text-white ring-2 ring-green-600 shadow-lg scale-[1.03]' : 'bg-white border border-gray-200'}`}>
-              {plan.badge && <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-yellow-400 text-yellow-900 text-xs font-bold px-4 py-1 rounded-full">{plan.badge}</div>}
-              <div>
-                <h3 className="text-lg font-semibold">{plan.name}</h3>
-                <p className={`text-sm mt-1 ${plan.highlighted ? 'text-green-100' : 'text-gray-500'}`}>{plan.description}</p>
-              </div>
-              <div>
-                {plan.originalPrice && (
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className={`text-base line-through ${plan.highlighted ? 'text-green-200' : 'text-gray-400'}`}>{plan.originalPrice} €</span>
-                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${plan.highlighted ? 'bg-green-500 text-white' : 'bg-red-100 text-red-600'}`}>-40%</span>
-                  </div>
-                )}
-                <div className="flex items-baseline gap-1">
-                  <span className="text-4xl font-extrabold">{plan.price}</span>
-                  <span className={`text-base font-medium ${plan.highlighted ? 'text-green-100' : 'text-gray-500'}`}>€</span>
-                </div>
-                <p className={`text-sm mt-1 ${plan.highlighted ? 'text-green-100' : 'text-gray-400'}`}>{plan.period}</p>
-              </div>
-              {plan.perMonth && <p className={`text-sm font-semibold ${plan.highlighted ? 'text-green-100' : 'text-green-600'}`}>{plan.perMonth}</p>}
-              <button
-                onClick={() => handleCheckout(plan)}
-                disabled={loading === plan.priceId}
-                className={`block w-full text-center font-semibold py-3 rounded-xl transition-colors disabled:opacity-60 ${plan.highlighted ? 'bg-white text-green-700 hover:bg-green-50' : 'bg-green-600 text-white hover:bg-green-700'}`}
-              >
-                {loading === plan.priceId ? 'Ohjataan maksuun...' : 'Tilaa nyt'}
-              </button>
-            </div>
+
+        {/* Plan duration selector */}
+        <div className="flex justify-center gap-2 mb-10">
+          {pricingPlans.map((plan) => (
+            <button
+              key={plan.id}
+              onClick={() => setSelectedPlan(plan.id)}
+              className={`px-5 py-2.5 rounded-xl text-sm font-medium transition-colors relative ${
+                selectedPlan === plan.id
+                  ? 'bg-green-600 text-white'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              {plan.name}
+              {plan.badge && selectedPlan === plan.id && (
+                <span className="absolute -top-2 -right-2 bg-yellow-400 text-yellow-900 text-[10px] font-bold px-2 py-0.5 rounded-full">{plan.badge}</span>
+              )}
+            </button>
           ))}
         </div>
-        <p className="text-center text-sm text-red-400 font-medium mt-6">Lanseeraustarjous –40 % — voimassa rajoitetun ajan!</p>
+
+        {/* Two tier cards */}
+        <div className="grid sm:grid-cols-2 gap-6 max-w-3xl mx-auto mb-10">
+          {/* Standard */}
+          <div className="rounded-2xl p-8 space-y-5 bg-white border border-gray-200">
+            <div>
+              <div className="flex items-center gap-2">
+                <FileText className="w-5 h-5 text-blue-600" />
+                <h3 className="text-lg font-bold text-gray-900">TrioLasku</h3>
+              </div>
+              <p className="text-sm text-gray-500 mt-1">Laskutuksen perustyökalut</p>
+            </div>
+            <div>
+              <div className="flex items-baseline gap-1">
+                <span className="text-4xl font-extrabold text-gray-900">{tierPrices.standard[selectedPlan]}</span>
+                <span className="text-base font-medium text-gray-500">€</span>
+              </div>
+              <p className="text-sm text-gray-400 mt-1">{planInfo.period}</p>
+              {selectedPlan === '6kk' && <p className="text-sm font-semibold text-green-600 mt-1">~8,33 €/kk</p>}
+              {selectedPlan === '12kk' && <p className="text-sm font-semibold text-green-600 mt-1">Vain 7,50 €/kk</p>}
+            </div>
+            <ul className="space-y-2">
+              {standardFeatures.map((f) => (
+                <li key={f} className="text-sm text-gray-600 flex items-center gap-2">
+                  <Check className="w-4 h-4 text-green-500 shrink-0" />
+                  {f}
+                </li>
+              ))}
+            </ul>
+            <button
+              onClick={() => handleCheckout('standard')}
+              disabled={!!loading}
+              className="block w-full text-center font-semibold py-3 rounded-xl transition-colors disabled:opacity-60 bg-green-600 text-white hover:bg-green-700"
+            >
+              {loading === tierPriceIds.standard[selectedPlan] ? 'Ohjataan maksuun...' : 'Tilaa nyt'}
+            </button>
+          </div>
+
+          {/* Promote */}
+          <div className="rounded-2xl p-8 space-y-5 bg-purple-600 text-white ring-2 ring-purple-600 shadow-lg relative">
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-yellow-400 text-yellow-900 text-xs font-bold px-4 py-1 rounded-full">Suosituin</div>
+            <div>
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-purple-200" />
+                <h3 className="text-lg font-bold">TrioLasku + Promote</h3>
+              </div>
+              <p className="text-sm text-purple-200 mt-1">Laskutus + AI-markkinointi</p>
+            </div>
+            <div>
+              <div className="flex items-baseline gap-1">
+                <span className="text-4xl font-extrabold">{tierPrices.promote[selectedPlan]}</span>
+                <span className="text-base font-medium text-purple-200">€</span>
+              </div>
+              <p className="text-sm text-purple-200 mt-1">{planInfo.period}</p>
+              {selectedPlan === '6kk' && <p className="text-sm font-semibold text-purple-100 mt-1">~13,33 €/kk</p>}
+              {selectedPlan === '12kk' && <p className="text-sm font-semibold text-purple-100 mt-1">Vain 12,50 €/kk</p>}
+            </div>
+            <ul className="space-y-2">
+              {promoteFeatures.map((f) => (
+                <li key={f} className="text-sm text-purple-100 flex items-center gap-2">
+                  <Check className="w-4 h-4 text-purple-200 shrink-0" />
+                  {f}
+                </li>
+              ))}
+            </ul>
+            <button
+              onClick={() => handleCheckout('promote')}
+              disabled={!!loading}
+              className="block w-full text-center font-semibold py-3 rounded-xl transition-colors disabled:opacity-60 bg-white text-purple-700 hover:bg-purple-50"
+            >
+              {loading === tierPriceIds.promote[selectedPlan] ? 'Ohjataan maksuun...' : 'Tilaa nyt'}
+            </button>
+          </div>
+        </div>
+
         <p className="text-center text-sm text-gray-400 mt-2">Hinnat sisältävät ALV 25,5 %.</p>
       </div>
     </section>

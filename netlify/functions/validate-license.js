@@ -42,6 +42,7 @@ export async function handler(event) {
       body: JSON.stringify({
         valid: true,
         plan: license.plan,
+        tier: license.tier || 'standard',
         expires_at: license.expires_at,
         email: license.email,
       }),

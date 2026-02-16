@@ -26,7 +26,9 @@ export async function handler(event) {
     try {
       const sub = await stripe.subscriptions.retrieve(subscriptionId)
       const priceId = sub.items.data[0]?.price.id
-      const plan = PRICE_ID_TO_PLAN[priceId] || '1kk'
+      const planInfo = PRICE_ID_TO_PLAN[priceId] || { plan: '1kk', tier: 'standard' }
+      const plan = planInfo.plan
+      const tier = planInfo.tier
       const days = PLAN_DURATIONS[plan] || 30
 
       const licenseKey = generateLicenseKey()
@@ -40,6 +42,7 @@ export async function handler(event) {
           license_key: licenseKey,
           email,
           plan,
+          tier,
           status: 'active',
           stripe_subscription_id: subscriptionId,
           activated_at: now.toISOString(),
@@ -54,8 +57,9 @@ export async function handler(event) {
         auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
       })
 
-      const planInfo = PLAN_PRICES[plan] || { gross: 0, label: plan }
-      const vat = vatBreakdown(planInfo.gross)
+      const priceInfo = PLAN_PRICES[tier]?.[plan] || PLAN_PRICES.standard[plan] || { gross: 0, label: plan }
+      const vat = vatBreakdown(priceInfo.gross)
+      const productName = tier === 'promote' ? 'TrioLasku + Promote' : 'TrioLasku'
 
       await transporter.sendMail({
         from: process.env.SMTP_USER,
@@ -67,7 +71,7 @@ export async function handler(event) {
           '',
           '─── TILAUSVAHVISTUS ───',
           '',
-          `Tuote:          TrioLasku – ${planInfo.label}`,
+          `Tuote:          ${productName} – ${priceInfo.label}`,
           `Hinta (alv 0%): ${vat.net} €`,
           `ALV ${vat.vatRate} %:    ${vat.vat} €`,
           `Yhteensä:       ${vat.gross} €`,

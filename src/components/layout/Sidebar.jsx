@@ -6,12 +6,14 @@ import {
   Package,
   FileText,
   HelpCircle,
+  Sparkles,
   Menu,
   X,
   Globe,
   Home,
 } from 'lucide-react'
 import { useLanguage } from '../../context/LanguageContext'
+import { useLicense } from '../../context/LicenseContext'
 
 const navItems = [
   { path: '/dashboard', icon: LayoutDashboard, labelKey: 'nav.dashboard' },
@@ -19,11 +21,13 @@ const navItems = [
   { path: '/customers', icon: Users, labelKey: 'nav.customers' },
   { path: '/products', icon: Package, labelKey: 'nav.products' },
   { path: '/invoices', icon: FileText, labelKey: 'nav.invoices' },
+  { path: '/triopromote', icon: Sparkles, labelKey: 'nav.triopromote', requireTier: 'promote' },
   { path: '/guide', icon: HelpCircle, label: 'Ohjeet' },
 ]
 
 export default function Sidebar({ isOpen, onToggle }) {
   const { t, language, setLanguage } = useLanguage()
+  const { licenseInfo } = useLicense()
 
   const languages = ['fi', 'en', 'sv']
   const languageLabels = { fi: 'Suomi', en: 'English', sv: 'Svenska' }
@@ -70,23 +74,29 @@ export default function Sidebar({ isOpen, onToggle }) {
 
         {/* Navigation */}
         <nav className="flex-1 p-4 space-y-1">
-          {navItems.map((item) => (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              onClick={() => window.innerWidth < 1024 && onToggle()}
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
-                  isActive
-                    ? 'bg-blue-50 text-blue-600 font-medium'
-                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                }`
-              }
-            >
-              <item.icon className="w-5 h-5" />
-              <span>{item.label || t(item.labelKey)}</span>
-            </NavLink>
-          ))}
+          {navItems.map((item) => {
+            const locked = item.requireTier && licenseInfo?.tier !== item.requireTier
+            return (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                onClick={() => window.innerWidth < 1024 && onToggle()}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
+                    isActive
+                      ? 'bg-blue-50 text-blue-600 font-medium'
+                      : locked
+                        ? 'text-gray-400 hover:bg-gray-50'
+                        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                  }`
+                }
+              >
+                <item.icon className="w-5 h-5" />
+                <span>{item.label || t(item.labelKey)}</span>
+                {locked && <span className="ml-auto text-xs text-purple-400">PRO</span>}
+              </NavLink>
+            )
+          })}
         </nav>
 
         {/* Back to landing page */}

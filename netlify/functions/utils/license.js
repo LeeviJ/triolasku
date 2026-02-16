@@ -24,16 +24,26 @@ export const PLAN_DURATIONS = {
 }
 
 export const PRICE_ID_TO_PLAN = {
-  [process.env.STRIPE_PRICE_ID_1MO]: '1kk',
-  [process.env.STRIPE_PRICE_ID_12MO]: '12kk',
-  [process.env.STRIPE_PRICE_ID_6MO]: '6kk',
+  [process.env.STRIPE_PRICE_ID_1MO]:  { plan: '1kk',  tier: 'standard' },
+  [process.env.STRIPE_PRICE_ID_6MO]:  { plan: '6kk',  tier: 'standard' },
+  [process.env.STRIPE_PRICE_ID_12MO]: { plan: '12kk', tier: 'standard' },
+  [process.env.STRIPE_PRICE_ID_1MO_PROMOTE]:  { plan: '1kk',  tier: 'promote' },
+  [process.env.STRIPE_PRICE_ID_6MO_PROMOTE]:  { plan: '6kk',  tier: 'promote' },
+  [process.env.STRIPE_PRICE_ID_12MO_PROMOTE]: { plan: '12kk', tier: 'promote' },
 }
 
 // Prices including VAT 25.5% (launch prices with -40% discount)
 export const PLAN_PRICES = {
-  '1kk':  { gross: 10.00, label: '1 kuukausi' },
-  '6kk':  { gross: 50.00, label: '6 kuukautta' },
-  '12kk': { gross: 90.00, label: '12 kuukautta' },
+  standard: {
+    '1kk':  { gross: 10.00, label: '1 kuukausi' },
+    '6kk':  { gross: 50.00, label: '6 kuukautta' },
+    '12kk': { gross: 90.00, label: '12 kuukautta' },
+  },
+  promote: {
+    '1kk':  { gross: 15.00, label: '1 kuukausi' },
+    '6kk':  { gross: 80.00, label: '6 kuukautta' },
+    '12kk': { gross: 150.00, label: '12 kuukautta' },
+  },
 }
 
 const VAT_RATE = 25.5
