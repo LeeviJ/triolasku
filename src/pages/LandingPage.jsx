@@ -146,13 +146,28 @@ const features = [
 
 function Features() {
   return (
-    <section id="features" className="py-20 px-6">
+    <section id="features" className="py-12 sm:py-20 px-6">
       <div className="max-w-5xl mx-auto">
         <div className="text-center mb-12">
           <h2 className="text-3xl sm:text-4xl font-bold mb-4">Kaikki mitä tarvitset laskutukseen</h2>
           <p className="text-gray-500 max-w-xl mx-auto">Yksinkertainen työkalu joka hoitaa laskutuksen puolestasi.</p>
         </div>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Mobile: compact list */}
+        <div className="sm:hidden space-y-3">
+          {features.map((f) => (
+            <div key={f.title} className="flex items-start gap-3">
+              <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${f.color}`}>
+                <f.icon className="w-4.5 h-4.5" />
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-gray-900">{f.title}</h3>
+                <p className="text-xs text-gray-500 mt-0.5">{f.desc}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+        {/* Desktop: card grid */}
+        <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {features.map((f) => (
             <div key={f.title} className="bg-white border border-gray-100 rounded-2xl p-6 space-y-4 hover:shadow-md hover:border-gray-200 transition-all duration-200">
               <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${f.color}`}>
@@ -172,7 +187,7 @@ function Features() {
 /* ── TrioPromote Section ──────────────────────────────── */
 function TrioPromoteSection() {
   return (
-    <section className="py-20 px-6 bg-gradient-to-br from-purple-50 to-indigo-50">
+    <section className="py-12 sm:py-20 px-6 bg-gradient-to-br from-purple-50 to-indigo-50">
       <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-12 items-center">
         {/* Left — Text */}
         <div className="space-y-5">
@@ -196,8 +211,8 @@ function TrioPromoteSection() {
           </a>
         </div>
 
-        {/* Right — Mockup */}
-        <div className="flex justify-center">
+        {/* Right — Mockup (hidden on mobile) */}
+        <div className="hidden md:flex justify-center">
           <div className="w-full max-w-sm bg-white border border-purple-200 rounded-2xl shadow-lg shadow-purple-100/50 p-6 space-y-4">
             <div className="flex items-center gap-2">
               <Wand2 className="w-5 h-5 text-purple-500" />
@@ -301,7 +316,7 @@ function Pricing() {
   const planInfo = pricingPlans.find((p) => p.id === selectedPlan)
 
   return (
-    <section id="pricing" className="py-20 px-6 bg-gray-50">
+    <section id="pricing" className="py-12 sm:py-20 px-6 bg-gray-50">
       <div className="max-w-5xl mx-auto">
         <div className="text-center mb-10">
           <h2 className="text-3xl sm:text-4xl font-bold mb-4">Hinnoittelu</h2>
@@ -333,7 +348,7 @@ function Pricing() {
         {/* Two tier cards */}
         <div className="grid sm:grid-cols-2 gap-6 max-w-3xl mx-auto mb-8">
           {/* Standard */}
-          <div className="rounded-2xl p-8 space-y-5 bg-white border border-gray-200 shadow-sm">
+          <div className="rounded-2xl p-5 sm:p-8 space-y-4 sm:space-y-5 bg-white border border-gray-200 shadow-sm">
             <div>
               <div className="flex items-center gap-2">
                 <FileText className="w-5 h-5 text-blue-600" />
@@ -367,7 +382,7 @@ function Pricing() {
           </div>
 
           {/* Promote */}
-          <div className="rounded-2xl p-8 space-y-5 bg-gradient-to-br from-purple-600 to-indigo-600 text-white shadow-xl shadow-purple-600/20 relative">
+          <div className="rounded-2xl p-5 sm:p-8 space-y-4 sm:space-y-5 bg-gradient-to-br from-purple-600 to-indigo-600 text-white shadow-xl shadow-purple-600/20 relative">
             <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-yellow-400 text-yellow-900 text-xs font-bold px-4 py-1 rounded-full">Suosituin</div>
             <div>
               <div className="flex items-center gap-2">
@@ -436,7 +451,7 @@ function Contact() {
 
   if (submitted) {
     return (
-      <section id="contact" className="py-20 px-6 text-center">
+      <section id="contact" className="py-12 sm:py-20 px-6 text-center">
         <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
           <Check className="w-8 h-8" />
         </div>
@@ -447,7 +462,7 @@ function Contact() {
   }
 
   return (
-    <section id="contact" className="py-20 px-6">
+    <section id="contact" className="py-12 sm:py-20 px-6">
       <div className="max-w-2xl mx-auto">
         <div className="text-center mb-10">
           <h2 className="text-3xl sm:text-4xl font-bold mb-3">Ota yhteyttä</h2>
