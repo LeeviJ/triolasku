@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
   FileText, Send, ArrowRight, Play, Sparkles, Check,
-  Users, Shield, Menu, X, Building2, MapPin, Wand2,
+  Users, Shield, Menu, X, Building2, MapPin, Wand2, Smartphone,
 } from 'lucide-react'
 import { useDemo } from '../context/DemoContext'
 
@@ -84,7 +84,7 @@ function Hero() {
           aloita heti
         </h1>
         <p className="animate-fade-in-up-delay-2 text-lg sm:text-xl text-gray-500 max-w-2xl mx-auto leading-relaxed">
-          Luo viivakoodilliset PDF-laskut, hallitse asiakkaita ja tuotteita — kaikki yhdessä paikassa.
+          Luo viivakoodilliset PDF-laskut, hallitse asiakkaita ja tuotteita — lähetä kuitit suoraan kännykältä viestillä.
         </p>
         <div className="animate-fade-in-up-delay-3 flex flex-col sm:flex-row gap-4 justify-center pt-4">
           <Link
@@ -131,6 +131,12 @@ const features = [
     desc: 'Tallenna asiakkaat ja tuotteet kertaalleen. Lisää ne laskulle yhdellä klikkauksella.',
   },
   {
+    icon: Smartphone,
+    color: 'bg-purple-100 text-purple-600',
+    title: 'Kuitit kännykältä viestillä',
+    desc: 'Lähetä kuitit suoraan asiakkaalle kännykältä — näppärästi WhatsAppilla, sähköpostilla tai tekstiviestillä.',
+  },
+  {
     icon: Shield,
     color: 'bg-amber-100 text-amber-600',
     title: 'Varmuuskopiointi & hyvityslaskut',
@@ -146,7 +152,7 @@ function Features() {
           <h2 className="text-3xl sm:text-4xl font-bold mb-4">Kaikki mitä tarvitset laskutukseen</h2>
           <p className="text-gray-500 max-w-xl mx-auto">Yksinkertainen työkalu joka hoitaa laskutuksen puolestasi.</p>
         </div>
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {features.map((f) => (
             <div key={f.title} className="bg-white border border-gray-100 rounded-2xl p-6 space-y-4 hover:shadow-md hover:border-gray-200 transition-all duration-200">
               <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${f.color}`}>
