@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react'
-import { Sparkles, Send, Copy, Check, Loader2, Trash2, ChevronDown, ChevronUp, Lock } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { useState, useEffect, useCallback } from 'react'
+import { Sparkles, Send, Copy, Check, Loader2, Trash2, ChevronDown, ChevronUp, Lock, Unplug } from 'lucide-react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useLanguage } from '../context/LanguageContext'
 import { useLicense } from '../context/LicenseContext'
 import Card, { CardBody } from '../components/ui/Card'
@@ -52,7 +52,8 @@ function saveHistory(history) {
 
 export default function TrioPromote() {
   const { t } = useLanguage()
-  const { licenseInfo } = useLicense()
+  const { licenseKey, licenseInfo } = useLicense()
+  const [searchParams, setSearchParams] = useSearchParams()
 
   const hasPromote = licenseInfo?.tier === 'promote'
 
@@ -63,6 +64,47 @@ export default function TrioPromote() {
   const [copiedChannel, setCopiedChannel] = useState(null)
   const [history, setHistory] = useState(loadHistory)
   const [expandedHistory, setExpandedHistory] = useState(null)
+
+  // Facebook state
+  const [fbConnected, setFbConnected] = useState(false)
+  const [fbPageName, setFbPageName] = useState('')
+  const [fbPublishing, setFbPublishing] = useState(false)
+  const [fbPublishStatus, setFbPublishStatus] = useState(null) // 'success' | 'error' | null
+  const [fbMessage, setFbMessage] = useState('')
+
+  // Check FB connection status
+  const checkFbStatus = useCallback(async () => {
+    if (!licenseKey) return
+    try {
+      const res = await fetch(`/.netlify/functions/fb-status?licenseKey=${encodeURIComponent(licenseKey)}`)
+      const data = await res.json()
+      setFbConnected(data.connected)
+      setFbPageName(data.pageName || '')
+    } catch { /* ignore */ }
+  }, [licenseKey])
+
+  useEffect(() => {
+    checkFbStatus()
+  }, [checkFbStatus])
+
+  // Handle ?fb= URL parameter from OAuth callback
+  useEffect(() => {
+    const fbParam = searchParams.get('fb')
+    if (!fbParam) return
+
+    if (fbParam === 'connected') {
+      setFbMessage(t('triopromote.fbConnectedSuccess'))
+      checkFbStatus()
+    } else if (fbParam === 'no_pages') {
+      setFbMessage(t('triopromote.fbNoPages'))
+    } else if (fbParam === 'error') {
+      setFbMessage(t('triopromote.fbError'))
+    }
+
+    // Clear the param from URL
+    searchParams.delete('fb')
+    setSearchParams(searchParams, { replace: true })
+  }, [searchParams, setSearchParams, checkFbStatus, t])
 
   // Auto-save settings
   useEffect(() => {
@@ -144,18 +186,95 @@ export default function TrioPromote() {
     setSettings({ product: entry.product, audience: entry.audience, tone: entry.tone })
   }
 
+  const handleFbConnect = () => {
+    window.location.href = `/.netlify/functions/fb-auth?licenseKey=${encodeURIComponent(licenseKey)}`
+  }
+
+  const handleFbDisconnect = async () => {
+    if (!window.confirm(t('triopromote.fbDisconnectConfirm'))) return
+    try {
+      await fetch('/.netlify/functions/fb-disconnect', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ licenseKey }),
+      })
+      setFbConnected(false)
+      setFbPageName('')
+    } catch { /* ignore */ }
+  }
+
+  const handleFbPublish = async (text) => {
+    setFbPublishing(true)
+    setFbPublishStatus(null)
+    try {
+      const res = await fetch('/.netlify/functions/fb-publish', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ licenseKey, message: text }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        setFbPublishStatus('success')
+      } else {
+        setFbPublishStatus('error')
+      }
+    } catch {
+      setFbPublishStatus('error')
+    } finally {
+      setFbPublishing(false)
+      setTimeout(() => setFbPublishStatus(null), 3000)
+    }
+  }
+
   const canGenerate = settings.product.trim() && settings.audience.trim() && !loading
 
   return (
     <div className="max-w-3xl mx-auto">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl md:text-3xl font-bold text-gray-900 flex items-center gap-2">
-          <Sparkles className="w-7 h-7 text-purple-500" />
-          {t('triopromote.title')}
-        </h1>
-        <p className="mt-1 text-gray-500">{t('triopromote.subtitle')}</p>
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 flex items-center gap-2">
+              <Sparkles className="w-7 h-7 text-purple-500" />
+              {t('triopromote.title')}
+            </h1>
+            <p className="mt-1 text-gray-500">{t('triopromote.subtitle')}</p>
+          </div>
+          {hasPromote && (
+            <div className="flex items-center gap-2">
+              {fbConnected ? (
+                <>
+                  <span className="text-xs text-green-700 bg-green-50 border border-green-200 px-3 py-1.5 rounded-lg font-medium">
+                    {t('triopromote.fbConnected')}: {fbPageName}
+                  </span>
+                  <button
+                    onClick={handleFbDisconnect}
+                    className="text-xs text-gray-500 hover:text-red-600 px-2 py-1.5 rounded hover:bg-red-50 transition-colors flex items-center gap-1"
+                  >
+                    <Unplug className="w-3.5 h-3.5" />
+                    {t('triopromote.fbDisconnect')}
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={handleFbConnect}
+                  className="text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg transition-colors"
+                >
+                  {t('triopromote.fbConnect')}
+                </button>
+              )}
+            </div>
+          )}
+        </div>
       </div>
+
+      {/* Facebook status message */}
+      {fbMessage && (
+        <div className="mb-4 px-4 py-3 bg-blue-50 border border-blue-200 rounded-lg text-blue-700 text-sm flex items-center justify-between">
+          <span>{fbMessage}</span>
+          <button onClick={() => setFbMessage('')} className="text-blue-400 hover:text-blue-600 ml-2">&times;</button>
+        </div>
+      )}
 
       {/* Upgrade prompt */}
       {!hasPromote && (
@@ -260,6 +379,7 @@ export default function TrioPromote() {
             const text = results[channel.id]
             if (!text) return null
             const isCopied = copiedChannel === channel.id
+            const isFacebook = channel.id === 'facebook'
             return (
               <Card key={channel.id}>
                 <CardBody className="py-3">
@@ -270,13 +390,41 @@ export default function TrioPromote() {
                         {t(`triopromote.${channel.id}`)}
                       </span>
                     </div>
-                    <button
-                      onClick={() => handleCopy(channel.id, text)}
-                      className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 px-2 py-1 rounded hover:bg-gray-100 transition-colors"
-                    >
-                      {isCopied ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
-                      {isCopied ? t('triopromote.copied') : t('triopromote.copy')}
-                    </button>
+                    <div className="flex items-center gap-1">
+                      {isFacebook && fbConnected && (
+                        <button
+                          onClick={() => handleFbPublish(text)}
+                          disabled={fbPublishing}
+                          className="flex items-center gap-1 text-xs text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 px-2.5 py-1 rounded transition-colors"
+                        >
+                          {fbPublishing ? (
+                            <>
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              {t('triopromote.fbPublishing')}
+                            </>
+                          ) : fbPublishStatus === 'success' ? (
+                            <>
+                              <Check className="w-3.5 h-3.5" />
+                              {t('triopromote.fbPublished')}
+                            </>
+                          ) : fbPublishStatus === 'error' ? (
+                            <span className="text-red-200">{t('triopromote.fbPublishError')}</span>
+                          ) : (
+                            <>
+                              <Send className="w-3.5 h-3.5" />
+                              {t('triopromote.fbPublish')}
+                            </>
+                          )}
+                        </button>
+                      )}
+                      <button
+                        onClick={() => handleCopy(channel.id, text)}
+                        className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 px-2 py-1 rounded hover:bg-gray-100 transition-colors"
+                      >
+                        {isCopied ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
+                        {isCopied ? t('triopromote.copied') : t('triopromote.copy')}
+                      </button>
+                    </div>
                   </div>
                   <div className="text-sm text-gray-800 whitespace-pre-wrap">{text}</div>
                 </CardBody>
