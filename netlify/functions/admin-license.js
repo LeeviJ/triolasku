@@ -12,10 +12,11 @@ export async function handler(event) {
   }
 
   try {
-    const { email, plan, sendEmail } = JSON.parse(event.body || '{}')
+    const { email, plan, tier, sendEmail } = JSON.parse(event.body || '{}')
     if (!email || !plan) {
       return { statusCode: 400, body: JSON.stringify({ error: 'email and plan required' }) }
     }
+    const licenseTier = tier || 'standard'
 
     const days = PLAN_DURATIONS[plan]
     if (!days) {
@@ -33,6 +34,7 @@ export async function handler(event) {
         license_key: licenseKey,
         email,
         plan,
+        tier: licenseTier,
         status: 'active',
         activated_at: now.toISOString(),
         expires_at: expiresAt.toISOString(),
@@ -75,7 +77,7 @@ export async function handler(event) {
     return {
       statusCode: 200,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ licenseKey, email, plan, expires_at: expiresAt.toISOString() }),
+      body: JSON.stringify({ licenseKey, email, plan, tier: licenseTier, expires_at: expiresAt.toISOString() }),
     }
   } catch (err) {
     console.error('Admin license error:', err.message)
