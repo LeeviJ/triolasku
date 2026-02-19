@@ -140,7 +140,7 @@ const features = [
     icon: Shield,
     color: 'bg-amber-100 text-amber-600',
     title: 'Varmuuskopiointi & hyvityslaskut',
-    desc: 'Varmuuskopiot, hyvityslaskut ja kuitit. TrioLog-ajonseuranta sisältyy.',
+    desc: 'Varmuuskopiot, hyvityslaskut ja kuitit. Jaa PDF-laskut ja kuitit kätevästi suoraan kännykästä.',
   },
 ]
 
@@ -255,7 +255,7 @@ function TrioPromoteSection() {
 }
 
 /* ── Pricing ───────────────────────────────────────────── */
-const standardFeatures = ['PDF-laskut viivakoodilla', 'Asiakas- ja tuoterekisteri', 'Hyvityslaskut & kuitit', 'TrioLog ajonseuranta', 'Varmuuskopiointi']
+const standardFeatures = ['PDF-laskut viivakoodilla', 'Asiakas- ja tuoterekisteri', 'Hyvityslaskut & kuitit', 'PDF-jako suoraan kännykästä', 'Varmuuskopiointi']
 const promoteFeatures = ['Kaikki TrioLasku-ominaisuudet', 'TrioPromote AI-markkinointi', 'Facebook, Instagram, LinkedIn...', 'Google Ads & sähköposti', 'Blogi-sisällöntuotanto']
 
 const pricingPlans = [
