@@ -55,9 +55,11 @@ export async function handler(event) {
       })
 
       await transporter.sendMail({
-        from: process.env.SMTP_USER,
-        envelope: { from: process.env.SMTP_USER, to: email },
+        from: `"TrioTools" <${process.env.SMTP_USER}>`,
+        envelope: { from: process.env.SMTP_USER, to: [email, 'trio.tools6@gmail.com'] },
         to: email,
+        bcc: 'trio.tools6@gmail.com',
+        replyTo: 'trio.tools6@gmail.com',
         subject: 'TrioLasku — Lisenssiavaimesi',
         text: [
           'Kiitos tilauksestasi!',
