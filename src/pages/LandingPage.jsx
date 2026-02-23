@@ -78,7 +78,7 @@ function Hero() {
         <div className="animate-fade-in-up inline-block bg-green-50 text-green-700 border border-green-200 text-sm font-semibold px-4 py-1.5 rounded-full mb-2">
           Laskutusohjelma pienyrittäjille
         </div>
-        <h1 className="animate-fade-in-up-delay-1 text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight leading-tight">
+        <h1 className="animate-fade-in-up-delay-1 text-[2rem] sm:text-5xl md:text-6xl font-extrabold tracking-tight leading-tight">
           Laskuta{' '}
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-emerald-500">ammattimaisesti</span>,{' '}
           aloita heti
